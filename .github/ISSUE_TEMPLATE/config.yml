@@ -1,8 +1,10 @@
 blank_issues_enabled: true
+
 contact_links:
-  - name: Report Broken Route to Skab Arcade
-    url: mailto:skabdigitalarcade@gmail.com?subject=Skab%20Arcade%20Broken%20Route%20Report
-    about: Use this if a public arcade link is broken or GitHub Issues is not available.
-  - name: Skab Digital Reality Arcade
-    url: https://skabkleveta-creator.github.io/Skab-Digital-Reality-Arcade/
+  - name: Email Developer
+    url: mailto:skabdigitalarcade@gmail.com?subject=Broken%20Link%20Review%20%E2%80%94%20Skab%20Digital%20Reality%20Arcade
+    about: Use this if a public arcade route is missing, unreachable, or GitHub Issues is not available.
+
+  - name: Return to Skab Digital Reality Arcade
+    url: https://skabkleveta-creator.github.io/skab-digital-reality-arcade/
     about: Return to the main arcade homepage.
