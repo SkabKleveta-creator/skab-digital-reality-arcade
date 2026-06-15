@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signal Lost — Skab Digital Reality Arcade</title>
+  <style>
+    :root {
+      --bg: #05070d;
+      --panel: #0b1020;
+      --panel-2: #101827;
+      --text: #e8fff3;
+      --muted: #8fb8a6;
+      --cyan: #68f5ff;
+      --green: #8dff9a;
+      --amber: #ffbf5f;
+      --red: #ff5f6d;
+      --line: rgba(104, 245, 255, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(104,245,255,.12), transparent 35%),
+        linear-gradient(180deg, #05070d 0%, #080d18 55%, #05070d 100%);
+      color: var(--text);
+      font-family: "Courier New", Courier, monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .shell {
+      width: min(760px, 100%);
+      border: 1px solid var(--line);
+      background: rgba(11, 16, 32, 0.92);
+      box-shadow: 0 0 28px rgba(104,245,255,.12), inset 0 0 0 1px rgba(255,255,255,.04);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .scanline {
+      height: 6px;
+      background: linear-gradient(90deg, var(--cyan), var(--green), var(--amber), var(--cyan));
+    }
+
+    main { padding: 32px; }
+
+    .eyebrow {
+      color: var(--amber);
+      font-size: 0.82rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2.1rem, 8vw, 4.6rem);
+      line-height: .9;
+      letter-spacing: .08em;
+      color: var(--cyan);
+      text-shadow: 0 0 16px rgba(104,245,255,.35);
+    }
+
+    .subhead {
+      color: var(--text);
+      font-size: clamp(1rem, 2.6vw, 1.25rem);
+      line-height: 1.45;
+      margin: 0 0 24px;
+      max-width: 56ch;
+    }
+
+    .panel {
+      background: rgba(16, 24, 39, .82);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 18px;
+      margin: 18px 0;
+    }
+
+    .status-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px dashed rgba(255,255,255,.12);
+      padding-bottom: 8px;
+    }
+
+    .status-row:last-child { border-bottom: 0; padding-bottom: 0; }
+
+    .label { color: var(--muted); }
+    .value { color: var(--red); text-align: right; overflow-wrap: anywhere; }
+    .value.ok { color: var(--green); }
+    .value.url { color: var(--amber); }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    a.button {
+      color: #041016;
+      background: var(--cyan);
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 14px;
+      text-decoration: none;
+      text-align: center;
+      font-weight: 700;
+      box-shadow: 0 0 16px rgba(104,245,255,.18);
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    a.button.secondary {
+      background: transparent;
+      color: var(--green);
+      border: 1px solid rgba(141,255,154,.44);
+    }
+
+    a.button.warning {
+      background: var(--amber);
+      color: #1b0f00;
+    }
+
+    footer {
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.5;
+      padding: 0 32px 30px;
+    }
+
+    @media (max-width: 620px) {
+      body { padding: 14px; align-items: stretch; }
+      .shell { border-radius: 14px; }
+      main { padding: 24px 18px; }
+      .actions { grid-template-columns: 1fr; }
+      .status-row { flex-direction: column; gap: 4px; }
+      .value { text-align: left; }
+      footer { padding: 0 18px 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="scanline" aria-hidden="true"></div>
+    <main>
+      <div class="eyebrow">Skab Digital Reality Arcade</div>
+      <h1>SIGNAL LOST</h1>
+      <p class="subhead">The requested route could not be restored. The arcade is still online, but this link is missing, moved, or unreachable.</p>
+
+      <section class="panel" aria-label="Route status">
+        <div class="status-grid">
+          <div class="status-row">
+            <span class="label">Route Status</span>
+            <span class="value">Missing / Unreachable</span>
+          </div>
+          <div class="status-row">
+            <span class="label">Requested Location</span>
+            <span class="value url" id="requested-url">Loading route...</span>
+          </div>
+          <div class="status-row">
+            <span class="label">Recovery Option</span>
+            <span class="value ok">Return to Arcade or Report Broken Route</span>
+          </div>
+        </div>
+      </section>
+
+      <nav class="actions" aria-label="Recovery actions">
+        <a class="button" href="/">Return to Arcade</a>
+        <a class="button secondary" href="/#projects">Browse Projects</a>
+        <a class="button warning" id="report-link" href="mailto:skabdigitalarcade@gmail.com">Report Broken Route</a>
+      </nav>
+    </main>
+    <footer>
+      If this route should exist, report it to Skab Arcade leadership. This page is designed for phone, laptop, tablet, and other connected-device browsers.
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const supportEmail = "skabdigitalarcade@gmail.com";
+      const currentUrl = window.location.href;
+      const timestamp = new Date().toISOString();
+      const browser = navigator.userAgent;
+
+      document.getElementById("requested-url").textContent = currentUrl;
+
+      const subject = "Broken Route Report — Skab Digital Reality Arcade";
+      const body = [
+        "A visitor encountered a broken route.",
+        "",
+        "URL:",
+        currentUrl,
+        "",
+        "Timestamp:",
+        timestamp,
+        "",
+        "Browser:",
+        browser,
+        "",
+        "Additional Notes:",
+        ""
+      ].join("\n");
+
+      document.getElementById("report-link").href =
+        "mailto:" + encodeURIComponent(supportEmail) +
+        "?subject=" + encodeURIComponent(subject) +
+        "&body=" + encodeURIComponent(body);
+    }());
+  </script>
+</body>
+</html>
