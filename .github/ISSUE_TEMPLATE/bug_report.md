@@ -23,3 +23,58 @@ Select one:
 Example: iPhone, Android phone, Windows laptop, MacBook, tablet, desktop, connected display.
 
 ```text
+
+```
+
+## Browser
+
+Example: Safari, Chrome, Edge, Firefox, mobile browser.
+
+```text
+
+```
+
+## Link used
+
+Paste the exact URL.
+
+```text
+
+```
+
+## Wi-Fi or cellular?
+
+Select all that apply:
+
+- [ ] Wi-Fi
+- [ ] Cellular
+- [ ] Both tested
+- [ ] Not sure
+
+## What happened?
+
+```text
+
+```
+
+## Expected result
+
+```text
+
+```
+
+## Steps to reproduce
+
+1.
+2.
+3.
+
+## Screenshot or screen recording
+
+Attach one if available.
+
+## Extra notes
+
+```text
+
+```
