@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Skab Digital Reality Arcade</title>
-  <meta name="description" content="Skab Digital Reality Arcade — browser-first hobbyist prototypes for phone, laptop, tablet, desktop, and connected devices." />
+  <meta name="description" content="Skab Digital Reality Arcade — browser-first hobbyist prototypes for phone, laptop, tablet, desktop, and connected devices.">
 
   <style>
     :root {
       --bg: #05070d;
       --panel: #0b111c;
-      --panel-2: #101a28;
-      --line: rgba(127,255,212,.22);
-      --line-strong: rgba(127,255,212,.48);
+      --line: rgba(127,255,212,.26);
       --text: #dcffe9;
       --muted: #9ab8a7;
       --cyan: #7fffd4;
@@ -20,15 +18,11 @@
       --amber: #ffbf61;
       --red: #ff5b6e;
       --blue: #72b7ff;
-      --max: 1120px;
-      --radius: 18px;
-      --shadow: 0 22px 70px rgba(0,0,0,.32);
+      --max: 1080px;
     }
 
-    * { box-sizing: border-box; }
-
-    html {
-      scroll-behavior: smooth;
+    * {
+      box-sizing: border-box;
     }
 
     body {
@@ -36,9 +30,8 @@
       min-height: 100vh;
       color: var(--text);
       background:
-        radial-gradient(circle at 18% 8%, rgba(127,255,212,.15), transparent 25rem),
-        radial-gradient(circle at 84% 12%, rgba(255,191,97,.10), transparent 24rem),
-        radial-gradient(circle at 50% 88%, rgba(114,183,255,.08), transparent 30rem),
+        radial-gradient(circle at 15% 10%, rgba(127,255,212,.14), transparent 24rem),
+        radial-gradient(circle at 85% 12%, rgba(255,191,97,.10), transparent 24rem),
         var(--bg);
       font-family: "Courier New", Courier, monospace;
     }
@@ -49,80 +42,46 @@
       inset: 0;
       pointer-events: none;
       background:
-        linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.020) 1px, transparent 1px);
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
       background-size: 34px 34px;
-      mask-image: linear-gradient(to bottom, rgba(0,0,0,.72), rgba(0,0,0,.10));
-      z-index: 0;
+      opacity: .55;
     }
 
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background: repeating-linear-gradient(
-        to bottom,
-        rgba(255,255,255,.03),
-        rgba(255,255,255,.03) 1px,
-        transparent 1px,
-        transparent 4px
-      );
-      opacity: .16;
-      mix-blend-mode: screen;
-      z-index: 0;
+    a {
+      color: inherit;
     }
-
-    a { color: inherit; }
 
     .wrap {
-      position: relative;
-      z-index: 1;
       width: min(var(--max), calc(100% - 32px));
       margin: 0 auto;
+      position: relative;
+      z-index: 1;
     }
 
-    .site-bar {
+    .topbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 18px;
-      padding: 20px 0 10px;
-    }
-
-    .brand-mini {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--green);
+      gap: 16px;
+      padding: 22px 0 10px;
       font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .08em;
       text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
     }
 
-    .logo-pip {
-      width: 24px;
-      height: 24px;
-      border: 1px solid var(--line-strong);
-      border-radius: 6px;
-      background:
-        linear-gradient(90deg, transparent 38%, rgba(157,255,110,.75) 38% 62%, transparent 62%),
-        linear-gradient(transparent 38%, rgba(157,255,110,.75) 38% 62%, transparent 62%),
-        rgba(16,40,28,.82);
-      box-shadow: 0 0 18px rgba(157,255,110,.18);
-      flex: 0 0 auto;
+    .brand {
+      color: var(--green);
+      font-weight: 700;
+      text-decoration: none;
     }
 
     nav {
       display: flex;
+      gap: 14px;
       flex-wrap: wrap;
       justify-content: flex-end;
-      gap: 14px;
-      color: var(--muted);
-      font-size: 12px;
-      letter-spacing: .08em;
-      text-transform: uppercase;
     }
 
     nav a {
@@ -130,52 +89,25 @@
       opacity: .9;
     }
 
-    nav a:hover,
-    nav a:focus {
+    nav a:hover {
       color: var(--cyan);
-      outline: none;
     }
 
-    header {
-      padding: 34px 0 24px;
-    }
-
-    .hero,
-    .card,
-    .support-panel,
-    .teaser,
-    .about {
+    .panel {
       border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background:
-        linear-gradient(145deg, rgba(15,24,37,.94), rgba(5,10,16,.97)),
-        var(--panel);
-      box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,.02) inset;
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(15,24,37,.94), rgba(5,10,16,.97));
+      box-shadow: 0 22px 70px rgba(0,0,0,.32);
       overflow: hidden;
       position: relative;
     }
 
-    .hero::before,
-    .card::before,
-    .support-panel::before,
-    .teaser::before,
-    .about::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(circle at 18% 18%, rgba(127,255,212,.12), transparent 17rem),
-        radial-gradient(circle at 82% 0%, rgba(255,191,97,.08), transparent 15rem);
-    }
-
     .hero {
       padding: clamp(24px, 4vw, 44px);
+      margin: 24px 0;
     }
 
     .eyebrow {
-      position: relative;
-      z-index: 1;
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -183,11 +115,11 @@
       padding: 0 10px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: rgba(5,12,18,.72);
       color: var(--green);
+      background: rgba(0,0,0,.22);
       font-size: 12px;
-      letter-spacing: .12em;
       text-transform: uppercase;
+      letter-spacing: .12em;
     }
 
     .dot {
@@ -199,107 +131,47 @@
     }
 
     h1 {
-      position: relative;
-      z-index: 1;
       margin: 22px 0 12px;
-      max-width: 920px;
-      font-size: clamp(38px, 7vw, 78px);
+      font-size: clamp(38px, 7vw, 76px);
       line-height: .92;
       letter-spacing: -.07em;
       text-transform: uppercase;
-      text-shadow: 0 0 12px rgba(127,255,212,.28), 0 0 44px rgba(127,255,212,.11);
+      text-shadow: 0 0 12px rgba(127,255,212,.28);
     }
 
-    .title-accent {
-      display: block;
+    .accent {
       color: var(--cyan);
+      display: block;
     }
 
     .subtitle {
-      position: relative;
-      z-index: 1;
-      max-width: 790px;
-      margin: 18px 0 0;
+      max-width: 800px;
       color: #bdddc9;
       font-size: clamp(15px, 2.1vw, 20px);
       line-height: 1.55;
     }
 
-    .hero-grid {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 24px;
-    }
-
-    .hero-stat {
-      border: 1px solid rgba(127,255,212,.16);
-      border-radius: 14px;
-      background: rgba(0,0,0,.22);
-      padding: 12px;
-      min-height: 78px;
-    }
-
-    .hero-stat b {
-      display: block;
-      color: var(--cyan);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: 6px;
-    }
-
-    .hero-stat span {
-      color: #d3f2df;
-      font-size: 13px;
-      line-height: 1.35;
-    }
-
     .device-strip {
-      position: relative;
-      z-index: 1;
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 16px;
+      margin-top: 18px;
     }
 
     .pill,
     .tag {
       display: inline-flex;
       align-items: center;
-      min-height: 26px;
-      padding: 0 9px;
-      border: 1px solid rgba(255,255,255,.14);
-      border-radius: 999px;
-      background: rgba(255,255,255,.045);
-      color: #c8e7d4;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
-
-    .pill {
       min-height: 28px;
-      color: #d4f5df;
+      padding: 0 10px;
+      border: 1px solid rgba(127,255,212,.18);
+      border-radius: 999px;
       background: rgba(0,0,0,.22);
-      border-color: rgba(127,255,212,.18);
-      text-transform: none;
-      letter-spacing: .02em;
+      color: #d4f5df;
       font-size: 12px;
-      font-weight: 400;
     }
-
-    .tag.live { color: var(--green); border-color: rgba(157,255,110,.35); }
-    .tag.prototype { color: var(--amber); border-color: rgba(255,191,97,.35); }
-    .tag.pending { color: var(--blue); border-color: rgba(114,183,255,.35); }
 
     .actions {
-      position: relative;
-      z-index: 1;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
@@ -314,21 +186,11 @@
       padding: 0 16px;
       border: 1px solid rgba(127,255,212,.50);
       border-radius: 10px;
-      background: rgba(19,52,43,.74);
+      background: rgba(19,52,43,.78);
       color: var(--text);
       font-weight: 700;
       text-decoration: none;
       letter-spacing: .04em;
-      box-shadow: 0 0 18px rgba(127,255,212,.10);
-      transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
-    }
-
-    .btn:hover,
-    .btn:focus {
-      transform: translateY(-1px);
-      border-color: rgba(127,255,212,.9);
-      background: rgba(25,75,60,.86);
-      outline: none;
     }
 
     .btn.secondary {
@@ -337,21 +199,19 @@
       color: #c9ead7;
     }
 
-    .btn.disabled,
-    .btn[aria-disabled="true"] {
+    .btn.disabled {
       opacity: .55;
-      cursor: not-allowed;
       pointer-events: none;
     }
 
     section {
-      padding: 24px 0;
+      padding: 22px 0;
     }
 
     .section-head {
       display: flex;
-      align-items: flex-end;
       justify-content: space-between;
+      align-items: end;
       gap: 18px;
       margin-bottom: 14px;
     }
@@ -360,8 +220,8 @@
       margin: 0;
       color: var(--cyan);
       text-transform: uppercase;
+      font-size: clamp(22px, 3vw, 32px);
       letter-spacing: -.03em;
-      font-size: clamp(21px, 3vw, 32px);
     }
 
     .section-note {
@@ -373,7 +233,7 @@
       text-align: right;
     }
 
-    .game-grid {
+    .grid {
       display: grid;
       grid-template-columns: repeat(12, 1fr);
       gap: 16px;
@@ -381,170 +241,16 @@
 
     .card {
       grid-column: span 4;
-      min-height: 330px;
+      min-height: 280px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
     }
 
     .card.featured {
       grid-column: span 12;
-      min-height: 286px;
-      display: grid;
-      grid-template-columns: minmax(0, .95fr) minmax(320px, 1.05fr);
-    }
-
-    .game-art {
-      position: relative;
-      z-index: 1;
-      min-height: 150px;
-      border-bottom: 1px solid rgba(127,255,212,.13);
-      background:
-        linear-gradient(180deg, rgba(5,7,13,.12), rgba(5,7,13,.82)),
-        repeating-linear-gradient(90deg, rgba(127,255,212,.10), rgba(127,255,212,.10) 2px, transparent 2px, transparent 14px),
-        radial-gradient(circle at 50% 55%, rgba(127,255,212,.22), transparent 9rem);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-    }
-
-    .featured .game-art {
-      min-height: 286px;
-      border-bottom: 0;
-      border-right: 1px solid rgba(127,255,212,.13);
-    }
-
-    .screen {
-      width: min(100%, 420px);
-      aspect-ratio: 16 / 9;
-      border: 3px solid rgba(220,255,233,.78);
-      border-radius: 8px;
-      background:
-        linear-gradient(to bottom, rgba(127,255,212,.12), transparent 55%),
-        linear-gradient(90deg, transparent 49%, rgba(127,255,212,.35) 50%, transparent 51%),
-        linear-gradient(0deg, #101827 50%, #0b111c 50%);
-      background-size: auto, auto, 100% 18px;
-      box-shadow: 0 0 28px rgba(127,255,212,.22), 0 0 0 8px rgba(0,0,0,.22);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .screen::before,
-    .screen::after {
-      content: "";
-      position: absolute;
-      display: block;
-    }
-
-    .screen::before {
-      left: 14%;
-      top: 35%;
-      width: 72%;
-      height: 34%;
-      background:
-        linear-gradient(90deg, rgba(38,70,98,.9) 0 24%, transparent 24% 28%, rgba(34,60,82,.92) 28% 68%, transparent 68% 72%, rgba(36,66,90,.9) 72% 100%);
-      box-shadow:
-        0 -42px 0 rgba(18,28,42,.95),
-        0 42px 0 rgba(9,14,20,.95),
-        86px 0 0 rgba(127,255,212,.18);
-    }
-
-    .screen::after {
-      left: 48%;
-      top: 24%;
-      width: 10%;
-      height: 52%;
-      background: rgba(127,255,212,.75);
-      box-shadow:
-        0 0 18px rgba(127,255,212,.52),
-        -60px 32px 0 -12px rgba(255,191,97,.68),
-        74px -14px 0 -12px rgba(114,183,255,.68);
-    }
-
-    .ship-screen::before {
-      left: 50%;
-      top: 58%;
-      width: 0;
-      height: 0;
-      border-left: 16px solid transparent;
-      border-right: 16px solid transparent;
-      border-bottom: 38px solid rgba(127,255,212,.75);
-      background: none;
-      box-shadow:
-        -72px -58px 0 -6px rgba(255,91,110,.72),
-        78px -78px 0 -6px rgba(255,191,97,.72),
-        18px -34px 0 -6px rgba(157,255,110,.72);
-    }
-
-    .ship-screen::after {
-      left: 18%;
-      top: 18%;
-      width: 70%;
-      height: 52%;
-      background:
-        radial-gradient(circle, rgba(255,91,110,.9) 0 6%, transparent 7%),
-        radial-gradient(circle at 74% 36%, rgba(255,191,97,.9) 0 5%, transparent 6%),
-        radial-gradient(circle at 36% 72%, rgba(127,255,212,.8) 0 4%, transparent 5%);
-    }
-
-    .trace-screen::before {
-      left: 13%;
-      top: 44%;
-      width: 74%;
-      height: 6px;
-      background: rgba(127,255,212,.72);
-      box-shadow:
-        34px -34px 0 rgba(255,191,97,.64),
-        96px 30px 0 rgba(255,91,110,.64),
-        170px -12px 0 rgba(157,255,110,.55);
-    }
-
-    .trace-screen::after {
-      left: 21%;
-      top: 28%;
-      width: 56%;
-      height: 48%;
-      background:
-        linear-gradient(90deg, transparent 45%, rgba(114,183,255,.78) 45% 49%, transparent 49%),
-        linear-gradient(0deg, transparent 52%, rgba(157,255,110,.78) 52% 56%, transparent 56%);
-      box-shadow: 0 0 18px rgba(127,255,212,.20);
-    }
-
-    .run-screen::before {
-      left: 12%;
-      top: 58%;
-      width: 76%;
-      height: 14%;
-      background: rgba(70,58,92,.80);
-      box-shadow:
-        90px -36px 0 -10px rgba(127,255,212,.65),
-        150px -58px 0 -12px rgba(255,191,97,.65),
-        -24px 28px 0 rgba(30,26,43,.95);
-    }
-
-    .run-screen::after {
-      left: 38%;
-      top: 39%;
-      width: 10%;
-      height: 24%;
-      background: #d19a66;
-      box-shadow:
-        0 -10px 0 #2b1b12,
-        0 12px 0 #1c2c3c,
-        20px 28px 0 #172230,
-        -16px 28px 0 #172230,
-        72px 4px 0 8px rgba(127,255,212,.65);
-    }
-
-    .card-content {
-      position: relative;
-      z-index: 1;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      flex: 1;
-      justify-content: space-between;
+      min-height: 260px;
     }
 
     .kicker {
@@ -554,10 +260,33 @@
       margin-bottom: 12px;
     }
 
+    .tag {
+      min-height: 24px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .tag.live {
+      color: var(--green);
+      border-color: rgba(157,255,110,.35);
+    }
+
+    .tag.prototype {
+      color: var(--amber);
+      border-color: rgba(255,191,97,.35);
+    }
+
+    .tag.pending {
+      color: var(--blue);
+      border-color: rgba(114,183,255,.35);
+    }
+
     h3 {
       margin: 0 0 8px;
       color: var(--text);
-      font-size: clamp(20px, 2.8vw, 32px);
+      font-size: clamp(22px, 3vw, 34px);
       line-height: 1.05;
       text-transform: uppercase;
       letter-spacing: -.04em;
@@ -570,28 +299,13 @@
       font-size: 14px;
     }
 
-    .support-panel {
+    .support-list {
+      display: grid;
+      gap: 10px;
       padding: 20px;
     }
 
-    .support-intro {
-      position: relative;
-      z-index: 1;
-      margin: 0 0 16px;
-      color: #bdddc9;
-      line-height: 1.6;
-      max-width: 800px;
-      font-size: 14px;
-    }
-
-    .ticket-list {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      gap: 10px;
-    }
-
-    .ticket-row {
+    .ticket {
       display: grid;
       grid-template-columns: 1fr auto;
       gap: 14px;
@@ -602,136 +316,25 @@
       padding: 14px;
     }
 
-    .ticket-row b {
+    .ticket b {
       display: block;
       color: var(--cyan);
       text-transform: uppercase;
-      letter-spacing: .04em;
       margin-bottom: 4px;
     }
 
-    .ticket-row span {
-      display: block;
+    .ticket span {
       color: #b9dec8;
       font-size: 13px;
       line-height: 1.45;
     }
 
-    .tester-template {
-      position: relative;
-      z-index: 1;
-      margin-top: 14px;
-      border: 1px solid rgba(157,255,110,.20);
-      border-radius: 14px;
-      background: rgba(0,0,0,.26);
-      padding: 14px;
-      color: var(--green);
-      font-size: 13px;
-      line-height: 1.65;
-    }
-
-    .teaser {
-      display: grid;
-      grid-template-columns: minmax(260px, .72fr) minmax(0, 1.28fr);
-      gap: 18px;
-      padding: 20px;
-      align-items: stretch;
-    }
-
-    .eli-stage {
-      position: relative;
-      z-index: 1;
-      min-height: 250px;
-      border: 1px solid rgba(127,255,212,.15);
-      border-radius: 14px;
-      background:
-        linear-gradient(180deg, rgba(8,17,26,.5), rgba(0,0,0,.32)),
-        repeating-linear-gradient(90deg, rgba(127,255,212,.07), rgba(127,255,212,.07) 2px, transparent 2px, transparent 18px),
-        radial-gradient(circle at 50% 58%, rgba(127,255,212,.16), transparent 10rem);
-      display: flex;
-      align-items: end;
-      justify-content: center;
-      padding: 18px;
-      overflow: hidden;
-    }
-
-    .eli-stage::after {
-      content: "";
-      position: absolute;
-      left: 14%;
-      right: 14%;
-      bottom: 18px;
-      height: 10px;
-      background: rgba(127,255,212,.22);
-      filter: blur(8px);
-      border-radius: 999px;
-    }
-
-    .eli-sprite {
-      --px: 7px;
-      width: calc(var(--px) * 22);
-      height: calc(var(--px) * 30);
-      position: relative;
-      image-rendering: pixelated;
-      transform: translateY(4px);
-      z-index: 2;
-    }
-
-    .eli-sprite span {
-      position: absolute;
-      display: block;
-      background: currentColor;
-      box-shadow: 0 0 0 1px rgba(0,0,0,.12) inset;
-    }
-
-    .hair { color: #2b1b12; left: calc(var(--px) * 6); top: calc(var(--px) * 1); width: calc(var(--px) * 10); height: calc(var(--px) * 5); clip-path: polygon(0 30%, 15% 0, 38% 8%, 54% 0, 78% 16%, 100% 32%, 88% 100%, 10% 100%); }
-    .face { color: #d19a66; left: calc(var(--px) * 7); top: calc(var(--px) * 5); width: calc(var(--px) * 8); height: calc(var(--px) * 7); border-radius: 0 0 calc(var(--px) * 2) calc(var(--px) * 2); }
-    .ear-l, .ear-r { color: #b97f55; top: calc(var(--px) * 7); width: calc(var(--px) * 1); height: calc(var(--px) * 3); }
-    .ear-l { left: calc(var(--px) * 6); }
-    .ear-r { left: calc(var(--px) * 15); }
-    .eye-l, .eye-r { color: #111820; top: calc(var(--px) * 8); width: calc(var(--px) * 1); height: calc(var(--px) * 1); }
-    .eye-l { left: calc(var(--px) * 9); }
-    .eye-r { left: calc(var(--px) * 13); }
-    .neck { color: #9b6544; left: calc(var(--px) * 10); top: calc(var(--px) * 12); width: calc(var(--px) * 3); height: calc(var(--px) * 2); }
-    .torso { color: #1c2c3c; left: calc(var(--px) * 5); top: calc(var(--px) * 14); width: calc(var(--px) * 12); height: calc(var(--px) * 10); clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%); }
-    .jacket-hi { color: #30465b; left: calc(var(--px) * 7); top: calc(var(--px) * 15); width: calc(var(--px) * 3); height: calc(var(--px) * 7); }
-    .jacket-dark { color: #0f1720; left: calc(var(--px) * 12); top: calc(var(--px) * 15); width: calc(var(--px) * 3); height: calc(var(--px) * 8); }
-    .signal { color: #64f3df; left: calc(var(--px) * 10); top: calc(var(--px) * 16); width: calc(var(--px) * 3); height: calc(var(--px) * 3); box-shadow: 0 0 12px rgba(100,243,223,.8); }
-    .belt { color: #8a6039; left: calc(var(--px) * 5); top: calc(var(--px) * 23); width: calc(var(--px) * 12); height: calc(var(--px) * 2); }
-    .arm-l, .arm-r { color: #243748; top: calc(var(--px) * 15); width: calc(var(--px) * 3); height: calc(var(--px) * 10); }
-    .arm-l { left: calc(var(--px) * 2); transform: rotate(8deg); transform-origin: top right; }
-    .arm-r { left: calc(var(--px) * 17); transform: rotate(-10deg); transform-origin: top left; }
-    .hand-l, .hand-r { color: #d19a66; top: calc(var(--px) * 24); width: calc(var(--px) * 3); height: calc(var(--px) * 2); }
-    .hand-l { left: calc(var(--px) * 1); }
-    .hand-r { left: calc(var(--px) * 18); }
-    .tool { color: #7fffd4; left: calc(var(--px) * 18); top: calc(var(--px) * 21); width: calc(var(--px) * 2); height: calc(var(--px) * 5); box-shadow: 0 0 12px rgba(127,255,212,.75); }
-    .leg-l, .leg-r { color: #172230; top: calc(var(--px) * 25); width: calc(var(--px) * 4); height: calc(var(--px) * 4); }
-    .leg-l { left: calc(var(--px) * 6); }
-    .leg-r { left: calc(var(--px) * 12); }
-    .boot-l, .boot-r { color: #0b0f15; top: calc(var(--px) * 29); width: calc(var(--px) * 5); height: calc(var(--px) * 2); }
-    .boot-l { left: calc(var(--px) * 5); }
-    .boot-r { left: calc(var(--px) * 12); }
-
-    .teaser-copy {
-      position: relative;
-      z-index: 1;
-      align-self: center;
-    }
-
-    .teaser-copy h3 {
-      font-size: clamp(24px, 3vw, 36px);
-    }
-
-    .teaser-copy p {
-      color: #b9dec8;
-      margin: 0 0 14px;
-      line-height: 1.65;
-      font-size: 14px;
+    .teaser,
+    .about {
+      padding: 24px;
     }
 
     .terminal {
-      position: relative;
-      z-index: 1;
       border: 1px solid rgba(157,255,110,.20);
       border-radius: 14px;
       background: rgba(0,0,0,.26);
@@ -740,27 +343,6 @@
       font-size: 13px;
       line-height: 1.65;
       margin-top: 16px;
-    }
-
-    .about {
-      padding: 24px;
-      display: grid;
-      grid-template-columns: .95fr 1.05fr;
-      gap: 24px;
-      align-items: start;
-    }
-
-    .about p {
-      position: relative;
-      z-index: 1;
-      margin: 0;
-      color: #b9dec8;
-      line-height: 1.65;
-      font-size: 14px;
-    }
-
-    .about strong {
-      color: var(--text);
     }
 
     footer {
@@ -779,55 +361,15 @@
       flex-wrap: wrap;
     }
 
-    @media (max-width: 940px) {
-      .card.featured,
-      .teaser,
-      .about {
-        grid-template-columns: 1fr;
-      }
-
-      .featured .game-art {
-        min-height: 220px;
-        border-right: 0;
-        border-bottom: 1px solid rgba(127,255,212,.13);
-      }
-
-      .card {
-        grid-column: span 6;
-      }
-    }
-
-    @media (max-width: 680px) {
-      .wrap {
-        width: min(var(--max), calc(100% - 22px));
-      }
-
-      .site-bar {
+    @media (max-width: 800px) {
+      .topbar,
+      .section-head {
         align-items: flex-start;
         flex-direction: column;
       }
 
       nav {
         justify-content: flex-start;
-        gap: 10px;
-        font-size: 11px;
-      }
-
-      header {
-        padding-top: 22px;
-      }
-
-      .hero {
-        padding: 22px;
-      }
-
-      .hero-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .section-head {
-        align-items: flex-start;
-        flex-direction: column;
       }
 
       .section-note {
@@ -836,28 +378,18 @@
 
       .card {
         grid-column: span 12;
-        min-height: auto;
       }
 
-      .game-art {
-        min-height: 168px;
-      }
-
-      .ticket-row {
+      .ticket {
         grid-template-columns: 1fr;
       }
 
       .actions {
         flex-direction: column;
-        align-items: stretch;
       }
 
       .btn {
         width: 100%;
-      }
-
-      .eli-sprite {
-        --px: 6px;
       }
     }
   </style>
@@ -865,12 +397,8 @@
 
 <body>
   <main class="wrap">
-    <div class="site-bar">
-      <a class="brand-mini" href="#top" aria-label="Skab Digital Reality Arcade home">
-        <span class="logo-pip" aria-hidden="true"></span>
-        <span>Skab Digital Reality Arcade</span>
-      </a>
-
+    <div class="topbar">
+      <a class="brand" href="#top">Skab Digital Reality Arcade</a>
       <nav aria-label="Primary navigation">
         <a href="#games">Games</a>
         <a href="#support">Support</a>
@@ -879,116 +407,103 @@
       </nav>
     </div>
 
-    <header id="top">
-      <section class="hero" aria-labelledby="site-title">
-        <div class="eyebrow"><span class="dot"></span> Browser-first prototype hub</div>
+    <header id="top" class="hero panel">
+      <div class="eyebrow"><span class="dot"></span> Browser-first prototype hub</div>
+      <h1>Skab <span class="accent">Digital Reality Arcade</span></h1>
+      <p class="subtitle">
+        Retro-inspired browser games and mini-game prototypes built for quick play on phones,
+        laptops, tablets, desktops, and connected displays. No install. Open the link, test the loop,
+        report what breaks, and keep moving.
+      </p>
 
-        <h1 id="site-title">Skab <span class="title-accent">Digital Reality Arcade</span></h1>
+      <div class="device-strip">
+        <span class="pill">Phone browser</span>
+        <span class="pill">Laptop</span>
+        <span class="pill">Tablet</span>
+        <span class="pill">Desktop</span>
+        <span class="pill">Connected display</span>
+      </div>
 
-        <p class="subtitle">
-          Retro-inspired browser games and mini-game prototypes built for quick play on phones,
-          laptops, tablets, desktops, and connected displays. No install. Open the link, test the loop,
-          report what breaks, and keep moving.
-        </p>
-
-        <div class="hero-grid" aria-label="Arcade priorities">
-          <div class="hero-stat"><b>Play</b><span>Fast browser launch with playable links and clear status.</span></div>
-          <div class="hero-stat"><b>Test</b><span>Mobile, laptop, tablet, desktop, Wi-Fi, and cellular checks.</span></div>
-          <div class="hero-stat"><b>Improve</b><span>Per-project issue reports feed the next prototype pass.</span></div>
-        </div>
-
-        <div class="device-strip" aria-label="Supported devices">
-          <span class="pill">Phone browser</span>
-          <span class="pill">Laptop</span>
-          <span class="pill">Tablet</span>
-          <span class="pill">Desktop</span>
-          <span class="pill">Connected display</span>
-        </div>
-
-        <div class="actions">
-          <a class="btn" href="#games">Enter Arcade</a>
-          <a class="btn secondary" href="#support">Open Support Desk</a>
-        </div>
-      </section>
+      <div class="actions">
+        <a class="btn" href="#games">Enter Arcade</a>
+        <a class="btn secondary" href="#support">Open Support Desk</a>
+      </div>
     </header>
 
     <section id="games">
       <div class="section-head">
         <h2>Playable Cabinet</h2>
-        <p class="section-note">Game cards now carry both play access and the right place to report trouble.</p>
+        <p class="section-note">Game cards carry both play access and the right place to report trouble.</p>
       </div>
 
-      <div class="game-grid">
-        <article class="card featured">
-          <div class="game-art" aria-hidden="true"><div class="screen"></div></div>
-          <div class="card-content">
-            <div>
-              <div class="kicker">
-                <span class="tag live">Live</span>
-                <span class="tag prototype">FPS-002</span>
-                <span class="tag">Browser FPS</span>
-              </div>
-              <h3>Digital Reality Run</h3>
-              <p class="desc">
-                A first-person recovery run through fractured digital sectors. Cut the command signal,
-                collapse Replicator Stations, shut down Automatons, and enter the Signal Gate.
-              </p>
+      <div class="grid">
+        <article class="card featured panel">
+          <div>
+            <div class="kicker">
+              <span class="tag live">Live</span>
+              <span class="tag prototype">FPS-002</span>
+              <span class="tag">Browser FPS</span>
             </div>
-            <div class="actions">
-              <a class="btn" href="https://skabkleveta-creator.github.io/FPS-002/" target="_blank" rel="noopener">Play FPS-002</a>
-              <a class="btn secondary" href="https://github.com/skabkleveta-creator/FPS-002/issues/new?title=FPS-002%20Issue&body=Game:%20FPS-002%0ADevice:%20%0ABrowser:%20%0ALink%20used:%20%0AWi-Fi%20or%20cellular:%20%0AWhat%20happened:%20%0AExpected%20result:%20" target="_blank" rel="noopener">Report Issue</a>
-            </div>
+            <h3>Digital Reality Run</h3>
+            <p class="desc">
+              A first-person recovery run through fractured digital sectors. Cut the command signal,
+              collapse Replicator Stations, shut down Automatons, and enter the Signal Gate.
+            </p>
+          </div>
+          <div class="actions">
+            <a class="btn" href="https://skabkleveta-creator.github.io/FPS-002/" target="_blank" rel="noopener">Play FPS-002</a>
+            <a class="btn secondary" href="https://github.com/skabkleveta-creator/FPS-002/issues/new" target="_blank" rel="noopener">Report Issue</a>
           </div>
         </article>
 
-        <article class="card">
-          <div class="game-art" aria-hidden="true"><div class="screen ship-screen"></div></div>
-          <div class="card-content">
-            <div>
-              <div class="kicker"><span class="tag live">Live</span><span class="tag">Shooter</span></div>
-              <h3>Blackbox Squadron</h3>
-              <p class="desc">
-                Retro vertical dogfights with power-ups, quick restarts, mobile controls, and score-chasing arcade pressure.
-              </p>
+        <article class="card panel">
+          <div>
+            <div class="kicker">
+              <span class="tag live">Live</span>
+              <span class="tag">Shooter</span>
             </div>
-            <div class="actions">
-              <a class="btn" href="https://skabkleveta-creator.github.io/BLACKBOX_SQUADRON_Public_Game/" target="_blank" rel="noopener">Play</a>
-              <a class="btn secondary" href="https://github.com/skabkleveta-creator/BLACKBOX_SQUADRON_Public_Game/issues/new?title=BLACKBOX%20SQUADRON%20Issue&body=Game:%20BLACKBOX%20SQUADRON%0ADevice:%20%0ABrowser:%20%0ALink%20used:%20%0AWi-Fi%20or%20cellular:%20%0AWhat%20happened:%20%0AExpected%20result:%20" target="_blank" rel="noopener">Report Issue</a>
-            </div>
+            <h3>Blackbox Squadron</h3>
+            <p class="desc">
+              Retro vertical dogfights with power-ups, quick restarts, mobile controls, and score-chasing arcade pressure.
+            </p>
+          </div>
+          <div class="actions">
+            <a class="btn" href="https://skabkleveta-creator.github.io/BLACKBOX_SQUADRON_Public_Game/" target="_blank" rel="noopener">Play</a>
+            <a class="btn secondary" href="https://github.com/skabkleveta-creator/BLACKBOX_SQUADRON_Public_Game/issues/new" target="_blank" rel="noopener">Report Issue</a>
           </div>
         </article>
 
-        <article class="card">
-          <div class="game-art" aria-hidden="true"><div class="screen trace-screen"></div></div>
-          <div class="card-content">
-            <div>
-              <div class="kicker"><span class="tag prototype">Prototype</span><span class="tag pending">Link Pending</span></div>
-              <h3>Connection Trace</h3>
-              <p class="desc">
-                Trace the signal. Mark the fault. Stabilize the broken link before the system loses the route.
-              </p>
+        <article class="card panel">
+          <div>
+            <div class="kicker">
+              <span class="tag prototype">Prototype</span>
+              <span class="tag pending">Link Pending</span>
             </div>
-            <div class="actions">
-              <a class="btn secondary disabled" href="#" aria-disabled="true">Play Pending</a>
-              <a class="btn secondary disabled" href="#" aria-disabled="true">Issue Link Pending</a>
-            </div>
+            <h3>Connection Trace</h3>
+            <p class="desc">
+              Trace the signal. Mark the fault. Stabilize the broken link before the system loses the route.
+            </p>
+          </div>
+          <div class="actions">
+            <a class="btn secondary disabled" href="#">Play Pending</a>
+            <a class="btn secondary disabled" href="#">Issue Link Pending</a>
           </div>
         </article>
 
-        <article class="card">
-          <div class="game-art" aria-hidden="true"><div class="screen run-screen"></div></div>
-          <div class="card-content">
-            <div>
-              <div class="kicker"><span class="tag prototype">Prototype</span><span class="tag pending">Link Pending</span></div>
-              <h3>Anchor Run</h3>
-              <p class="desc">
-                Compact route-running through unstable floors. Recover anchors, validate sectors, and keep the route alive.
-              </p>
+        <article class="card panel">
+          <div>
+            <div class="kicker">
+              <span class="tag prototype">Prototype</span>
+              <span class="tag pending">Link Pending</span>
             </div>
-            <div class="actions">
-              <a class="btn secondary disabled" href="#" aria-disabled="true">Play Pending</a>
-              <a class="btn secondary disabled" href="#" aria-disabled="true">Issue Link Pending</a>
-            </div>
+            <h3>Anchor Run</h3>
+            <p class="desc">
+              Compact route-running through unstable floors. Recover anchors, validate sectors, and keep the route alive.
+            </p>
+          </div>
+          <div class="actions">
+            <a class="btn secondary disabled" href="#">Play Pending</a>
+            <a class="btn secondary disabled" href="#">Issue Link Pending</a>
           </div>
         </article>
       </div>
@@ -997,57 +512,50 @@
     <section id="support">
       <div class="section-head">
         <h2>Support Desk</h2>
-        <p class="section-note">Project-specific ticketing keeps feedback tied to the exact game that broke.</p>
+        <p class="section-note">Project-specific tickets keep feedback tied to the exact game that broke.</p>
       </div>
 
-      <div class="support-panel">
-        <p class="support-intro">
-          Use the correct project issue link whenever possible. A useful issue report should explain the device,
-          browser, network, link used, what happened, and whether the problem changes on Wi-Fi versus cellular.
-        </p>
-
-        <div class="ticket-list" aria-label="Project issue links">
-          <div class="ticket-row">
-            <div>
-              <b>Digital Reality Run / FPS-002</b>
-              <span>For FPS runtime bugs, blank screens, mobile control problems, sector progression, or deployment issues.</span>
-            </div>
-            <a class="btn" href="https://github.com/skabkleveta-creator/FPS-002/issues/new?title=FPS-002%20Issue&body=Game:%20FPS-002%0ADevice:%20%0ABrowser:%20%0ALink%20used:%20%0AWi-Fi%20or%20cellular:%20%0AWhat%20happened:%20%0AExpected%20result:%20" target="_blank" rel="noopener">Create Ticket</a>
+      <div class="panel support-list">
+        <div class="ticket">
+          <div>
+            <b>Digital Reality Run / FPS-002</b>
+            <span>Runtime bugs, blank screens, mobile control problems, sector progression, or deployment issues.</span>
           </div>
-
-          <div class="ticket-row">
-            <div>
-              <b>Blackbox Squadron</b>
-              <span>For shooter controls, power-ups, performance, mobile layout, or public-link access problems.</span>
-            </div>
-            <a class="btn" href="https://github.com/skabkleveta-creator/BLACKBOX_SQUADRON_Public_Game/issues/new?title=BLACKBOX%20SQUADRON%20Issue&body=Game:%20BLACKBOX%20SQUADRON%0ADevice:%20%0ABrowser:%20%0ALink%20used:%20%0AWi-Fi%20or%20cellular:%20%0AWhat%20happened:%20%0AExpected%20result:%20" target="_blank" rel="noopener">Create Ticket</a>
-          </div>
-
-          <div class="ticket-row">
-            <div>
-              <b>Connection Trace</b>
-              <span>Issue link activates when the public repo is finalized.</span>
-            </div>
-            <a class="btn secondary disabled" href="#" aria-disabled="true">Ticket Link Pending</a>
-          </div>
-
-          <div class="ticket-row">
-            <div>
-              <b>Anchor Run</b>
-              <span>Issue link activates when the public repo is finalized.</span>
-            </div>
-            <a class="btn secondary disabled" href="#" aria-disabled="true">Ticket Link Pending</a>
-          </div>
+          <a class="btn" href="https://github.com/skabkleveta-creator/FPS-002/issues/new" target="_blank" rel="noopener">Create Ticket</a>
         </div>
 
-        <div class="tester-template">
-          &gt; TESTER TEMPLATE<br />
-          &gt; Game:<br />
-          &gt; Device: phone / laptop / tablet / desktop / connected display<br />
-          &gt; Browser:<br />
-          &gt; Link used:<br />
-          &gt; Wi-Fi or cellular:<br />
-          &gt; What happened:<br />
+        <div class="ticket">
+          <div>
+            <b>Blackbox Squadron</b>
+            <span>Shooter controls, power-ups, performance, mobile layout, or public-link access problems.</span>
+          </div>
+          <a class="btn" href="https://github.com/skabkleveta-creator/BLACKBOX_SQUADRON_Public_Game/issues/new" target="_blank" rel="noopener">Create Ticket</a>
+        </div>
+
+        <div class="ticket">
+          <div>
+            <b>Connection Trace</b>
+            <span>Issue link activates when the public repo is finalized.</span>
+          </div>
+          <a class="btn secondary disabled" href="#">Ticket Link Pending</a>
+        </div>
+
+        <div class="ticket">
+          <div>
+            <b>Anchor Run</b>
+            <span>Issue link activates when the public repo is finalized.</span>
+          </div>
+          <a class="btn secondary disabled" href="#">Ticket Link Pending</a>
+        </div>
+
+        <div class="terminal">
+          &gt; TESTER TEMPLATE<br>
+          &gt; Game:<br>
+          &gt; Device: phone / laptop / tablet / desktop / connected display<br>
+          &gt; Browser:<br>
+          &gt; Link used:<br>
+          &gt; Wi-Fi or cellular:<br>
+          &gt; What happened:<br>
           &gt; Expected result:
         </div>
       </div>
@@ -1059,53 +567,19 @@
         <p class="section-note">Eli appears as a future-project teaser, not the host of every arcade game.</p>
       </div>
 
-      <div class="teaser">
-        <div class="eli-stage" aria-label="16-bit Eli character teaser">
-          <div class="eli-sprite" aria-hidden="true">
-            <span class="hair"></span>
-            <span class="face"></span>
-            <span class="ear-l"></span>
-            <span class="ear-r"></span>
-            <span class="eye-l"></span>
-            <span class="eye-r"></span>
-            <span class="neck"></span>
-            <span class="torso"></span>
-            <span class="jacket-hi"></span>
-            <span class="jacket-dark"></span>
-            <span class="signal"></span>
-            <span class="belt"></span>
-            <span class="arm-l"></span>
-            <span class="arm-r"></span>
-            <span class="hand-l"></span>
-            <span class="hand-r"></span>
-            <span class="tool"></span>
-            <span class="leg-l"></span>
-            <span class="leg-r"></span>
-            <span class="boot-l"></span>
-            <span class="boot-r"></span>
-          </div>
+      <div class="panel teaser">
+        <div class="eyebrow"><span class="dot"></span> Upcoming Adventure</div>
+        <h3>Learn more about Eli in Reintegration Core</h3>
+        <p class="desc">
+          Eli’s real story begins in Reintegration Core, a restoration-focused systems adventure
+          about broken infrastructure, route logic, terminals, ladders, and the quiet work of bringing purpose back online.
+        </p>
+        <div class="terminal">
+          &gt; ROUTE IS BROKEN. NOT GONE.<br>
+          &gt; SIGNAL IS WEAK, BUT PRESENT.<br>
+          &gt; THIS PLACE REMEMBERS HOW TO WORK.<br>
+          _
         </div>
-
-        <article class="teaser-copy">
-          <div class="eyebrow"><span class="dot"></span> Upcoming Adventure</div>
-          <h3>Learn more about Eli in Reintegration Core</h3>
-          <p>
-            Eli’s real story begins in <strong>Reintegration Core</strong>, a restoration-focused systems adventure
-            about broken infrastructure, route logic, terminals, ladders, and the quiet work of bringing purpose back online.
-          </p>
-          <p>
-            Anchor Run is the closest current prototype to Eli’s movement language. His full adventure is still forming.
-          </p>
-          <div class="terminal">
-            &gt; ROUTE IS BROKEN. NOT GONE.<br />
-            &gt; SIGNAL IS WEAK, BUT PRESENT.<br />
-            &gt; THIS PLACE REMEMBERS HOW TO WORK.<br />
-            <span aria-hidden="true">_</span>
-          </div>
-          <div class="actions">
-            <a class="btn secondary disabled" href="#" aria-disabled="true">Reintegration Core Coming Soon</a>
-          </div>
-        </article>
       </div>
     </section>
 
@@ -1115,21 +589,13 @@
         <p class="section-note">A hobbyist prototype hub, not a studio launch or storefront.</p>
       </div>
 
-      <div class="about">
+      <div class="panel about">
         <p>
           <strong>Skab Digital Reality Arcade</strong> is a personal archive for browser-based prototypes,
           retro-inspired experiments, and mini-games built around systems, signal, and purpose.
           The page is designed as a clean public front door for playable links, tester feedback,
           device-friendly browser access, and occasional teasers for projects still forming.
         </p>
-
-        <div class="terminal">
-          &gt; THE SYSTEMS ARE WAITING.<br />
-          &gt; THE ROUTES ARE STILL THERE.<br />
-          &gt; OPEN ON ANY MODERN BROWSER.<br />
-          &gt; PLAY. TEST. RESTORE.<br />
-          <span aria-hidden="true">_</span>
-        </div>
       </div>
     </section>
 
