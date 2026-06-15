@@ -99,7 +99,13 @@
     .status-row:last-child { border-bottom: 0; padding-bottom: 0; }
 
     .label { color: var(--muted); }
-    .value { color: var(--red); text-align: right; overflow-wrap: anywhere; }
+
+    .value {
+      color: var(--red);
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
     .value.ok { color: var(--green); }
     .value.url { color: var(--amber); }
 
@@ -145,12 +151,24 @@
     }
 
     @media (max-width: 620px) {
-      body { padding: 14px; align-items: stretch; }
+      body {
+        padding: 14px;
+        align-items: stretch;
+      }
+
       .shell { border-radius: 14px; }
+
       main { padding: 24px 18px; }
+
       .actions { grid-template-columns: 1fr; }
-      .status-row { flex-direction: column; gap: 4px; }
+
+      .status-row {
+        flex-direction: column;
+        gap: 4px;
+      }
+
       .value { text-align: left; }
+
       footer { padding: 0 18px 22px; }
     }
   </style>
@@ -158,10 +176,16 @@
 <body>
   <div class="shell">
     <div class="scanline" aria-hidden="true"></div>
+
     <main>
       <div class="eyebrow">Skab Digital Reality Arcade</div>
+
       <h1>SIGNAL LOST</h1>
-      <p class="subhead">The requested route could not be restored. The arcade is still online, but this link is missing, moved, or unreachable.</p>
+
+      <p class="subhead">
+        The requested route could not be restored. The arcade is still online,
+        but this link is missing, moved, or unreachable.
+      </p>
 
       <section class="panel" aria-label="Route status">
         <div class="status-grid">
@@ -169,10 +193,12 @@
             <span class="label">Route Status</span>
             <span class="value">Missing / Unreachable</span>
           </div>
+
           <div class="status-row">
             <span class="label">Requested Location</span>
             <span class="value url" id="requested-url">Loading route...</span>
           </div>
+
           <div class="status-row">
             <span class="label">Recovery Option</span>
             <span class="value ok">Return to Arcade or Email Developer</span>
@@ -181,16 +207,15 @@
       </section>
 
       <nav class="actions" aria-label="Recovery actions">
-
-       <a class="button" href="/skab-digital-reality-arcade/">Return to Arcade</a>
-
-       <a class="button secondary" href="/skab-digital-reality-arcade/#games">Browse Games</a>
-       <a class="button warning" id="report-link" href="mailto:skabdigitalarcade@gmail.com">Email Developer</a>
-
-</nav>
+        <a class="button" href="/skab-digital-reality-arcade/">Return to Arcade</a>
+        <a class="button secondary" href="/skab-digital-reality-arcade/#games">Browse Games</a>
+        <a class="button warning" id="report-link" href="mailto:skabdigitalarcade@gmail.com">Email Developer</a>
+      </nav>
     </main>
+
     <footer>
-      If this route should exist, email the developer so the broken link can be reviewed and corrected. This page is designed for phone, laptop, tablet, and other connected-device browsers.
+      If this route should exist, email the developer so the broken link can be reviewed and corrected.
+      This page is designed for phone, laptop, tablet, and other connected-device browsers.
     </footer>
   </div>
 
@@ -221,7 +246,7 @@
       ].join("\n");
 
       document.getElementById("report-link").href =
-        "mailto:" + encodeURIComponent(supportEmail) +
+        "mailto:" + supportEmail +
         "?subject=" + encodeURIComponent(subject) +
         "&body=" + encodeURIComponent(body);
     }());
