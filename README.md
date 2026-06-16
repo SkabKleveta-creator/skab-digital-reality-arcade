@@ -28,6 +28,14 @@ Designed to run directly in modern browsers on:
 
 A continuous arcade FPS set inside reconstructed digital environments.
 
+Play:
+
+https://skabkleveta-creator.github.io/FPS-002/
+
+Report issues:
+
+https://github.com/skabkleveta-creator/FPS-002/issues/new
+
 Features:
 
 - Fast sector-based runs
@@ -42,6 +50,14 @@ Features:
 
 A retro vertical shooter inspired by classic arcade and console shoot-em-ups.
 
+Play:
+
+https://skabkleveta-creator.github.io/BLACKBOX_SQUADRON_Public_Game/
+
+Report issues:
+
+https://github.com/skabkleveta-creator/BLACKBOX_SQUADRON_Public_Game/issues/new
+
 Features:
 
 - Progressive enemy waves
@@ -51,9 +67,33 @@ Features:
 
 ---
 
+### ANCHOR RUN
+
+A compact route-running prototype built around unstable floors, recovery anchors, sector validation, and keeping the route alive.
+
+Play:
+
+https://skabkleveta-creator.github.io/ANCHOR_RUN_Public_Game/
+
+Report issues:
+
+https://github.com/skabkleveta-creator/ANCHOR_RUN_Public_Game/issues/new
+
+Features:
+
+- Route-running through unstable floors
+- Anchor recovery
+- Sector validation
+- Browser-first gameplay
+- Mobile-friendly controls
+
+---
+
 ### CONNECTION TRACE
 
 A digital infrastructure recovery puzzle game.
+
+Status: Link pending
 
 Core Loop:
 
@@ -63,14 +103,6 @@ Core Loop:
 4. Verify
 
 Players locate faults inside damaged networks and restore connectivity.
-
----
-
-### ANCHOR RUN
-
-A route restoration puzzle adventure.
-
-Players restore movement through broken environments by identifying obstacles, rebuilding routes, and reconnecting systems.
 
 ---
 
@@ -104,7 +136,10 @@ Please include:
 - Game name
 - Device
 - Browser
+- Link used
+- Wi-Fi or cellular
 - What happened
+- Expected result
 - Steps to reproduce
 
 ---
