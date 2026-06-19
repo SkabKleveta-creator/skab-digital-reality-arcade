@@ -1,8 +1,26 @@
 # SKAB DIGITAL REALITY ARCADE
 
-Play original browser-based games inspired by classic arcade design, retro consoles, and experimental gameplay systems.
+Play original browser-based mini-games, arcade prototypes, and testable browser demos built around systems, signal, recovery, route logic, and experimental gameplay.
 
 Built and maintained by Kenneth Kleveta.
+
+Public arcade:
+
+https://skabkleveta-creator.github.io/skab-digital-reality-arcade/
+
+---
+
+## PURPOSE
+
+Skab Digital Reality Arcade started as a practical experiment:
+
+Can small browser games become a low-cost way to learn game design, test ideas quickly, and turn creative momentum into playable proof?
+
+This is not a studio launch or storefront. It is a public workshop for browser-first prototypes, rough playable loops, mobile testing, design iteration, and direct developer feedback.
+
+The goal is not to pretend every prototype is complete.
+
+The goal is to create enough playable evidence to learn what deserves to grow, what needs to be redesigned, and what should be retired.
 
 ---
 
@@ -14,56 +32,41 @@ No installs.
 
 Designed to run directly in modern browsers on:
 
-- Desktop
-- Laptop
-- Tablet
-- Mobile devices
-- Connected displays
+* Phone browsers
+* Tablets
+* Laptops
+* Desktops
+* Connected displays
 
 ---
 
-## CURRENT PROJECTS
+## LIVE PLAYABLE
 
-### FPS-002: DIGITAL REALITY RUN
+### DIGITAL REALITY RUN
 
-A continuous arcade FPS set inside reconstructed digital environments.
+A first-person recovery run through fractured digital sectors. Cut the command signal, collapse Replicator Stations, shut down Automatons, and enter the Signal Gate.
 
 Play:
 
 https://skabkleveta-creator.github.io/FPS-002/
 
-Report issues:
+Status:
 
-https://github.com/skabkleveta-creator/FPS-002/issues/new
-
-Features:
-
-- Fast sector-based runs
-- Replicator Station objectives
-- Signal Baton mechanics
-- Retro-inspired controls
-- Browser-first gameplay
+Live playable
 
 ---
 
 ### BLACKBOX SQUADRON
 
-A retro vertical shooter inspired by classic arcade and console shoot-em-ups.
+A retro vertical shooter with power-ups, quick restarts, mobile controls, and score-chasing arcade pressure.
 
 Play:
 
 https://skabkleveta-creator.github.io/BLACKBOX_SQUADRON_Public_Game/
 
-Report issues:
+Status:
 
-https://github.com/skabkleveta-creator/BLACKBOX_SQUADRON_Public_Game/issues/new
-
-Features:
-
-- Progressive enemy waves
-- Power-ups
-- Mobile touch controls
-- High-score gameplay
+Live playable
 
 ---
 
@@ -75,95 +78,192 @@ Play:
 
 https://skabkleveta-creator.github.io/ANCHOR_RUN_Public_Game/
 
-Report issues:
+Status:
 
-https://github.com/skabkleveta-creator/ANCHOR_RUN_Public_Game/issues/new
-
-Features:
-
-- Route-running through unstable floors
-- Anchor recovery
-- Sector validation
-- Browser-first gameplay
-- Mobile-friendly controls
+Live playable
 
 ---
+
+## INTERNAL ARCADE DEMOS
+
+These demos live inside this arcade repository under the `games/` folder.
+
+### SIGNAL SWEEPER
+
+Fast containment arcade prototype about sweeping corrupted data, restoring signal fragments, and escaping before the grid closes.
+
+Play:
+
+https://skabkleveta-creator.github.io/skab-digital-reality-arcade/games/signal_sweeper/
+
+Status:
+
+In Build Queue / demo folder available
+
+---
+
+### RELAY RUSH
+
+Signal-routing arcade demo focused on timing, pressure, and clean mobile-friendly control flow.
+
+Play:
+
+https://skabkleveta-creator.github.io/skab-digital-reality-arcade/games/relay-rush/
+
+Status:
+
+Testable Demo
+
+---
+
+### NODE BLASTER
+
+Side-scrolling digital tunnel action demo built around continuous movement, pressure, and node-clearing.
+
+Play:
+
+https://skabkleveta-creator.github.io/skab-digital-reality-arcade/games/node-blaster/
+
+Status:
+
+Testable Demo
+
+---
+
+### BREACH DROP
+
+Downward-flowing route breach demo focused on movement, recovery space, and no-dead-end path design.
+
+Play:
+
+https://skabkleveta-creator.github.io/skab-digital-reality-arcade/games/breach-drop/
+
+Status:
+
+Testable Demo
+
+---
+
+## DESIGN REVIEW
 
 ### CONNECTION TRACE
 
-A digital infrastructure recovery puzzle game.
+Connection Trace is being redesigned as a compact diagnostic puzzle about finding the one broken relationship that prevents a system from validating truth.
 
-Status: Link pending
+Current design direction:
 
-Core Loop:
+* Observe
+* Scan
+* Reveal
+* Mark
+* Stabilize
+* Validate
 
-1. Scan
-2. Mark
-3. Stabilize
-4. Verify
+Core rule:
 
-Players locate faults inside damaged networks and restore connectivity.
+The player does not fix everything. The player identifies the critical bad connection.
 
----
+Status:
 
-## DESIGN PHILOSOPHY
-
-Skab Digital Reality Arcade focuses on:
-
-- Small games
-- Complete gameplay loops
-- Browser accessibility
-- Mobile compatibility
-- Retro-inspired design
-- Learn-by-building development
-
-The goal is not massive productions.
-
-The goal is creating playable experiences that can be understood, tested, improved, and shared.
+Concept Under Review
 
 ---
 
-## ISSUE REPORTING
+## FEEDBACK
 
-Found a bug?
+Public feedback is handled by email only.
 
-Have a gameplay suggestion?
+Email:
 
-Use the Issues section associated with the individual project repository.
+[skabdigitalarcade@gmail.com](mailto:skabdigitalarcade@gmail.com)
 
 Please include:
 
-- Game name
-- Device
-- Browser
-- Link used
-- Wi-Fi or cellular
-- What happened
-- Expected result
-- Steps to reproduce
+* Game name
+* Device
+* Browser
+* Link used
+* Wi-Fi or cellular
+* What happened
+* Expected result
+
+GitHub Issues are not the public feedback path for the arcade.
 
 ---
 
-## UPCOMING
+## REPOSITORY STRUCTURE
 
-### Reintegration Core
+Expected structure:
 
-A larger narrative adventure currently in development.
+```text
+/
+├─ index.html
+├─ 404.html
+├─ README.md
+├─ site-version.json
+└─ games/
+   ├─ signal_sweeper/
+   │  └─ index.html
+   ├─ relay-rush/
+   │  └─ index.html
+   ├─ node-blaster/
+   │  └─ index.html
+   └─ breach-drop/
+      └─ index.html
+```
 
-Follow Eli's journey through forgotten systems, abandoned routes, and fractured infrastructure as he attempts to restore continuity across a broken world.
+---
 
-More information coming soon.
+## FRESH VERSION SYSTEM
+
+The homepage uses `site-version.json` to help visitors receive the newest version without needing to manually clear browser cache.
+
+When the arcade homepage is updated, update both:
+
+```text
+index.html
+site-version.json
+```
+
+Current homepage version:
+
+```text
+2026.06.19.008
+```
+
+If the version in `site-version.json` is newer than the loaded page, the homepage redirects itself with a versioned URL.
+
+---
+
+## DEVELOPMENT METHOD
+
+The arcade is built using a lightweight disciplined process:
+
+```text
+IDEA → LOOP → TEST → PATCH → PROOF
+```
+
+Working principles:
+
+* Small enough to finish
+* Real enough to judge
+* Phone-first testing matters
+* One focused patch at a time
+* Design locks prevent drift
+* Field testing beats assumption
+* Broken prototypes are data
 
 ---
 
 ## BUILT WITH
 
-- HTML
-- CSS
-- JavaScript
-- GitHub Pages
+* HTML
+* CSS
+* JavaScript
+* GitHub Pages
 
 ---
 
 Routes still move.
+
 Purpose does not.
