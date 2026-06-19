@@ -1,0 +1,3653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>SIGNAL SWEEPER — Campaign v0.3.3 Scroll View</title>
+<style>
+  :root{
+    --bg:#020611;
+    --panel:#071425;
+    --panel2:#0b2038;
+    --cyan:#42e7ff;
+    --cyan2:#bff9ff;
+    --blue:#2577ff;
+    --green:#67ff9d;
+    --gold:#ffc247;
+    --orange:#ff7c24;
+    --red:#ff365f;
+    --white:#edfaff;
+    --muted:#7ba1b8;
+    --shadow:rgba(0,0,0,.66);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;width:100%;min-height:100%;background:
+    radial-gradient(circle at 50% 0%, rgba(46,188,255,.18), transparent 30%),
+    radial-gradient(circle at 85% 80%, rgba(255,124,36,.10), transparent 24%),
+    linear-gradient(180deg,#061426 0%, #020611 58%, #00030a 100%);
+    color:var(--white);font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;overscroll-behavior:none;}
+  body{display:flex;align-items:center;justify-content:center;padding:10px;touch-action:none;overflow:hidden;}
+  #app{width:min(1180px,100vw);display:flex;flex-direction:column;gap:8px;align-items:center;}
+  #gameShell{position:relative;width:100%;aspect-ratio:16/9;border:1px solid rgba(66,231,255,.76);border-radius:22px;overflow:hidden;background:#030812;box-shadow:0 0 34px rgba(66,231,255,.26), inset 0 0 42px rgba(66,231,255,.12);}
+  canvas{display:block;width:100%;height:100%;background:#030812;touch-action:none;}
+  .screenOverlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:22px;background:
+    radial-gradient(circle at 55% 30%, rgba(43,136,255,.18), transparent 42%),
+    linear-gradient(180deg, rgba(2,6,17,.90), rgba(2,6,17,.78));z-index:8;backdrop-filter:blur(5px);}
+  .panel{width:min(760px,96%);border:1px solid rgba(66,231,255,.76);border-radius:22px;background:linear-gradient(180deg,rgba(5,18,34,.94),rgba(4,11,23,.92));box-shadow:0 0 34px rgba(66,231,255,.22), inset 0 0 30px rgba(66,231,255,.09);padding:22px;position:relative;overflow:hidden;}
+  .panel:before{content:"";position:absolute;inset:-80px;pointer-events:none;background:linear-gradient(115deg,transparent 0%,rgba(66,231,255,.08) 48%,transparent 52%);transform:translateX(-38%);animation:sheen 5.5s ease-in-out infinite;}
+  @keyframes sheen{0%,44%{transform:translateX(-48%)}68%,100%{transform:translateX(52%)}}
+  .panel h1{position:relative;margin:0 0 4px;font-size:clamp(34px,7vw,76px);line-height:.92;letter-spacing:.04em;font-weight:950;color:#f5feff;text-shadow:0 0 22px rgba(66,231,255,.64);}
+  .panel .sub{position:relative;color:var(--gold);letter-spacing:.24em;font-weight:900;font-size:clamp(12px,2vw,18px);margin-bottom:16px;text-transform:uppercase;}
+  .panel p{position:relative;margin:10px 0;color:#d9f8ff;line-height:1.42;font-size:clamp(14px,2.2vw,18px);}
+  .panel .grid{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 8px;}
+  .card{border:1px solid rgba(66,231,255,.32);background:linear-gradient(180deg,rgba(13,38,66,.72),rgba(5,18,34,.66));border-radius:14px;padding:11px;min-height:78px;}
+  .label{font-size:12px;color:var(--cyan);letter-spacing:.15em;font-weight:950;text-transform:uppercase;margin-bottom:6px;}
+  .value{font-size:15px;color:#fff;line-height:1.32;}
+  .startLine{position:relative;margin-top:16px;color:var(--green);font-weight:950;letter-spacing:.08em;text-align:center;text-transform:uppercase;}
+  .hidden{display:none!important;}
+  #touchDeck{width:min(100%,920px);height:134px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 10px 0;user-select:none;touch-action:none;}
+  .joyWrap{display:flex;align-items:center;gap:10px;}
+  #joy{position:relative;width:112px;height:112px;border:2px solid rgba(66,231,255,.62);border-radius:50%;background:radial-gradient(circle, rgba(66,231,255,.20), rgba(6,18,35,.72));box-shadow:0 0 20px rgba(66,231,255,.18), inset 0 0 18px rgba(66,231,255,.16);overflow:hidden;}
+  #joy:before,#joy:after{content:"";position:absolute;background:rgba(191,249,255,.20);left:17%;right:17%;height:2px;top:50%;transform:translateY(-50%);} 
+  #joy:after{top:17%;bottom:17%;width:2px;height:auto;left:50%;right:auto;transform:translateX(-50%);} 
+  #stick{position:absolute;left:50%;top:50%;width:42px;height:42px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,#ffffff 0%,#bff9ff 43%,#42e7ff 100%);box-shadow:0 0 18px rgba(66,231,255,.65);}
+  .deckLabel{font-size:10px;color:#88eaff;letter-spacing:.12em;text-transform:uppercase;text-align:center;margin-top:4px;font-weight:900;}
+  .buttonCluster{display:flex;align-items:center;gap:12px;}
+  .smallCluster{display:flex;flex-direction:column;gap:8px;}
+  .tbtn{border:2px solid rgba(66,231,255,.58);background:linear-gradient(180deg, rgba(18,48,80,.86), rgba(4,14,28,.9));color:#eaffff;border-radius:16px;min-width:66px;height:50px;font-weight:950;letter-spacing:.07em;font-size:12px;box-shadow:0 0 16px rgba(66,231,255,.14);touch-action:none;}
+  .tbtn.primary{width:84px;height:84px;border-radius:50%;font-size:23px;border-color:rgba(66,231,255,.94);color:#031018;background:radial-gradient(circle,#ffffff 0%, #bff9ff 22%, #42e7ff 58%, #197b9d 100%);box-shadow:0 0 24px rgba(66,231,255,.42);}
+  .tbtn.secondary{width:78px;height:78px;border-radius:50%;font-size:23px;border-color:rgba(255,194,71,.94);color:#180b00;background:radial-gradient(circle,#fff4d7 0%, #ffc247 52%, #9d5b0c 100%);box-shadow:0 0 22px rgba(255,194,71,.32);}
+  .tbtn:active,.tbtn.down{transform:translateY(1px) scale(.965);filter:brightness(1.16);}
+  @media (pointer:fine){#touchDeck{display:none;}}
+  @media (max-height:560px){body{padding:4px;}#app{flex-direction:row;align-items:center;}#gameShell{width:calc(100vw - 230px);}#touchDeck{height:100vh;width:222px;flex-direction:column;justify-content:center;padding:4px;}#joy{width:96px;height:96px}.tbtn.primary{width:68px;height:68px}.tbtn.secondary{width:62px;height:62px}.buttonCluster{gap:7px}.smallCluster{flex-direction:row}.tbtn{min-width:52px;height:42px;font-size:10px}.panel{padding:14px}}
+  @media (max-width:560px){body{padding:6px}.panel{padding:14px}.panel .grid{grid-template-columns:1fr}.card{min-height:auto}#touchDeck{height:128px}.tbtn.primary{width:76px;height:76px}.tbtn.secondary{width:70px;height:70px}#joy{width:104px;height:104px}.buttonCluster{gap:8px}.tbtn{min-width:58px}}
+
+  /* v0.3.1 mobile deck patch: portrait phones now use the available lower screen as
+     a deliberate arcade control deck instead of leaving dead black space under the buttons. */
+  @media (pointer:coarse) and (orientation:portrait){
+    html,body{height:100%;height:100dvh;min-height:100dvh;}
+    body{align-items:flex-start;justify-content:center;overflow:hidden;padding:6px;}
+    #app{height:calc(100dvh - 12px);min-height:0;gap:6px;justify-content:flex-start;align-items:center;}
+    #gameShell{flex:0 0 auto;width:100%;}
+    #touchDeck{
+      position:relative;flex:1 1 auto;height:auto;min-height:194px;width:100%;
+      align-items:flex-end;justify-content:space-between;gap:12px;
+      padding:18px 14px max(20px,calc(env(safe-area-inset-bottom) + 12px));
+      border:1px solid rgba(66,231,255,.35);border-top:0;border-radius:0 0 22px 22px;
+      background:
+        radial-gradient(circle at 18% 70%, rgba(66,231,255,.23), transparent 28%),
+        radial-gradient(circle at 84% 68%, rgba(255,194,71,.16), transparent 28%),
+        linear-gradient(180deg, rgba(3,8,18,.62), rgba(2,5,12,.94) 76%);
+      box-shadow:inset 0 0 28px rgba(66,231,255,.08);overflow:hidden;
+    }
+    #touchDeck:before{
+      content:"REPAIR DECK";position:absolute;left:50%;top:12px;transform:translateX(-50%);
+      color:rgba(136,234,255,.36);font-size:10px;font-weight:950;letter-spacing:.28em;text-transform:uppercase;
+      text-shadow:0 0 12px rgba(66,231,255,.22);pointer-events:none;
+    }
+    #touchDeck:after{
+      content:"";position:absolute;inset:0;pointer-events:none;opacity:.32;
+      background:
+        linear-gradient(90deg, transparent 0 10%, rgba(66,231,255,.10) 10.4%, transparent 11%, transparent 89%, rgba(255,194,71,.09) 89.4%, transparent 90%),
+        repeating-linear-gradient(0deg, transparent 0 17px, rgba(66,231,255,.035) 18px);
+    }
+    .joyWrap,.buttonCluster{position:relative;z-index:1;margin-bottom:4px;}
+    #joy{width:clamp(118px,31vw,144px);height:clamp(118px,31vw,144px);}
+    #stick{width:clamp(46px,12vw,58px);height:clamp(46px,12vw,58px);}
+    .buttonCluster{gap:clamp(10px,3vw,16px);}
+    .smallCluster{gap:10px;}
+    .tbtn{min-width:clamp(68px,18vw,82px);height:clamp(52px,13vw,62px);font-size:12px;}
+    .tbtn.primary{width:clamp(86px,23vw,104px);height:clamp(86px,23vw,104px);font-size:25px;}
+    .tbtn.secondary{width:clamp(80px,21vw,98px);height:clamp(80px,21vw,98px);font-size:25px;}
+    .deckLabel{font-size:11px;margin-top:6px;}
+  }
+  @media (pointer:coarse) and (orientation:portrait) and (max-height:720px){
+    #touchDeck{min-height:164px;padding-top:8px;padding-bottom:max(12px,calc(env(safe-area-inset-bottom) + 8px));}
+    #touchDeck:before{display:none;}
+    #joy{width:112px;height:112px;}
+    #stick{width:44px;height:44px;}
+    .tbtn.primary{width:78px;height:78px;}
+    .tbtn.secondary{width:72px;height:72px;}
+    .tbtn{min-width:58px;height:48px;font-size:11px;}
+    .buttonCluster{gap:8px;}
+  }
+
+
+  /* v0.3.2 large-screen mobile patch: keep gameplay unchanged, but make the
+     visual play screen use more of portrait phones and stop the control deck
+     from consuming the whole lower viewport. */
+  @media (pointer:coarse) and (orientation:portrait){
+    html,body{height:auto;min-height:100dvh;}
+    body{align-items:flex-start;justify-content:center;overflow:hidden;padding:6px;}
+    #app{
+      height:auto;min-height:0;width:100%;max-width:980px;gap:6px;
+      justify-content:flex-start;align-items:center;
+    }
+    #gameShell{
+      flex:0 0 auto;width:100%;aspect-ratio:4/3;height:auto;
+      border-radius:24px;
+      box-shadow:0 0 34px rgba(66,231,255,.30), inset 0 0 46px rgba(66,231,255,.13);
+    }
+    #touchDeck{
+      flex:0 0 auto;width:100%;height:clamp(226px,30dvh,326px);min-height:0;
+      align-items:center;justify-content:space-between;gap:12px;
+      padding:12px 18px max(14px,calc(env(safe-area-inset-bottom) + 10px));
+      border:1px solid rgba(66,231,255,.35);border-top:0;border-radius:0 0 24px 24px;
+      background:
+        radial-gradient(circle at 18% 58%, rgba(66,231,255,.24), transparent 28%),
+        radial-gradient(circle at 84% 58%, rgba(255,194,71,.18), transparent 28%),
+        linear-gradient(180deg, rgba(3,8,18,.78), rgba(2,5,12,.96) 82%);
+      box-shadow:inset 0 0 28px rgba(66,231,255,.09), 0 12px 26px rgba(0,0,0,.36);
+      overflow:hidden;
+    }
+    #touchDeck:before{
+      content:"REPAIR DECK";position:absolute;left:50%;top:8px;transform:translateX(-50%);
+      color:rgba(136,234,255,.30);font-size:9px;font-weight:950;letter-spacing:.28em;text-transform:uppercase;
+      text-shadow:0 0 12px rgba(66,231,255,.18);pointer-events:none;
+    }
+    .joyWrap,.buttonCluster{position:relative;z-index:1;margin-bottom:0;}
+    #joy{width:clamp(112px,28vw,142px);height:clamp(112px,28vw,142px);}
+    #stick{width:clamp(44px,11vw,58px);height:clamp(44px,11vw,58px);}
+    .buttonCluster{gap:clamp(10px,3vw,16px);}
+    .smallCluster{gap:10px;}
+    .tbtn{min-width:clamp(62px,16vw,82px);height:clamp(48px,12vw,62px);font-size:12px;}
+    .tbtn.primary{width:clamp(80px,21vw,104px);height:clamp(80px,21vw,104px);font-size:25px;}
+    .tbtn.secondary{width:clamp(74px,20vw,98px);height:clamp(74px,20vw,98px);font-size:25px;}
+    .deckLabel{font-size:11px;margin-top:6px;}
+  }
+  @media (pointer:coarse) and (orientation:portrait) and (max-height:760px){
+    #gameShell{aspect-ratio:16/11;}
+    #touchDeck{height:clamp(188px,28dvh,250px);padding-top:8px;padding-bottom:max(10px,calc(env(safe-area-inset-bottom) + 8px));}
+    #touchDeck:before{display:none;}
+    #joy{width:104px;height:104px;}
+    #stick{width:42px;height:42px;}
+    .tbtn.primary{width:76px;height:76px;}
+    .tbtn.secondary{width:70px;height:70px;}
+    .tbtn{min-width:56px;height:46px;font-size:11px;}
+    .buttonCluster{gap:8px;}
+  }
+
+
+
+  /* v0.3.3 portrait scrolling patch:
+     - restore the controller deck to the lower part of the screen
+     - let the deck fill the remaining viewport instead of leaving dead space
+     - support a larger-feeling game view with camera scrolling */
+  @media (pointer:coarse) and (orientation:portrait){
+    html,body{height:100%;min-height:100dvh;}
+    body{align-items:flex-start;justify-content:center;overflow:hidden;padding:6px;}
+    #app{
+      width:100%;max-width:980px;
+      height:calc(100dvh - 12px);
+      min-height:calc(100dvh - 12px);
+      gap:4px;
+      justify-content:flex-start;
+      align-items:center;
+    }
+    #gameShell{
+      flex:0 0 auto;
+      width:100%;
+      aspect-ratio:16/9;
+      min-height:262px;
+      max-height:min(54dvh, calc((100vw - 12px) * .60));
+      border-radius:22px 22px 0 0;
+      box-shadow:0 0 36px rgba(66,231,255,.30), inset 0 0 46px rgba(66,231,255,.13);
+    }
+    #touchDeck{
+      flex:1 1 auto;
+      width:100%;
+      height:auto;
+      min-height:0;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:14px;
+      padding:16px 16px max(16px,calc(env(safe-area-inset-bottom) + 14px));
+      border:1px solid rgba(66,231,255,.35);
+      border-top:0;
+      border-radius:0 0 22px 22px;
+      background:
+        radial-gradient(circle at 18% 72%, rgba(66,231,255,.24), transparent 30%),
+        radial-gradient(circle at 84% 76%, rgba(255,194,71,.18), transparent 28%),
+        linear-gradient(180deg, rgba(3,8,18,.86), rgba(2,5,12,.98) 84%);
+      box-shadow:inset 0 0 28px rgba(66,231,255,.09), 0 12px 26px rgba(0,0,0,.36);
+      overflow:hidden;
+    }
+    #touchDeck:before{
+      content:"REPAIR DECK";
+      position:absolute;left:50%;top:10px;transform:translateX(-50%);
+      color:rgba(136,234,255,.30);font-size:9px;font-weight:950;letter-spacing:.28em;text-transform:uppercase;
+      text-shadow:0 0 12px rgba(66,231,255,.18);pointer-events:none;
+    }
+    .joyWrap,.buttonCluster{position:relative;z-index:1;align-self:flex-end;margin-bottom:0;}
+    .buttonCluster{padding-bottom:4px;}
+    #joy{width:clamp(112px,28vw,142px);height:clamp(112px,28vw,142px);}
+    #stick{width:clamp(44px,11vw,58px);height:clamp(44px,11vw,58px);}
+    .buttonCluster{gap:clamp(10px,3vw,16px);}
+    .smallCluster{gap:10px;}
+    .tbtn{min-width:clamp(62px,16vw,82px);height:clamp(48px,12vw,62px);font-size:12px;}
+    .tbtn.primary{width:clamp(80px,21vw,104px);height:clamp(80px,21vw,104px);font-size:25px;}
+    .tbtn.secondary{width:clamp(74px,20vw,98px);height:clamp(74px,20vw,98px);font-size:25px;}
+    .deckLabel{font-size:11px;margin-top:6px;}
+  }
+  @media (pointer:coarse) and (orientation:portrait) and (max-height:760px){
+    #gameShell{min-height:240px;max-height:min(50dvh, calc((100vw - 12px) * .58));}
+    #touchDeck{padding-top:10px;padding-bottom:max(12px,calc(env(safe-area-inset-bottom) + 10px));}
+    #touchDeck:before{display:none;}
+    #joy{width:104px;height:104px;}
+    #stick{width:42px;height:42px;}
+    .tbtn.primary{width:76px;height:76px;}
+    .tbtn.secondary{width:70px;height:70px;}
+    .tbtn{min-width:56px;height:46px;font-size:11px;}
+    .buttonCluster{gap:8px;}
+  }
+
+</style>
+</head>
+<body>
+<main id="app" aria-label="Signal Sweeper game">
+  <div id="gameShell">
+    <canvas id="game" aria-label="Signal Sweeper canvas"></canvas>
+    <div id="intro" class="screenOverlay">
+      <section class="panel">
+        <h1>SIGNAL SWEEPER</h1>
+        <div class="sub">ARCADE GRID REPAIR</div>
+        <p><strong>Clean. Restore. Survive.</strong> You are the repair agent inside a live AI chamber. Sweep corruption, collect signal, restore nodes, and break out through the exit before correction drones close the room.</p>
+        <div class="grid">
+          <div class="card"><div class="label">Core Loop</div><div class="value">Move → Collect → Sweep → Restore → Exit</div></div>
+          <div class="card"><div class="label">Keyboard</div><div class="value">Move: WASD/Arrows<br>A: Z/Space Sweep<br>B: X/Shift Dash</div></div>
+          <div class="card"><div class="label">Touch</div><div class="value">Left thumb pad moves. Right A sweeps/restores. B dashes.</div></div>
+          <div class="card"><div class="label">Objective</div><div class="value">Clear 5 escalating grids. Collect signal, restore every node, reach EXIT.</div></div>
+        </div>
+        <div class="startLine">Press Enter / Space / A to begin</div>
+      </section>
+    </div>
+    <div id="briefing" class="screenOverlay hidden">
+      <section class="panel">
+        <h1 style="font-size:clamp(28px,5vw,58px)">OBJECTIVE</h1>
+        <div class="sub">GRID REPAIR REMINDER</div>
+        <p><strong>A / Sweep Pulse</strong> clears corruption, stuns drones, and restores a node when you are close enough and have enough signal.</p>
+        <p><strong>B / Dash</strong> is a short emergency burst. Use it to cross scanner cones, not to fly through the whole chamber.</p>
+        <p>The exit opens after <strong>all required nodes</strong> are restored. Follow the cyan objective arrow if you lose the path.</p>
+        <div class="startLine">Press Select / Tab to return</div>
+      </section>
+    </div>
+  </div>
+
+  <div id="touchDeck" aria-label="Touch controls">
+    <div class="joyWrap">
+      <div>
+        <div id="joy" role="button" aria-label="Move thumb pad"><div id="stick"></div></div>
+        <div class="deckLabel">Move</div>
+      </div>
+    </div>
+    <div class="buttonCluster">
+      <div class="smallCluster">
+        <button id="selectBtn" class="tbtn" type="button">SELECT</button>
+        <button id="startBtn" class="tbtn" type="button">START</button>
+      </div>
+      <button id="bBtn" class="tbtn secondary" type="button">B</button>
+      <button id="aBtn" class="tbtn primary" type="button">A</button>
+    </div>
+  </div>
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  const BASE_W = 1024;
+  const BASE_H = 576;
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const intro = document.getElementById('intro');
+  const briefing = document.getElementById('briefing');
+  const joy = document.getElementById('joy');
+  const stick = document.getElementById('stick');
+  const aBtn = document.getElementById('aBtn');
+  const bBtn = document.getElementById('bBtn');
+  const startBtn = document.getElementById('startBtn');
+  const selectBtn = document.getElementById('selectBtn');
+
+  const keys = Object.create(null);
+  const pressed = { a:false, b:false, start:false, select:false, restart:false };
+  const touchMove = { x:0, y:0 };
+  let state = 'intro';
+  let lastTime = performance.now();
+  let t = 0;
+  let score = 0;
+  let combo = 0;
+  let comboTimer = 0;
+  let objective = 'A: SWEEP FIRST CORRUPTION';
+  let objectiveFlash = 1.2;
+  let screenShake = 0;
+  let endingText = '';
+  let currentLevel = 0;
+  let currentConfig = null;
+
+  const rand = (a,b) => a + Math.random() * (b - a);
+  const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+  const lerp = (a,b,m) => a + (b-a) * m;
+  const dist = (ax,ay,bx,by) => Math.hypot(ax-bx, ay-by);
+  const angleDiff = (a,b) => Math.atan2(Math.sin(a-b), Math.cos(a-b));
+  const now = () => performance.now();
+
+  const player = {
+    x: 96, y: 472, r: 13,
+    vx: 0, vy: 0, facing: 0,
+    speed: 182,
+    integrity: 100,
+    fragments: 0,
+    nodes: 0,
+    dashTime: 0,
+    dashCooldown: 0,
+    sweepCooldown: 0,
+    invuln: 0,
+    glow: 0
+  };
+
+  const camera = { x:0, y:0, targetX:0, targetY:0, zoom:1, viewW:BASE_W, viewH:BASE_H };
+
+  const exit = { x: 924, y: 258, w: 68, h: 92, open:false, pulse:0 };
+
+  const walls = [
+    {x:34,y:58,w:250,h:20}, {x:34,y:58,w:20,h:118},
+    {x:144,y:176,w:20,h:104}, {x:54,y:280,w:238,h:20},
+    {x:288,y:112,w:20,h:132}, {x:308,y:112,w:142,h:20},
+    {x:450,y:112,w:20,h:112}, {x:336,y:336,w:226,h:20},
+    {x:542,y:212,w:20,h:124}, {x:628,y:78,w:276,h:20},
+    {x:628,y:98,w:20,h:134}, {x:704,y:242,w:196,h:20},
+    {x:880,y:242,w:20,h:120}, {x:664,y:392,w:218,h:20},
+    {x:664,y:316,w:20,h:76}, {x:206,y:398,w:20,h:96},
+    {x:284,y:470,w:190,h:20}, {x:94,y:388,w:86,h:14},
+    {x:474,y:456,w:120,h:18}, {x:768,y:478,w:136,h:16}
+  ];
+
+  const fragmentSeed = [
+    [116,420],[142,364],[224,238],[306,282],[382,212],[420,286],[486,404],
+    [554,144],[612,272],[692,126],[752,188],[790,342],[864,178],[904,418]
+  ];
+
+  const corruptionSeed = [
+    {x:118,y:378,r:46,hp:1,seed:1},
+    {x:240,y:232,r:42,hp:1,seed:2},
+    {x:390,y:238,r:54,hp:2,seed:3},
+    {x:484,y:384,r:52,hp:1,seed:4},
+    {x:586,y:154,r:48,hp:1,seed:5},
+    {x:650,y:270,r:56,hp:2,seed:6},
+    {x:792,y:332,r:52,hp:1,seed:7},
+    {x:868,y:406,r:48,hp:1,seed:8},
+    {x:736,y:132,r:42,hp:1,seed:9}
+  ];
+
+  const nodeSeed = [
+    {x:194,y:222,requirement:2,label:'NODE 1'},
+    {x:520,y:134,requirement:7,label:'NODE 2'},
+    {x:748,y:350,requirement:11,label:'NODE 3'}
+  ];
+
+  const droneSeed = [
+    {x:142,y:142,r:15,speed:76,activeAt:1,path:[[142,142],[354,160],[350,300],[138,314]],target:1,scanRange:132,scanHalf:.36},
+    {x:674,y:146,r:15,speed:82,activeAt:2,path:[[674,146],[842,148],[832,318],[696,318]],target:1,scanRange:142,scanHalf:.36},
+    {x:478,y:444,r:14,speed:70,activeAt:3,path:[[478,444],[640,438],[640,500],[406,506]],target:1,scanRange:120,scanHalf:.32}
+  ];
+
+
+  const LEVELS = [
+    {
+        "id": "GRID 01",
+        "name": "REPAIR BAY",
+        "start": {
+            "x": 96,
+            "y": 472
+        },
+        "exit": {
+            "x": 924,
+            "y": 258,
+            "w": 68,
+            "h": 92
+        },
+        "firstObjective": "GRID 01: SWEEP FIRST CORRUPTION",
+        "playerSpeed": 182,
+        "sweepCooldown": 0.42,
+        "dashCooldown": 0.78,
+        "threatStart": 75,
+        "threatRate": 0.002,
+        "corruptionDrain": 5.2,
+        "scannerDamage": 13,
+        "contactDamage": 18,
+        "walls": [
+            {
+                "x": 34,
+                "y": 58,
+                "w": 250,
+                "h": 20
+            },
+            {
+                "x": 34,
+                "y": 58,
+                "w": 20,
+                "h": 118
+            },
+            {
+                "x": 144,
+                "y": 176,
+                "w": 20,
+                "h": 104
+            },
+            {
+                "x": 54,
+                "y": 280,
+                "w": 238,
+                "h": 20
+            },
+            {
+                "x": 288,
+                "y": 112,
+                "w": 20,
+                "h": 132
+            },
+            {
+                "x": 308,
+                "y": 112,
+                "w": 142,
+                "h": 20
+            },
+            {
+                "x": 450,
+                "y": 112,
+                "w": 20,
+                "h": 112
+            },
+            {
+                "x": 336,
+                "y": 336,
+                "w": 226,
+                "h": 20
+            },
+            {
+                "x": 542,
+                "y": 212,
+                "w": 20,
+                "h": 124
+            },
+            {
+                "x": 628,
+                "y": 78,
+                "w": 276,
+                "h": 20
+            },
+            {
+                "x": 628,
+                "y": 98,
+                "w": 20,
+                "h": 134
+            },
+            {
+                "x": 704,
+                "y": 242,
+                "w": 196,
+                "h": 20
+            },
+            {
+                "x": 880,
+                "y": 242,
+                "w": 20,
+                "h": 120
+            },
+            {
+                "x": 664,
+                "y": 392,
+                "w": 218,
+                "h": 20
+            },
+            {
+                "x": 664,
+                "y": 316,
+                "w": 20,
+                "h": 76
+            },
+            {
+                "x": 206,
+                "y": 398,
+                "w": 20,
+                "h": 96
+            },
+            {
+                "x": 284,
+                "y": 470,
+                "w": 190,
+                "h": 20
+            },
+            {
+                "x": 94,
+                "y": 388,
+                "w": 86,
+                "h": 14
+            },
+            {
+                "x": 474,
+                "y": 456,
+                "w": 120,
+                "h": 18
+            },
+            {
+                "x": 768,
+                "y": 478,
+                "w": 136,
+                "h": 16
+            }
+        ],
+        "fragments": [
+            [
+                116,
+                420
+            ],
+            [
+                142,
+                364
+            ],
+            [
+                224,
+                238
+            ],
+            [
+                306,
+                282
+            ],
+            [
+                382,
+                212
+            ],
+            [
+                420,
+                286
+            ],
+            [
+                486,
+                404
+            ],
+            [
+                554,
+                144
+            ],
+            [
+                612,
+                272
+            ],
+            [
+                692,
+                126
+            ],
+            [
+                752,
+                188
+            ],
+            [
+                790,
+                342
+            ],
+            [
+                864,
+                178
+            ],
+            [
+                904,
+                418
+            ]
+        ],
+        "corruption": [
+            {
+                "x": 118,
+                "y": 378,
+                "r": 46,
+                "hp": 1,
+                "seed": 1
+            },
+            {
+                "x": 240,
+                "y": 232,
+                "r": 42,
+                "hp": 1,
+                "seed": 2
+            },
+            {
+                "x": 390,
+                "y": 238,
+                "r": 54,
+                "hp": 2,
+                "seed": 3
+            },
+            {
+                "x": 484,
+                "y": 384,
+                "r": 52,
+                "hp": 1,
+                "seed": 4
+            },
+            {
+                "x": 586,
+                "y": 154,
+                "r": 48,
+                "hp": 1,
+                "seed": 5
+            },
+            {
+                "x": 650,
+                "y": 270,
+                "r": 56,
+                "hp": 2,
+                "seed": 6
+            },
+            {
+                "x": 792,
+                "y": 332,
+                "r": 52,
+                "hp": 1,
+                "seed": 7
+            },
+            {
+                "x": 868,
+                "y": 406,
+                "r": 48,
+                "hp": 1,
+                "seed": 8
+            },
+            {
+                "x": 736,
+                "y": 132,
+                "r": 42,
+                "hp": 1,
+                "seed": 9
+            }
+        ],
+        "nodes": [
+            {
+                "x": 194,
+                "y": 222,
+                "requirement": 2,
+                "label": "NODE 1"
+            },
+            {
+                "x": 520,
+                "y": 134,
+                "requirement": 7,
+                "label": "NODE 2"
+            },
+            {
+                "x": 748,
+                "y": 350,
+                "requirement": 11,
+                "label": "NODE 3"
+            }
+        ],
+        "drones": [
+            {
+                "x": 142,
+                "y": 142,
+                "r": 15,
+                "speed": 76,
+                "activeAt": 1,
+                "path": [
+                    [
+                        142,
+                        142
+                    ],
+                    [
+                        354,
+                        160
+                    ],
+                    [
+                        350,
+                        300
+                    ],
+                    [
+                        138,
+                        314
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 132,
+                "scanHalf": 0.36
+            },
+            {
+                "x": 674,
+                "y": 146,
+                "r": 15,
+                "speed": 82,
+                "activeAt": 2,
+                "path": [
+                    [
+                        674,
+                        146
+                    ],
+                    [
+                        842,
+                        148
+                    ],
+                    [
+                        832,
+                        318
+                    ],
+                    [
+                        696,
+                        318
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 142,
+                "scanHalf": 0.36
+            },
+            {
+                "x": 478,
+                "y": 444,
+                "r": 14,
+                "speed": 70,
+                "activeAt": 3,
+                "path": [
+                    [
+                        478,
+                        444
+                    ],
+                    [
+                        640,
+                        438
+                    ],
+                    [
+                        640,
+                        500
+                    ],
+                    [
+                        406,
+                        506
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 120,
+                "scanHalf": 0.32
+            }
+        ]
+    },
+    {
+        "id": "GRID 02",
+        "name": "CROSSLOAD RELAY",
+        "start": {
+            "x": 88,
+            "y": 486
+        },
+        "exit": {
+            "x": 918,
+            "y": 82,
+            "w": 70,
+            "h": 86
+        },
+        "firstObjective": "GRID 02: RESTORE THE CROSSLOAD RELAY",
+        "playerSpeed": 184,
+        "sweepCooldown": 0.43,
+        "dashCooldown": 0.82,
+        "threatStart": 66,
+        "threatRate": 0.0028,
+        "corruptionDrain": 5.9,
+        "scannerDamage": 14.5,
+        "contactDamage": 19.5,
+        "walls": [
+            {
+                "x": 48,
+                "y": 68,
+                "w": 280,
+                "h": 18
+            },
+            {
+                "x": 48,
+                "y": 68,
+                "w": 18,
+                "h": 142
+            },
+            {
+                "x": 142,
+                "y": 202,
+                "w": 18,
+                "h": 126
+            },
+            {
+                "x": 70,
+                "y": 328,
+                "w": 230,
+                "h": 18
+            },
+            {
+                "x": 300,
+                "y": 124,
+                "w": 18,
+                "h": 170
+            },
+            {
+                "x": 318,
+                "y": 124,
+                "w": 146,
+                "h": 18
+            },
+            {
+                "x": 446,
+                "y": 142,
+                "w": 18,
+                "h": 114
+            },
+            {
+                "x": 368,
+                "y": 292,
+                "w": 214,
+                "h": 18
+            },
+            {
+                "x": 562,
+                "y": 210,
+                "w": 18,
+                "h": 126
+            },
+            {
+                "x": 632,
+                "y": 76,
+                "w": 220,
+                "h": 18
+            },
+            {
+                "x": 632,
+                "y": 94,
+                "w": 18,
+                "h": 126
+            },
+            {
+                "x": 704,
+                "y": 236,
+                "w": 220,
+                "h": 18
+            },
+            {
+                "x": 904,
+                "y": 236,
+                "w": 18,
+                "h": 118
+            },
+            {
+                "x": 664,
+                "y": 384,
+                "w": 248,
+                "h": 18
+            },
+            {
+                "x": 664,
+                "y": 318,
+                "w": 18,
+                "h": 66
+            },
+            {
+                "x": 218,
+                "y": 418,
+                "w": 18,
+                "h": 86
+            },
+            {
+                "x": 302,
+                "y": 468,
+                "w": 186,
+                "h": 18
+            },
+            {
+                "x": 496,
+                "y": 448,
+                "w": 122,
+                "h": 18
+            },
+            {
+                "x": 756,
+                "y": 468,
+                "w": 156,
+                "h": 18
+            },
+            {
+                "x": 838,
+                "y": 74,
+                "w": 18,
+                "h": 70
+            }
+        ],
+        "fragments": [
+            [
+                112,
+                446
+            ],
+            [
+                150,
+                386
+            ],
+            [
+                228,
+                292
+            ],
+            [
+                250,
+                184
+            ],
+            [
+                346,
+                206
+            ],
+            [
+                390,
+                274
+            ],
+            [
+                486,
+                190
+            ],
+            [
+                502,
+                356
+            ],
+            [
+                556,
+                420
+            ],
+            [
+                610,
+                262
+            ],
+            [
+                680,
+                128
+            ],
+            [
+                722,
+                198
+            ],
+            [
+                790,
+                302
+            ],
+            [
+                842,
+                356
+            ],
+            [
+                884,
+                224
+            ],
+            [
+                898,
+                438
+            ]
+        ],
+        "corruption": [
+            {
+                "x": 132,
+                "y": 394,
+                "r": 48,
+                "hp": 1,
+                "seed": 11
+            },
+            {
+                "x": 246,
+                "y": 256,
+                "r": 45,
+                "hp": 2,
+                "seed": 12
+            },
+            {
+                "x": 382,
+                "y": 220,
+                "r": 52,
+                "hp": 2,
+                "seed": 13
+            },
+            {
+                "x": 508,
+                "y": 354,
+                "r": 50,
+                "hp": 2,
+                "seed": 14
+            },
+            {
+                "x": 586,
+                "y": 168,
+                "r": 50,
+                "hp": 1,
+                "seed": 15
+            },
+            {
+                "x": 666,
+                "y": 266,
+                "r": 58,
+                "hp": 2,
+                "seed": 16
+            },
+            {
+                "x": 788,
+                "y": 330,
+                "r": 54,
+                "hp": 2,
+                "seed": 17
+            },
+            {
+                "x": 850,
+                "y": 152,
+                "r": 44,
+                "hp": 1,
+                "seed": 18
+            },
+            {
+                "x": 864,
+                "y": 426,
+                "r": 50,
+                "hp": 2,
+                "seed": 19
+            },
+            {
+                "x": 308,
+                "y": 440,
+                "r": 42,
+                "hp": 1,
+                "seed": 20
+            }
+        ],
+        "nodes": [
+            {
+                "x": 186,
+                "y": 176,
+                "requirement": 3,
+                "label": "NODE 1"
+            },
+            {
+                "x": 500,
+                "y": 342,
+                "requirement": 7,
+                "label": "NODE 2"
+            },
+            {
+                "x": 690,
+                "y": 142,
+                "requirement": 11,
+                "label": "NODE 3"
+            },
+            {
+                "x": 828,
+                "y": 438,
+                "requirement": 15,
+                "label": "NODE 4"
+            }
+        ],
+        "drones": [
+            {
+                "x": 126,
+                "y": 138,
+                "r": 15,
+                "speed": 84,
+                "activeAt": 1,
+                "path": [
+                    [
+                        126,
+                        138
+                    ],
+                    [
+                        348,
+                        158
+                    ],
+                    [
+                        342,
+                        302
+                    ],
+                    [
+                        126,
+                        302
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 138,
+                "scanHalf": 0.38
+            },
+            {
+                "x": 618,
+                "y": 134,
+                "r": 15,
+                "speed": 88,
+                "activeAt": 1,
+                "path": [
+                    [
+                        618,
+                        134
+                    ],
+                    [
+                        858,
+                        136
+                    ],
+                    [
+                        858,
+                        310
+                    ],
+                    [
+                        646,
+                        310
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 150,
+                "scanHalf": 0.38
+            },
+            {
+                "x": 444,
+                "y": 450,
+                "r": 15,
+                "speed": 82,
+                "activeAt": 2,
+                "path": [
+                    [
+                        444,
+                        450
+                    ],
+                    [
+                        650,
+                        450
+                    ],
+                    [
+                        650,
+                        512
+                    ],
+                    [
+                        350,
+                        512
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 134,
+                "scanHalf": 0.34
+            },
+            {
+                "x": 820,
+                "y": 470,
+                "r": 14,
+                "speed": 78,
+                "activeAt": 3,
+                "path": [
+                    [
+                        820,
+                        470
+                    ],
+                    [
+                        920,
+                        366
+                    ],
+                    [
+                        780,
+                        286
+                    ],
+                    [
+                        706,
+                        432
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 128,
+                "scanHalf": 0.34
+            }
+        ]
+    },
+    {
+        "id": "GRID 03",
+        "name": "SCANNER CROSSING",
+        "start": {
+            "x": 82,
+            "y": 92
+        },
+        "exit": {
+            "x": 922,
+            "y": 430,
+            "w": 68,
+            "h": 88
+        },
+        "firstObjective": "GRID 03: CROSS THE SCANNER LANES",
+        "playerSpeed": 186,
+        "sweepCooldown": 0.45,
+        "dashCooldown": 0.86,
+        "threatStart": 58,
+        "threatRate": 0.0036,
+        "corruptionDrain": 6.5,
+        "scannerDamage": 16,
+        "contactDamage": 21,
+        "walls": [
+            {
+                "x": 32,
+                "y": 150,
+                "w": 220,
+                "h": 18
+            },
+            {
+                "x": 252,
+                "y": 62,
+                "w": 18,
+                "h": 168
+            },
+            {
+                "x": 92,
+                "y": 278,
+                "w": 224,
+                "h": 18
+            },
+            {
+                "x": 316,
+                "y": 206,
+                "w": 18,
+                "h": 144
+            },
+            {
+                "x": 334,
+                "y": 350,
+                "w": 164,
+                "h": 18
+            },
+            {
+                "x": 474,
+                "y": 84,
+                "w": 18,
+                "h": 188
+            },
+            {
+                "x": 492,
+                "y": 84,
+                "w": 152,
+                "h": 18
+            },
+            {
+                "x": 624,
+                "y": 102,
+                "w": 18,
+                "h": 104
+            },
+            {
+                "x": 540,
+                "y": 252,
+                "w": 218,
+                "h": 18
+            },
+            {
+                "x": 740,
+                "y": 166,
+                "w": 18,
+                "h": 104
+            },
+            {
+                "x": 680,
+                "y": 376,
+                "w": 236,
+                "h": 18
+            },
+            {
+                "x": 680,
+                "y": 300,
+                "w": 18,
+                "h": 76
+            },
+            {
+                "x": 858,
+                "y": 208,
+                "w": 18,
+                "h": 118
+            },
+            {
+                "x": 104,
+                "y": 430,
+                "w": 180,
+                "h": 18
+            },
+            {
+                "x": 284,
+                "y": 448,
+                "w": 18,
+                "h": 72
+            },
+            {
+                "x": 366,
+                "y": 496,
+                "w": 204,
+                "h": 18
+            },
+            {
+                "x": 606,
+                "y": 454,
+                "w": 106,
+                "h": 18
+            },
+            {
+                "x": 800,
+                "y": 68,
+                "w": 150,
+                "h": 18
+            },
+            {
+                "x": 930,
+                "y": 86,
+                "w": 18,
+                "h": 120
+            },
+            {
+                "x": 34,
+                "y": 354,
+                "w": 70,
+                "h": 18
+            }
+        ],
+        "fragments": [
+            [
+                88,
+                122
+            ],
+            [
+                134,
+                214
+            ],
+            [
+                214,
+                246
+            ],
+            [
+                284,
+                118
+            ],
+            [
+                344,
+                174
+            ],
+            [
+                392,
+                326
+            ],
+            [
+                452,
+                416
+            ],
+            [
+                520,
+                138
+            ],
+            [
+                570,
+                228
+            ],
+            [
+                636,
+                320
+            ],
+            [
+                692,
+                126
+            ],
+            [
+                724,
+                218
+            ],
+            [
+                786,
+                314
+            ],
+            [
+                832,
+                156
+            ],
+            [
+                876,
+                352
+            ],
+            [
+                888,
+                458
+            ],
+            [
+                584,
+                500
+            ],
+            [
+                180,
+                494
+            ]
+        ],
+        "corruption": [
+            {
+                "x": 158,
+                "y": 214,
+                "r": 48,
+                "hp": 2,
+                "seed": 31
+            },
+            {
+                "x": 284,
+                "y": 126,
+                "r": 46,
+                "hp": 1,
+                "seed": 32
+            },
+            {
+                "x": 396,
+                "y": 296,
+                "r": 58,
+                "hp": 2,
+                "seed": 33
+            },
+            {
+                "x": 522,
+                "y": 156,
+                "r": 52,
+                "hp": 2,
+                "seed": 34
+            },
+            {
+                "x": 596,
+                "y": 316,
+                "r": 56,
+                "hp": 3,
+                "seed": 35
+            },
+            {
+                "x": 724,
+                "y": 206,
+                "r": 50,
+                "hp": 2,
+                "seed": 36
+            },
+            {
+                "x": 800,
+                "y": 332,
+                "r": 54,
+                "hp": 2,
+                "seed": 37
+            },
+            {
+                "x": 872,
+                "y": 456,
+                "r": 48,
+                "hp": 2,
+                "seed": 38
+            },
+            {
+                "x": 214,
+                "y": 478,
+                "r": 46,
+                "hp": 1,
+                "seed": 39
+            },
+            {
+                "x": 468,
+                "y": 464,
+                "r": 44,
+                "hp": 2,
+                "seed": 40
+            },
+            {
+                "x": 856,
+                "y": 122,
+                "r": 42,
+                "hp": 1,
+                "seed": 41
+            }
+        ],
+        "nodes": [
+            {
+                "x": 218,
+                "y": 226,
+                "requirement": 3,
+                "label": "NODE 1"
+            },
+            {
+                "x": 548,
+                "y": 170,
+                "requirement": 8,
+                "label": "NODE 2"
+            },
+            {
+                "x": 612,
+                "y": 346,
+                "requirement": 12,
+                "label": "NODE 3"
+            },
+            {
+                "x": 842,
+                "y": 452,
+                "requirement": 16,
+                "label": "NODE 4"
+            }
+        ],
+        "drones": [
+            {
+                "x": 370,
+                "y": 110,
+                "r": 15,
+                "speed": 90,
+                "activeAt": 0,
+                "path": [
+                    [
+                        370,
+                        110
+                    ],
+                    [
+                        370,
+                        318
+                    ],
+                    [
+                        166,
+                        318
+                    ],
+                    [
+                        166,
+                        176
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 150,
+                "scanHalf": 0.36
+            },
+            {
+                "x": 640,
+                "y": 134,
+                "r": 15,
+                "speed": 94,
+                "activeAt": 1,
+                "path": [
+                    [
+                        640,
+                        134
+                    ],
+                    [
+                        872,
+                        148
+                    ],
+                    [
+                        870,
+                        300
+                    ],
+                    [
+                        650,
+                        300
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 158,
+                "scanHalf": 0.4
+            },
+            {
+                "x": 458,
+                "y": 460,
+                "r": 15,
+                "speed": 88,
+                "activeAt": 2,
+                "path": [
+                    [
+                        458,
+                        460
+                    ],
+                    [
+                        680,
+                        460
+                    ],
+                    [
+                        680,
+                        516
+                    ],
+                    [
+                        300,
+                        516
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 142,
+                "scanHalf": 0.36
+            },
+            {
+                "x": 850,
+                "y": 244,
+                "r": 14,
+                "speed": 86,
+                "activeAt": 3,
+                "path": [
+                    [
+                        850,
+                        244
+                    ],
+                    [
+                        742,
+                        112
+                    ],
+                    [
+                        582,
+                        244
+                    ],
+                    [
+                        748,
+                        356
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 136,
+                "scanHalf": 0.34
+            },
+            {
+                "x": 120,
+                "y": 496,
+                "r": 14,
+                "speed": 80,
+                "activeAt": 4,
+                "path": [
+                    [
+                        120,
+                        496
+                    ],
+                    [
+                        268,
+                        398
+                    ],
+                    [
+                        452,
+                        432
+                    ],
+                    [
+                        228,
+                        520
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 128,
+                "scanHalf": 0.32
+            }
+        ]
+    },
+    {
+        "id": "GRID 04",
+        "name": "FAULT SPIRAL",
+        "start": {
+            "x": 512,
+            "y": 500
+        },
+        "exit": {
+            "x": 480,
+            "y": 36,
+            "w": 82,
+            "h": 70
+        },
+        "firstObjective": "GRID 04: CLEAN THE FAULT SPIRAL",
+        "playerSpeed": 188,
+        "sweepCooldown": 0.46,
+        "dashCooldown": 0.9,
+        "threatStart": 50,
+        "threatRate": 0.0045,
+        "corruptionDrain": 7.2,
+        "scannerDamage": 17.5,
+        "contactDamage": 22.5,
+        "walls": [
+            {
+                "x": 96,
+                "y": 76,
+                "w": 330,
+                "h": 18
+            },
+            {
+                "x": 96,
+                "y": 76,
+                "w": 18,
+                "h": 132
+            },
+            {
+                "x": 186,
+                "y": 208,
+                "w": 240,
+                "h": 18
+            },
+            {
+                "x": 408,
+                "y": 96,
+                "w": 18,
+                "h": 130
+            },
+            {
+                "x": 596,
+                "y": 76,
+                "w": 330,
+                "h": 18
+            },
+            {
+                "x": 908,
+                "y": 76,
+                "w": 18,
+                "h": 128
+            },
+            {
+                "x": 604,
+                "y": 208,
+                "w": 240,
+                "h": 18
+            },
+            {
+                "x": 604,
+                "y": 96,
+                "w": 18,
+                "h": 130
+            },
+            {
+                "x": 260,
+                "y": 284,
+                "w": 504,
+                "h": 18
+            },
+            {
+                "x": 260,
+                "y": 302,
+                "w": 18,
+                "h": 112
+            },
+            {
+                "x": 746,
+                "y": 302,
+                "w": 18,
+                "h": 112
+            },
+            {
+                "x": 178,
+                "y": 414,
+                "w": 240,
+                "h": 18
+            },
+            {
+                "x": 606,
+                "y": 414,
+                "w": 240,
+                "h": 18
+            },
+            {
+                "x": 418,
+                "y": 414,
+                "w": 18,
+                "h": 86
+            },
+            {
+                "x": 588,
+                "y": 414,
+                "w": 18,
+                "h": 86
+            },
+            {
+                "x": 64,
+                "y": 320,
+                "w": 132,
+                "h": 18
+            },
+            {
+                "x": 828,
+                "y": 320,
+                "w": 132,
+                "h": 18
+            },
+            {
+                "x": 74,
+                "y": 500,
+                "w": 310,
+                "h": 18
+            },
+            {
+                "x": 640,
+                "y": 500,
+                "w": 310,
+                "h": 18
+            },
+            {
+                "x": 486,
+                "y": 118,
+                "w": 52,
+                "h": 18
+            }
+        ],
+        "fragments": [
+            [
+                126,
+                142
+            ],
+            [
+                168,
+                244
+            ],
+            [
+                244,
+                176
+            ],
+            [
+                322,
+                250
+            ],
+            [
+                386,
+                142
+            ],
+            [
+                470,
+                234
+            ],
+            [
+                544,
+                234
+            ],
+            [
+                636,
+                142
+            ],
+            [
+                702,
+                250
+            ],
+            [
+                780,
+                176
+            ],
+            [
+                856,
+                244
+            ],
+            [
+                882,
+                142
+            ],
+            [
+                140,
+                374
+            ],
+            [
+                250,
+                462
+            ],
+            [
+                350,
+                378
+            ],
+            [
+                486,
+                470
+            ],
+            [
+                540,
+                470
+            ],
+            [
+                672,
+                378
+            ],
+            [
+                774,
+                462
+            ],
+            [
+                884,
+                374
+            ]
+        ],
+        "corruption": [
+            {
+                "x": 174,
+                "y": 186,
+                "r": 50,
+                "hp": 2,
+                "seed": 51
+            },
+            {
+                "x": 320,
+                "y": 252,
+                "r": 52,
+                "hp": 2,
+                "seed": 52
+            },
+            {
+                "x": 430,
+                "y": 152,
+                "r": 48,
+                "hp": 2,
+                "seed": 53
+            },
+            {
+                "x": 594,
+                "y": 152,
+                "r": 48,
+                "hp": 2,
+                "seed": 54
+            },
+            {
+                "x": 704,
+                "y": 252,
+                "r": 52,
+                "hp": 3,
+                "seed": 55
+            },
+            {
+                "x": 850,
+                "y": 186,
+                "r": 50,
+                "hp": 2,
+                "seed": 56
+            },
+            {
+                "x": 242,
+                "y": 386,
+                "r": 56,
+                "hp": 2,
+                "seed": 57
+            },
+            {
+                "x": 398,
+                "y": 452,
+                "r": 50,
+                "hp": 3,
+                "seed": 58
+            },
+            {
+                "x": 512,
+                "y": 378,
+                "r": 58,
+                "hp": 3,
+                "seed": 59
+            },
+            {
+                "x": 626,
+                "y": 452,
+                "r": 50,
+                "hp": 3,
+                "seed": 60
+            },
+            {
+                "x": 782,
+                "y": 386,
+                "r": 56,
+                "hp": 2,
+                "seed": 61
+            },
+            {
+                "x": 512,
+                "y": 110,
+                "r": 44,
+                "hp": 2,
+                "seed": 62
+            }
+        ],
+        "nodes": [
+            {
+                "x": 198,
+                "y": 176,
+                "requirement": 3,
+                "label": "NODE 1"
+            },
+            {
+                "x": 452,
+                "y": 164,
+                "requirement": 7,
+                "label": "NODE 2"
+            },
+            {
+                "x": 572,
+                "y": 164,
+                "requirement": 11,
+                "label": "NODE 3"
+            },
+            {
+                "x": 790,
+                "y": 386,
+                "requirement": 15,
+                "label": "NODE 4"
+            },
+            {
+                "x": 512,
+                "y": 378,
+                "requirement": 19,
+                "label": "NODE 5"
+            }
+        ],
+        "drones": [
+            {
+                "x": 150,
+                "y": 116,
+                "r": 15,
+                "speed": 94,
+                "activeAt": 0,
+                "path": [
+                    [
+                        150,
+                        116
+                    ],
+                    [
+                        386,
+                        116
+                    ],
+                    [
+                        386,
+                        258
+                    ],
+                    [
+                        166,
+                        258
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 150,
+                "scanHalf": 0.38
+            },
+            {
+                "x": 874,
+                "y": 116,
+                "r": 15,
+                "speed": 94,
+                "activeAt": 1,
+                "path": [
+                    [
+                        874,
+                        116
+                    ],
+                    [
+                        638,
+                        116
+                    ],
+                    [
+                        638,
+                        258
+                    ],
+                    [
+                        858,
+                        258
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 150,
+                "scanHalf": 0.38
+            },
+            {
+                "x": 512,
+                "y": 318,
+                "r": 16,
+                "speed": 92,
+                "activeAt": 2,
+                "path": [
+                    [
+                        512,
+                        318
+                    ],
+                    [
+                        730,
+                        318
+                    ],
+                    [
+                        730,
+                        470
+                    ],
+                    [
+                        294,
+                        470
+                    ],
+                    [
+                        294,
+                        318
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 158,
+                "scanHalf": 0.38
+            },
+            {
+                "x": 150,
+                "y": 476,
+                "r": 14,
+                "speed": 88,
+                "activeAt": 3,
+                "path": [
+                    [
+                        150,
+                        476
+                    ],
+                    [
+                        390,
+                        392
+                    ],
+                    [
+                        512,
+                        492
+                    ],
+                    [
+                        246,
+                        520
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 136,
+                "scanHalf": 0.34
+            },
+            {
+                "x": 874,
+                "y": 476,
+                "r": 14,
+                "speed": 88,
+                "activeAt": 4,
+                "path": [
+                    [
+                        874,
+                        476
+                    ],
+                    [
+                        634,
+                        392
+                    ],
+                    [
+                        512,
+                        492
+                    ],
+                    [
+                        778,
+                        520
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 136,
+                "scanHalf": 0.34
+            }
+        ]
+    },
+    {
+        "id": "GRID 05",
+        "name": "LOCKDOWN CORE",
+        "start": {
+            "x": 86,
+            "y": 500
+        },
+        "exit": {
+            "x": 922,
+            "y": 42,
+            "w": 70,
+            "h": 90
+        },
+        "firstObjective": "GRID 05: SURVIVE THE LOCKDOWN CORE",
+        "playerSpeed": 190,
+        "sweepCooldown": 0.48,
+        "dashCooldown": 0.94,
+        "threatStart": 42,
+        "threatRate": 0.0058,
+        "corruptionDrain": 8.0,
+        "scannerDamage": 19,
+        "contactDamage": 24,
+        "walls": [
+            {
+                "x": 42,
+                "y": 86,
+                "w": 238,
+                "h": 18
+            },
+            {
+                "x": 42,
+                "y": 86,
+                "w": 18,
+                "h": 144
+            },
+            {
+                "x": 146,
+                "y": 230,
+                "w": 18,
+                "h": 116
+            },
+            {
+                "x": 60,
+                "y": 346,
+                "w": 246,
+                "h": 18
+            },
+            {
+                "x": 306,
+                "y": 110,
+                "w": 18,
+                "h": 178
+            },
+            {
+                "x": 324,
+                "y": 110,
+                "w": 162,
+                "h": 18
+            },
+            {
+                "x": 468,
+                "y": 128,
+                "w": 18,
+                "h": 130
+            },
+            {
+                "x": 382,
+                "y": 300,
+                "w": 260,
+                "h": 18
+            },
+            {
+                "x": 624,
+                "y": 190,
+                "w": 18,
+                "h": 128
+            },
+            {
+                "x": 688,
+                "y": 86,
+                "w": 228,
+                "h": 18
+            },
+            {
+                "x": 688,
+                "y": 104,
+                "w": 18,
+                "h": 130
+            },
+            {
+                "x": 752,
+                "y": 248,
+                "w": 208,
+                "h": 18
+            },
+            {
+                "x": 940,
+                "y": 248,
+                "w": 18,
+                "h": 122
+            },
+            {
+                "x": 694,
+                "y": 390,
+                "w": 234,
+                "h": 18
+            },
+            {
+                "x": 694,
+                "y": 314,
+                "w": 18,
+                "h": 76
+            },
+            {
+                "x": 198,
+                "y": 416,
+                "w": 18,
+                "h": 88
+            },
+            {
+                "x": 286,
+                "y": 470,
+                "w": 196,
+                "h": 18
+            },
+            {
+                "x": 482,
+                "y": 452,
+                "w": 152,
+                "h": 18
+            },
+            {
+                "x": 770,
+                "y": 468,
+                "w": 156,
+                "h": 18
+            },
+            {
+                "x": 830,
+                "y": 128,
+                "w": 18,
+                "h": 78
+            },
+            {
+                "x": 502,
+                "y": 32,
+                "w": 18,
+                "h": 68
+            },
+            {
+                "x": 550,
+                "y": 78,
+                "w": 80,
+                "h": 18
+            },
+            {
+                "x": 86,
+                "y": 438,
+                "w": 74,
+                "h": 18
+            },
+            {
+                "x": 530,
+                "y": 518,
+                "w": 104,
+                "h": 18
+            }
+        ],
+        "fragments": [
+            [
+                112,
+                474
+            ],
+            [
+                128,
+                392
+            ],
+            [
+                216,
+                304
+            ],
+            [
+                236,
+                204
+            ],
+            [
+                340,
+                190
+            ],
+            [
+                376,
+                264
+            ],
+            [
+                438,
+                214
+            ],
+            [
+                486,
+                360
+            ],
+            [
+                542,
+                420
+            ],
+            [
+                604,
+                242
+            ],
+            [
+                662,
+                138
+            ],
+            [
+                728,
+                202
+            ],
+            [
+                768,
+                312
+            ],
+            [
+                812,
+                356
+            ],
+            [
+                862,
+                188
+            ],
+            [
+                898,
+                438
+            ],
+            [
+                918,
+                318
+            ],
+            [
+                566,
+                500
+            ],
+            [
+                412,
+                510
+            ],
+            [
+                274,
+                430
+            ],
+            [
+                522,
+                142
+            ],
+            [
+                648,
+                82
+            ],
+            [
+                748,
+                64
+            ],
+            [
+                886,
+                116
+            ]
+        ],
+        "corruption": [
+            {
+                "x": 132,
+                "y": 392,
+                "r": 52,
+                "hp": 2,
+                "seed": 71
+            },
+            {
+                "x": 234,
+                "y": 252,
+                "r": 50,
+                "hp": 3,
+                "seed": 72
+            },
+            {
+                "x": 386,
+                "y": 228,
+                "r": 56,
+                "hp": 3,
+                "seed": 73
+            },
+            {
+                "x": 496,
+                "y": 356,
+                "r": 58,
+                "hp": 3,
+                "seed": 74
+            },
+            {
+                "x": 586,
+                "y": 166,
+                "r": 52,
+                "hp": 2,
+                "seed": 75
+            },
+            {
+                "x": 666,
+                "y": 266,
+                "r": 60,
+                "hp": 3,
+                "seed": 76
+            },
+            {
+                "x": 784,
+                "y": 330,
+                "r": 58,
+                "hp": 3,
+                "seed": 77
+            },
+            {
+                "x": 852,
+                "y": 152,
+                "r": 48,
+                "hp": 2,
+                "seed": 78
+            },
+            {
+                "x": 874,
+                "y": 426,
+                "r": 54,
+                "hp": 3,
+                "seed": 79
+            },
+            {
+                "x": 310,
+                "y": 438,
+                "r": 48,
+                "hp": 2,
+                "seed": 80
+            },
+            {
+                "x": 520,
+                "y": 118,
+                "r": 44,
+                "hp": 2,
+                "seed": 81
+            },
+            {
+                "x": 618,
+                "y": 478,
+                "r": 52,
+                "hp": 3,
+                "seed": 82
+            },
+            {
+                "x": 906,
+                "y": 294,
+                "r": 44,
+                "hp": 2,
+                "seed": 83
+            }
+        ],
+        "nodes": [
+            {
+                "x": 188,
+                "y": 188,
+                "requirement": 4,
+                "label": "NODE 1"
+            },
+            {
+                "x": 464,
+                "y": 346,
+                "requirement": 9,
+                "label": "NODE 2"
+            },
+            {
+                "x": 618,
+                "y": 164,
+                "requirement": 13,
+                "label": "NODE 3"
+            },
+            {
+                "x": 798,
+                "y": 360,
+                "requirement": 18,
+                "label": "NODE 4"
+            },
+            {
+                "x": 876,
+                "y": 144,
+                "requirement": 22,
+                "label": "NODE 5"
+            }
+        ],
+        "drones": [
+            {
+                "x": 120,
+                "y": 142,
+                "r": 15,
+                "speed": 96,
+                "activeAt": 0,
+                "path": [
+                    [
+                        120,
+                        142
+                    ],
+                    [
+                        356,
+                        162
+                    ],
+                    [
+                        350,
+                        310
+                    ],
+                    [
+                        132,
+                        320
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 156,
+                "scanHalf": 0.4
+            },
+            {
+                "x": 628,
+                "y": 136,
+                "r": 15,
+                "speed": 100,
+                "activeAt": 0,
+                "path": [
+                    [
+                        628,
+                        136
+                    ],
+                    [
+                        886,
+                        136
+                    ],
+                    [
+                        886,
+                        318
+                    ],
+                    [
+                        648,
+                        318
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 164,
+                "scanHalf": 0.42
+            },
+            {
+                "x": 444,
+                "y": 450,
+                "r": 15,
+                "speed": 94,
+                "activeAt": 1,
+                "path": [
+                    [
+                        444,
+                        450
+                    ],
+                    [
+                        680,
+                        450
+                    ],
+                    [
+                        680,
+                        516
+                    ],
+                    [
+                        328,
+                        516
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 148,
+                "scanHalf": 0.38
+            },
+            {
+                "x": 840,
+                "y": 460,
+                "r": 14,
+                "speed": 92,
+                "activeAt": 2,
+                "path": [
+                    [
+                        840,
+                        460
+                    ],
+                    [
+                        940,
+                        354
+                    ],
+                    [
+                        792,
+                        286
+                    ],
+                    [
+                        710,
+                        432
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 142,
+                "scanHalf": 0.36
+            },
+            {
+                "x": 512,
+                "y": 116,
+                "r": 15,
+                "speed": 90,
+                "activeAt": 3,
+                "path": [
+                    [
+                        512,
+                        116
+                    ],
+                    [
+                        688,
+                        110
+                    ],
+                    [
+                        690,
+                        238
+                    ],
+                    [
+                        480,
+                        238
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 150,
+                "scanHalf": 0.38
+            },
+            {
+                "x": 260,
+                "y": 506,
+                "r": 14,
+                "speed": 88,
+                "activeAt": 4,
+                "path": [
+                    [
+                        260,
+                        506
+                    ],
+                    [
+                        520,
+                        384
+                    ],
+                    [
+                        760,
+                        506
+                    ],
+                    [
+                        464,
+                        520
+                    ]
+                ],
+                "target": 1,
+                "scanRange": 136,
+                "scanHalf": 0.34
+            }
+        ]
+    }
+];
+
+  let fragments = [];
+  let corruption = [];
+  let nodes = [];
+  let drones = [];
+  let particles = [];
+  let pulses = [];
+  let floatText = [];
+  let trail = [];
+
+  function resetGame(resetScore=false){
+    currentConfig = LEVELS[currentLevel] || LEVELS[0];
+    const cfg = currentConfig;
+    walls.length = 0; walls.push(...cfg.walls.map(w => ({...w})));
+    fragmentSeed.length = 0; fragmentSeed.push(...cfg.fragments.map(p => [p[0], p[1]]));
+    corruptionSeed.length = 0; corruptionSeed.push(...cfg.corruption.map(c => ({...c})));
+    nodeSeed.length = 0; nodeSeed.push(...cfg.nodes.map(n => ({...n})));
+    droneSeed.length = 0; droneSeed.push(...cfg.drones.map(d => ({...d, path:d.path.map(p => [p[0], p[1]] )})));
+    exit.x = cfg.exit.x; exit.y = cfg.exit.y; exit.w = cfg.exit.w; exit.h = cfg.exit.h;
+    player.x = cfg.start.x; player.y = cfg.start.y; player.vx = 0; player.vy = 0; player.facing = 0;
+    player.speed = cfg.playerSpeed || 182;
+    player.integrity = 100; player.fragments = 0; player.nodes = 0;
+    player.dashTime = 0; player.dashCooldown = 0; player.sweepCooldown = 0; player.invuln = 0; player.glow = 0;
+    exit.open = false; exit.pulse = 0;
+    fragments = fragmentSeed.map((p,i)=>({id:i,x:p[0],y:p[1],taken:false,pulse:rand(0,8)}));
+    corruption = corruptionSeed.map((c,i)=>({id:i,...c,maxHp:c.hp,cleared:false,alpha:1,flicker:rand(0,8)}));
+    nodes = nodeSeed.map((n,i)=>({id:i,...n,restored:false,ready:false,pulse:rand(0,8),ring:0}));
+    drones = droneSeed.map((d,i)=>({id:i,...d,angle:0,active:false,stunned:0,warned:false,hitFlash:0}));
+    particles = [];
+    pulses = [];
+    floatText = [];
+    trail = [];
+    if(resetScore) score = 0;
+    combo = 0; comboTimer = 0; t = 0; screenShake = 0;
+    objective = cfg.firstObjective || 'A: SWEEP FIRST CORRUPTION';
+    objectiveFlash = 1.2;
+    endingText = '';
+    snapCamera();
+  }
+
+  function resizeCanvas(){
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    canvas.width = Math.floor(BASE_W * dpr);
+    canvas.height = Math.floor(BASE_H * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener('resize', resizeCanvas, {passive:true});
+  resizeCanvas();
+
+  function getDesiredZoom(){
+    const coarse = window.matchMedia('(pointer: coarse)').matches;
+    const portrait = window.matchMedia('(orientation: portrait)').matches;
+    if(coarse && portrait) return window.innerWidth < 430 ? 1.62 : 1.48;
+    if(coarse) return 1.12;
+    return 1;
+  }
+
+  function snapCamera(){
+    const zoom = getDesiredZoom();
+    camera.zoom = zoom;
+    camera.viewW = BASE_W / zoom;
+    camera.viewH = BASE_H / zoom;
+    camera.x = clamp(player.x - camera.viewW/2, 0, BASE_W - camera.viewW);
+    camera.y = clamp(player.y - camera.viewH/2, 0, BASE_H - camera.viewH);
+    camera.targetX = camera.x;
+    camera.targetY = camera.y;
+  }
+
+  function updateCamera(dt){
+    const zoomTarget = getDesiredZoom();
+    camera.zoom = lerp(camera.zoom, zoomTarget, 1 - Math.pow(.0001, dt));
+    camera.viewW = BASE_W / camera.zoom;
+    camera.viewH = BASE_H / camera.zoom;
+    const lead = camera.zoom > 1.01 ? 44 : 24;
+    const focusX = player.x + Math.cos(player.facing) * lead;
+    const focusY = player.y + Math.sin(player.facing) * lead;
+    camera.targetX = clamp(focusX - camera.viewW/2, 0, BASE_W - camera.viewW);
+    camera.targetY = clamp(focusY - camera.viewH/2, 0, BASE_H - camera.viewH);
+    camera.x = lerp(camera.x, camera.targetX, 1 - Math.pow(.0006, dt));
+    camera.y = lerp(camera.y, camera.targetY, 1 - Math.pow(.0006, dt));
+  }
+
+  function worldToScreen(x,y){
+    return { x:(x - camera.x) * camera.zoom, y:(y - camera.y) * camera.zoom };
+  }
+
+  function circleRectOverlap(cx,cy,cr,r){
+    const nx = clamp(cx, r.x, r.x + r.w);
+    const ny = clamp(cy, r.y, r.y + r.h);
+    return dist(cx,cy,nx,ny) < cr;
+  }
+
+  function moveWithCollision(entity, dx, dy){
+    let nx = entity.x + dx;
+    for(const w of walls){
+      if(circleRectOverlap(nx, entity.y, entity.r, w)){
+        nx = entity.x;
+        break;
+      }
+    }
+    let ny = entity.y + dy;
+    for(const w of walls){
+      if(circleRectOverlap(nx, ny, entity.r, w)){
+        ny = entity.y;
+        break;
+      }
+    }
+    entity.x = clamp(nx, entity.r + 18, BASE_W - entity.r - 18);
+    entity.y = clamp(ny, entity.r + 18, BASE_H - entity.r - 18);
+  }
+
+  function setObjective(text, flash=0.9){
+    if(objective !== text){ objective = text; objectiveFlash = flash; }
+  }
+
+  function addFloat(text,x,y,color='#bff9ff'){
+    floatText.push({text,x,y,life:1.0,color});
+  }
+
+  function spawnParticles(x,y,count,color,spread=1, speed=96){
+    for(let i=0;i<count;i++){
+      const a = rand(0,Math.PI*2);
+      const s = rand(speed*.25, speed) * spread;
+      particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:rand(1.4,4.4),life:rand(.35,.9),max:1,color});
+    }
+  }
+
+  function burstRing(x,y,color,r0=8,r1=92,life=.42){
+    pulses.push({x,y,color,r:r0,target:r1,life,max:life});
+  }
+
+  function addScore(amount, label, x=player.x, y=player.y){
+    comboTimer = 2.2;
+    combo = clamp(combo + 1, 1, 9);
+    const total = Math.floor(amount * (1 + (combo-1)*0.18));
+    score += total;
+    addFloat(label ? `${label} +${total}` : `+${total}`, x, y-20, combo>1 ? '#ffc247' : '#bff9ff');
+  }
+
+  function startGame(){
+    currentLevel = 0;
+    resetGame(true);
+    state = 'playing';
+    intro.classList.add('hidden');
+    briefing.classList.add('hidden');
+  }
+
+  function startNextLevel(){
+    currentLevel = clamp(currentLevel + 1, 0, LEVELS.length - 1);
+    resetGame(false);
+    state = 'playing';
+    intro.classList.add('hidden');
+    briefing.classList.add('hidden');
+  }
+
+  function showBriefing(){
+    if(state === 'playing') { state = 'briefing'; briefing.classList.remove('hidden'); }
+    else if(state === 'briefing') { state = 'playing'; briefing.classList.add('hidden'); }
+    else if(state === 'intro') { briefing.classList.toggle('hidden'); }
+  }
+
+  function togglePause(){
+    if(state === 'playing'){
+      state = 'paused';
+      briefing.classList.remove('hidden');
+      briefing.querySelector('h1').textContent = 'PAUSED';
+      briefing.querySelector('.sub').textContent = 'START TO RESUME';
+    } else if(state === 'paused'){
+      state = 'playing';
+      briefing.classList.add('hidden');
+      briefing.querySelector('h1').textContent = 'OBJECTIVE';
+      briefing.querySelector('.sub').textContent = 'GRID REPAIR REMINDER';
+    } else if(state === 'intro'){
+      startGame();
+    }
+  }
+
+  function playerInput(){
+    let x = 0, y = 0;
+    if(keys.ArrowLeft || keys.KeyA) x -= 1;
+    if(keys.ArrowRight || keys.KeyD) x += 1;
+    if(keys.ArrowUp || keys.KeyW) y -= 1;
+    if(keys.ArrowDown || keys.KeyS) y += 1;
+    x += touchMove.x; y += touchMove.y;
+
+    const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+    const gp = Array.from(gps).find(g => g && g.connected);
+    if(gp){
+      const ax = Math.abs(gp.axes[0] || 0) > .18 ? gp.axes[0] : 0;
+      const ay = Math.abs(gp.axes[1] || 0) > .18 ? gp.axes[1] : 0;
+      x += ax; y += ay;
+      if(gp.buttons[0]?.pressed) pressed.a = true;
+      if(gp.buttons[1]?.pressed) pressed.b = true;
+      if(gp.buttons[9]?.pressed) pressed.start = true;
+      if(gp.buttons[8]?.pressed) pressed.select = true;
+    }
+
+    const m = Math.hypot(x,y);
+    if(m > 1){ x /= m; y /= m; }
+    return {x,y};
+  }
+
+  function doSweep(){
+    if(player.sweepCooldown > 0) return;
+    player.sweepCooldown = currentConfig?.sweepCooldown || 0.42;
+    player.glow = 0.38;
+    burstRing(player.x, player.y, '#42e7ff', 8, 96, .42);
+    spawnParticles(player.x, player.y, 18, '#42e7ff', 1.0, 130);
+    let hitSomething = false;
+
+    for(const c of corruption){
+      if(c.cleared) continue;
+      const d = dist(player.x, player.y, c.x, c.y);
+      if(d < c.r + 92){
+        c.hp -= 1;
+        c.flicker += 2;
+        hitSomething = true;
+        spawnParticles(c.x, c.y, 16, '#ff7c24', 1.2, 115);
+        burstRing(c.x, c.y, '#ff7c24', c.r*.35, c.r+20, .28);
+        if(c.hp <= 0){
+          c.cleared = true;
+          c.alpha = 1;
+          addScore(140, 'CLEAN', c.x, c.y);
+          player.integrity = clamp(player.integrity + 2, 0, 100);
+        } else {
+          addScore(45, 'SWEEP', c.x, c.y);
+        }
+      }
+    }
+
+    for(const d of drones){
+      if(!d.active) continue;
+      if(dist(player.x, player.y, d.x, d.y) < 96){
+        d.stunned = Math.max(d.stunned, 2.15);
+        d.hitFlash = .35;
+        hitSomething = true;
+        spawnParticles(d.x, d.y, 18, '#ffc247', 1.0, 120);
+        addScore(75, 'STUN', d.x, d.y);
+      }
+    }
+
+    const restored = tryRestoreNode();
+    if(restored) hitSomething = true;
+    if(!hitSomething){ addFloat('PULSE', player.x, player.y-28, '#7ba1b8'); }
+  }
+
+  function dash(input){
+    if(player.dashCooldown > 0 || player.dashTime > 0) return;
+    let ix = input.x, iy = input.y;
+    if(Math.hypot(ix,iy) < .12){ ix = Math.cos(player.facing); iy = Math.sin(player.facing); }
+    player.vx = ix * 520;
+    player.vy = iy * 520;
+    player.dashTime = .13;
+    player.dashCooldown = currentConfig?.dashCooldown || .78;
+    player.invuln = .18;
+    burstRing(player.x, player.y, '#ffc247', 6, 54, .22);
+    spawnParticles(player.x, player.y, 10, '#ffc247', .8, 95);
+  }
+
+  function nodeBlocked(n){
+    return corruption.some(c => !c.cleared && dist(n.x,n.y,c.x,c.y) < c.r + 92);
+  }
+
+  function tryRestoreNode(){
+    for(const n of nodes){
+      if(n.restored) continue;
+      const near = dist(player.x, player.y, n.x, n.y) < 54;
+      if(near && player.fragments >= n.requirement && !nodeBlocked(n)){
+        n.restored = true;
+        n.ring = 1;
+        player.nodes += 1;
+        player.integrity = clamp(player.integrity + 12, 0, 100);
+        addScore(450, 'NODE RESTORED', n.x, n.y);
+        spawnParticles(n.x, n.y, 42, '#67ff9d', 1.2, 170);
+        burstRing(n.x, n.y, '#67ff9d', 18, 132, .65);
+        screenShake = .18;
+        if(player.nodes >= nodes.length){
+          exit.open = true;
+          setObjective('EXIT OPEN — MOVE TO GATE', 1.3);
+          burstRing(exit.x+exit.w/2, exit.y+exit.h/2, '#67ff9d', 20, 150, .75);
+        } else {
+          setObjective(`RESTORE NODE ${player.nodes + 1}`, 1.2);
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function update(dt){
+    if(state !== 'playing') return;
+    t += dt;
+    objectiveFlash = Math.max(0, objectiveFlash - dt);
+    screenShake = Math.max(0, screenShake - dt);
+    comboTimer = Math.max(0, comboTimer - dt);
+    if(comboTimer <= 0) combo = 0;
+    player.sweepCooldown = Math.max(0, player.sweepCooldown - dt);
+    player.dashCooldown = Math.max(0, player.dashCooldown - dt);
+    player.dashTime = Math.max(0, player.dashTime - dt);
+    player.invuln = Math.max(0, player.invuln - dt);
+    player.glow = Math.max(0, player.glow - dt);
+
+    const input = playerInput();
+    if(Math.hypot(input.x,input.y) > .1) player.facing = Math.atan2(input.y,input.x);
+    if(pressed.a) doSweep();
+    if(pressed.b) dash(input);
+    pressed.a = pressed.b = false;
+
+    const inCorruption = corruption.some(c => !c.cleared && dist(player.x, player.y, c.x, c.y) < c.r);
+    const slow = inCorruption ? .58 : 1;
+    if(inCorruption && player.invuln <= 0){
+      player.integrity -= (currentConfig?.corruptionDrain || 5.2) * dt;
+    }
+
+    if(player.dashTime <= 0){
+      player.vx = lerp(player.vx, input.x * player.speed * slow, 1 - Math.pow(.0008, dt));
+      player.vy = lerp(player.vy, input.y * player.speed * slow, 1 - Math.pow(.0008, dt));
+    }
+    moveWithCollision(player, player.vx * dt, player.vy * dt);
+    trail.push({x:player.x,y:player.y,life:.35});
+    if(trail.length > 34) trail.shift();
+
+    for(const f of fragments){
+      f.pulse += dt;
+      if(!f.taken && dist(player.x,player.y,f.x,f.y) < player.r + 16){
+        f.taken = true;
+        player.fragments += 1;
+        player.integrity = clamp(player.integrity + 1.1, 0, 100);
+        addScore(60, 'SIGNAL', f.x, f.y);
+        spawnParticles(f.x, f.y, 14, '#42e7ff', 1.0, 100);
+        if(player.fragments === 1) setObjective('A: SWEEP CORRUPTION NEAR NODE 1', 1.0);
+      }
+    }
+
+    for(const c of corruption){
+      c.flicker += dt;
+      if(c.cleared) c.alpha = Math.max(0, c.alpha - dt * 1.4);
+    }
+
+    for(const n of nodes){
+      n.pulse += dt;
+      n.ring = Math.max(0, n.ring - dt * 1.2);
+      n.ready = !n.restored && player.fragments >= n.requirement && !nodeBlocked(n);
+      if(!n.restored && dist(player.x,player.y,n.x,n.y) < 70){
+        if(player.fragments < n.requirement) setObjective(`${n.label}: NEED SIGNAL ${player.fragments}/${n.requirement}`, .25);
+        else if(nodeBlocked(n)) setObjective(`${n.label}: SWEEP LOCAL CORRUPTION`, .25);
+        else setObjective(`A: RESTORE ${n.label}`, .5);
+      }
+    }
+
+    const allOpenNodes = nodes.filter(n=>!n.restored);
+    if(player.nodes < nodes.length && allOpenNodes.length && objectiveFlash <= 0){
+      const next = allOpenNodes[0];
+      if(player.fragments < next.requirement) setObjective(`COLLECT SIGNAL ${player.fragments}/${next.requirement}`, .05);
+      else if(nodeBlocked(next)) setObjective(`SWEEP CORRUPTION AROUND ${next.label}`, .05);
+      else setObjective(`RESTORE ${next.label}`, .05);
+    }
+
+    updateDrones(dt);
+    updateEffects(dt);
+    updateExit(dt);
+    updateCamera(dt);
+
+    const threatDrain = Math.max(0, (t - (currentConfig?.threatStart || 75))) * (currentConfig?.threatRate || 0.002);
+    if(threatDrain > 0 && player.nodes < 3) player.integrity -= threatDrain * dt;
+
+    if(player.integrity <= 0){
+      player.integrity = 0;
+      state = 'fail';
+      endingText = 'INTEGRITY COLLAPSED';
+      intro.classList.remove('hidden');
+      intro.querySelector('h1').textContent = 'GRID COLLAPSED';
+      intro.querySelector('.sub').textContent = 'REPAIR FAILED';
+      intro.querySelector('p').innerHTML = 'The chamber corrected faster than you could clean it. <strong>Press R / Start / A to retry.</strong>';
+      intro.querySelector('.startLine').textContent = 'PRESS R / ENTER / A TO RESTART';
+    }
+  }
+
+  function updateDrones(dt){
+    for(const d of drones){
+      if(!d.active && player.nodes >= d.activeAt){
+        d.active = true;
+        d.warned = true;
+        spawnParticles(d.x,d.y,24,'#ff365f',1.0,120);
+        burstRing(d.x,d.y,'#ff365f',10,90,.45);
+      }
+      if(!d.active) continue;
+      d.stunned = Math.max(0, d.stunned - dt);
+      d.hitFlash = Math.max(0, d.hitFlash - dt);
+      const p = d.path[d.target];
+      const dx = p[0] - d.x, dy = p[1] - d.y;
+      d.angle = Math.atan2(dy,dx);
+      if(d.stunned <= 0){
+        const m = Math.hypot(dx,dy) || 1;
+        const speed = d.speed * (1 + player.nodes * .06 + Math.min(.18, t/280));
+        d.x += dx/m * speed * dt;
+        d.y += dy/m * speed * dt;
+        if(m < 8) d.target = (d.target + 1) % d.path.length;
+      }
+
+      if(player.invuln <= 0 && dist(player.x,player.y,d.x,d.y) < player.r + d.r){
+        player.integrity -= (currentConfig?.contactDamage || 18) * dt;
+        screenShake = Math.max(screenShake,.08);
+      }
+
+      if(d.stunned <= 0 && inScanner(d, player.x, player.y) && player.invuln <= 0){
+        player.integrity -= ((currentConfig?.scannerDamage || 13) + player.nodes*1.5) * dt;
+        screenShake = Math.max(screenShake,.04);
+        if(Math.random() < .20) spawnParticles(player.x,player.y,1,'#ff365f',.8,65);
+      }
+    }
+  }
+
+  function inScanner(d,x,y){
+    const dx = x-d.x, dy = y-d.y;
+    const range = d.scanRange * (1 + player.nodes*.05);
+    const m = Math.hypot(dx,dy);
+    if(m > range || m < 4) return false;
+    const a = Math.atan2(dy,dx);
+    return Math.abs(angleDiff(a,d.angle)) < d.scanHalf;
+  }
+
+  function updateEffects(dt){
+    for(const p of particles){
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      p.vx *= Math.pow(.02, dt); p.vy *= Math.pow(.02, dt);
+      p.life -= dt;
+    }
+    particles = particles.filter(p=>p.life>0);
+    for(const p of pulses){
+      p.r = lerp(p.r, p.target, 1-Math.pow(.02,dt));
+      p.life -= dt;
+    }
+    pulses = pulses.filter(p=>p.life>0);
+    for(const ft of floatText){ ft.y -= 34*dt; ft.life -= dt; }
+    floatText = floatText.filter(ft=>ft.life>0);
+    for(const tr of trail){ tr.life -= dt; }
+    trail = trail.filter(tr=>tr.life>0);
+  }
+
+  function updateExit(dt){
+    exit.pulse += dt;
+    if(exit.open && player.x > exit.x - 10 && player.x < exit.x + exit.w + 10 && player.y > exit.y - 12 && player.y < exit.y + exit.h + 12){
+      const bonus = Math.floor(player.integrity * (10 + currentLevel * 3));
+      score += bonus;
+      intro.classList.remove('hidden');
+      if(currentLevel < LEVELS.length - 1){
+        state = 'levelComplete';
+        endingText = 'GRID CLEARED';
+        const next = LEVELS[currentLevel + 1];
+        intro.querySelector('h1').textContent = `${currentConfig.id} CLEARED`;
+        intro.querySelector('.sub').textContent = `NEXT: ${next.id} // ${next.name}`;
+        intro.querySelector('p').innerHTML = `Grid stable. Integrity bonus <strong>+${bonus}</strong>. Campaign score: <strong>${score}</strong>.<br><br>Next chamber increases scanner pressure, corruption density, and node requirements.`;
+        intro.querySelector('.startLine').textContent = 'PRESS ENTER / SPACE / A FOR NEXT GRID';
+      } else {
+        state = 'win';
+        endingText = 'CAMPAIGN RESTORED';
+        intro.querySelector('h1').textContent = 'SYSTEM RESTORED';
+        intro.querySelector('.sub').textContent = 'FIVE-GRID REPAIR RUN COMPLETE';
+        intro.querySelector('p').innerHTML = `You cleaned every chamber, restored the signal nodes, and escaped before correction lock. <strong>Final Score: ${score}</strong>.`;
+        intro.querySelector('.startLine').textContent = 'PRESS R / ENTER / A TO RUN AGAIN';
+      }
+    }
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,BASE_W,BASE_H);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0,0,BASE_W,BASE_H);
+    ctx.clip();
+    if(screenShake > 0){ ctx.translate(rand(-4,4)*screenShake*8, rand(-3,3)*screenShake*8); }
+    ctx.scale(camera.zoom, camera.zoom);
+    ctx.translate(-camera.x, -camera.y);
+    drawBackground();
+    drawExit();
+    drawCorruption();
+    drawFragments();
+    drawNodes();
+    drawDrones();
+    drawWalls();
+    drawPlayer();
+    drawArrowToObjective();
+    drawEffects();
+    ctx.restore();
+    drawHud();
+    if(state === 'paused') drawCenterText('PAUSED');
+  }
+
+  function drawBackground(){
+    const g = ctx.createRadialGradient(BASE_W*.52, BASE_H*.46, 40, BASE_W*.52, BASE_H*.46, BASE_W*.8);
+    g.addColorStop(0,'#082347'); g.addColorStop(.48,'#041224'); g.addColorStop(1,'#020611');
+    ctx.fillStyle = g; ctx.fillRect(0,0,BASE_W,BASE_H);
+
+    ctx.save();
+    ctx.globalAlpha = .28;
+    ctx.strokeStyle = '#16456d'; ctx.lineWidth = 1;
+    const grid = 32;
+    for(let x=0;x<=BASE_W;x+=grid){
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,BASE_H); ctx.stroke();
+    }
+    for(let y=0;y<=BASE_H;y+=grid){
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(BASE_W,y); ctx.stroke();
+    }
+    ctx.globalAlpha = .15;
+    ctx.strokeStyle = '#42e7ff';
+    for(let x=((t*24)%128)-128;x<BASE_W;x+=128){
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x+180,BASE_H); ctx.stroke();
+    }
+    ctx.restore();
+
+    drawCircuit(76,96,270,96,320,150,'#42e7ff',.32);
+    drawCircuit(48,520,240,520,270,470,'#42e7ff',.24);
+    drawCircuit(618,64,910,64,940,194,'#ff7c24',.26);
+    drawCircuit(566,458,890,458,930,410,'#42e7ff',.22);
+    drawCircuit(612,302,690,302,720,350,'#ff7c24',.20);
+  }
+
+  function drawCircuit(x1,y1,x2,y2,x3,y3,color,alpha){
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.lineTo(x3,y3); ctx.stroke();
+    for(const [x,y] of [[x1,y1],[x2,y2],[x3,y3]]){
+      ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawWalls(){
+    ctx.save();
+    for(const w of walls){
+      ctx.fillStyle = 'rgba(7,22,42,.96)';
+      roundRect(w.x,w.y,w.w,w.h,7,true,false);
+      ctx.strokeStyle = 'rgba(66,231,255,.68)'; ctx.lineWidth = 2; ctx.shadowColor = '#42e7ff'; ctx.shadowBlur = 10;
+      roundRect(w.x+.5,w.y+.5,w.w-1,w.h-1,7,false,true);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(191,249,255,.22)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(w.x+8,w.y+w.h/2); ctx.lineTo(w.x+w.w-8,w.y+w.h/2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawCorruption(){
+    ctx.save();
+    for(const c of corruption){
+      if(c.cleared && c.alpha <= 0) continue;
+      const alpha = c.cleared ? c.alpha*.22 : .70 + Math.sin(t*5+c.seed)*.08;
+      const grad = ctx.createRadialGradient(c.x,c.y,4,c.x,c.y,c.r*1.25);
+      grad.addColorStop(0,`rgba(255,124,36,${alpha})`);
+      grad.addColorStop(.55,`rgba(255,54,95,${alpha*.38})`);
+      grad.addColorStop(1,'rgba(255,124,36,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(c.x,c.y,c.r*1.26,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = c.cleared ? 'rgba(103,255,157,.55)' : 'rgba(255,124,36,.88)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([10,8]); ctx.lineDashOffset = -t*18 + c.seed*5;
+      ctx.beginPath(); ctx.arc(c.x,c.y,c.r + Math.sin(t*4+c.seed)*2,0,Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = alpha*.75;
+      ctx.fillStyle = '#ff7c24';
+      for(let i=0;i<12;i++){
+        const a = i*.9 + c.seed + Math.sin(t*1.7+i)*.18;
+        const rr = c.r*randNoise(c.seed+i, .25, .95);
+        const sz = 2 + ((i+c.seed)%4);
+        ctx.fillRect(c.x+Math.cos(a)*rr, c.y+Math.sin(a)*rr, sz, sz);
+      }
+    }
+    ctx.restore();
+  }
+
+  function randNoise(seed,a,b){
+    const x = Math.sin(seed*999.13) * 43758.5453;
+    return a + (x - Math.floor(x)) * (b-a);
+  }
+
+  function drawFragments(){
+    ctx.save();
+    for(const f of fragments){
+      if(f.taken) continue;
+      const r = 9 + Math.sin(t*4+f.pulse)*2;
+      ctx.save();
+      ctx.translate(f.x,f.y);
+      ctx.rotate(t*1.8+f.id);
+      ctx.shadowColor = '#42e7ff'; ctx.shadowBlur = 18;
+      ctx.strokeStyle = '#bff9ff'; ctx.lineWidth = 2;
+      ctx.fillStyle = 'rgba(66,231,255,.18)';
+      ctx.beginPath();
+      ctx.moveTo(0,-r); ctx.lineTo(r,0); ctx.lineTo(0,r); ctx.lineTo(-r,0); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawNodes(){
+    ctx.save();
+    for(const n of nodes){
+      const pulse = 1 + Math.sin(t*3+n.pulse)*.06;
+      const color = n.restored ? '#67ff9d' : n.ready ? '#ffc247' : '#42e7ff';
+      ctx.shadowColor = color; ctx.shadowBlur = n.restored ? 24 : 14;
+      ctx.strokeStyle = color; ctx.lineWidth = 3;
+      ctx.fillStyle = n.restored ? 'rgba(103,255,157,.22)' : 'rgba(66,231,255,.14)';
+      ctx.beginPath(); ctx.arc(n.x,n.y,26*pulse,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(n.x,n.y,13*pulse,0,Math.PI*2); ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = color;
+      ctx.font = '700 10px Inter, system-ui'; ctx.textAlign = 'center';
+      ctx.fillText(n.restored ? 'ONLINE' : `${player.fragments}/${n.requirement}`, n.x, n.y+44);
+      if(n.ring > 0){
+        ctx.globalAlpha = n.ring;
+        ctx.strokeStyle = '#67ff9d'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(n.x,n.y,34 + (1-n.ring)*80,0,Math.PI*2); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawExit(){
+    ctx.save();
+    const cx = exit.x + exit.w/2, cy = exit.y + exit.h/2;
+    const openPulse = exit.open ? .65 + Math.sin(t*6)*.25 : .25;
+    ctx.fillStyle = exit.open ? 'rgba(103,255,157,.16)' : 'rgba(7,22,42,.90)';
+    ctx.strokeStyle = exit.open ? '#67ff9d' : 'rgba(66,231,255,.56)';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = exit.open ? '#67ff9d' : '#42e7ff'; ctx.shadowBlur = exit.open ? 28 : 12;
+    roundRect(exit.x,exit.y,exit.w,exit.h,12,true,true);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = exit.open ? '#67ff9d' : '#42e7ff';
+    ctx.font = '900 14px Inter, system-ui'; ctx.textAlign='center';
+    ctx.fillText('EXIT', cx, exit.y-12);
+    ctx.globalAlpha = exit.open ? 1 : .45;
+    ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = exit.open ? '#eaffff' : '#42e7ff';
+    for(let i=0;i<2;i++){
+      const ox = cx - 14 + i*18 + (exit.open ? Math.sin(t*7)*3 : 0);
+      ctx.beginPath(); ctx.moveTo(ox-8,cy-16); ctx.lineTo(ox+8,cy); ctx.lineTo(ox-8,cy+16); ctx.stroke();
+    }
+    if(exit.open){
+      ctx.globalAlpha = openPulse;
+      ctx.strokeStyle = '#67ff9d'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(cx,cy,42 + Math.sin(t*4)*5,0,Math.PI*2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawDrones(){
+    ctx.save();
+    for(const d of drones){
+      if(!d.active){
+        ctx.globalAlpha = .30;
+      }
+      if(d.active && d.stunned <= 0){
+        const range = d.scanRange * (1 + player.nodes*.05);
+        ctx.save();
+        ctx.translate(d.x,d.y);
+        ctx.rotate(d.angle);
+        const cone = ctx.createRadialGradient(0,0,10,0,0,range);
+        cone.addColorStop(0,'rgba(255,54,95,.32)');
+        cone.addColorStop(1,'rgba(255,54,95,0)');
+        ctx.fillStyle = cone;
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,range,-d.scanHalf,d.scanHalf); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+      const body = d.stunned > 0 ? '#ffc247' : '#ff365f';
+      ctx.shadowColor = body; ctx.shadowBlur = d.active ? 18 : 8;
+      ctx.fillStyle = d.active ? 'rgba(8,16,28,.96)' : 'rgba(8,16,28,.55)';
+      ctx.strokeStyle = body; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = body;
+      ctx.beginPath(); ctx.arc(d.x,d.y,5 + Math.sin(t*8+d.id)*1.4,0,Math.PI*2); ctx.fill();
+      ctx.lineWidth = 2;
+      for(let i=0;i<4;i++){
+        const a = t*2.4 + i*Math.PI/2;
+        ctx.beginPath(); ctx.moveTo(d.x+Math.cos(a)*18,d.y+Math.sin(a)*18); ctx.lineTo(d.x+Math.cos(a)*25,d.y+Math.sin(a)*25); ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      if(d.stunned > 0){
+        ctx.fillStyle = '#ffc247'; ctx.font = '900 10px Inter, system-ui'; ctx.textAlign='center';
+        ctx.fillText('STUN', d.x, d.y-26);
+      }
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+
+  function drawPlayer(){
+    ctx.save();
+    for(const tr of trail){
+      ctx.globalAlpha = tr.life / .35 * .28;
+      ctx.fillStyle = '#42e7ff';
+      ctx.beginPath(); ctx.arc(tr.x,tr.y,player.r*.82,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    const glow = 18 + player.glow*44;
+    ctx.shadowColor = '#42e7ff'; ctx.shadowBlur = glow;
+    ctx.fillStyle = '#eaffff';
+    ctx.strokeStyle = '#42e7ff'; ctx.lineWidth = 3;
+    roundRect(player.x-15, player.y-12, 30, 24, 8, true, true);
+    ctx.fillStyle = '#153555';
+    roundRect(player.x-7, player.y-5, 14, 10, 3, true, false);
+    ctx.strokeStyle = '#bff9ff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(player.x + Math.cos(player.facing)*13, player.y + Math.sin(player.facing)*10); ctx.lineTo(player.x + Math.cos(player.facing)*22, player.y + Math.sin(player.facing)*17); ctx.stroke();
+    ctx.shadowBlur = 0;
+    if(player.invuln > 0){
+      ctx.globalAlpha = .42;
+      ctx.strokeStyle = '#ffc247'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(player.x,player.y,24 + Math.sin(t*22)*2,0,Math.PI*2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawEffects(){
+    ctx.save();
+    for(const p of pulses){
+      const a = clamp(p.life / p.max, 0, 1);
+      ctx.globalAlpha = a;
+      ctx.strokeStyle = p.color; ctx.lineWidth = 5 * a;
+      ctx.shadowColor = p.color; ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.stroke();
+    }
+    for(const p of particles){
+      const a = clamp(p.life / p.max, 0, 1);
+      ctx.globalAlpha = a;
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r*a,0,Math.PI*2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    ctx.font = '900 13px Inter, system-ui'; ctx.textAlign = 'center';
+    for(const ft of floatText){
+      ctx.globalAlpha = clamp(ft.life,0,1);
+      ctx.fillStyle = ft.color;
+      ctx.fillText(ft.text, ft.x, ft.y);
+    }
+    ctx.restore();
+  }
+
+  function drawHud(){
+    ctx.save();
+    drawHudPanel(18,18,234,102);
+    ctx.fillStyle = '#42e7ff'; ctx.font = '900 12px Inter, system-ui'; ctx.textAlign='left';
+    ctx.fillText('SIGNAL', 34, 42);
+    ctx.fillText('NODES', 34, 72);
+    ctx.fillText('INTEGRITY', 34, 102);
+    ctx.fillStyle = '#ffffff'; ctx.font = '900 19px ui-monospace, Menlo, monospace';
+    ctx.fillText(`${player.fragments}/${fragments.length}`, 128, 43);
+    ctx.fillText(`${player.nodes}/${nodes.length}`, 128, 73);
+    ctx.fillText(`${Math.ceil(player.integrity)}%`, 128, 103);
+    bar(128,91,96,9,player.integrity/100, player.integrity>35 ? '#67ff9d' : '#ff365f');
+
+    drawHudPanel(BASE_W-258,18,240,88);
+    ctx.fillStyle = '#42e7ff'; ctx.font = '900 12px Inter, system-ui';
+    ctx.fillText('SCORE', BASE_W-240, 42);
+    ctx.fillText('THREAT', BASE_W-240, 72);
+    ctx.fillStyle = '#ffffff'; ctx.font = '900 19px ui-monospace, Menlo, monospace';
+    ctx.fillText(String(score).padStart(6,'0'), BASE_W-146, 43);
+    const activeThreat = drones.filter(d=>d.active).length + corruption.filter(c=>!c.cleared).length/4;
+    drawSkulls(BASE_W-146, 72, clamp(Math.ceil(activeThreat),1,5));
+
+    drawHudPanel(276,18,472,64);
+    ctx.textAlign = 'center';
+    ctx.font = '900 10px Inter, system-ui';
+    ctx.fillStyle = '#42e7ff';
+    ctx.fillText(`${currentConfig.id} / ${currentConfig.name} / ${currentLevel+1}-${LEVELS.length}`, BASE_W/2, 39);
+    ctx.font = '900 15px Inter, system-ui';
+    ctx.fillStyle = objectiveFlash > 0 ? '#ffc247' : '#bff9ff';
+    ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = objectiveFlash > 0 ? 14 : 4;
+    ctx.fillText(objective, BASE_W/2, 62);
+    ctx.shadowBlur = 0;
+
+    if(combo > 1){
+      ctx.textAlign = 'center'; ctx.font = '900 14px Inter, system-ui'; ctx.fillStyle = '#ffc247';
+      ctx.fillText(`CHAIN x${combo}`, BASE_W/2, 82);
+    }
+
+    drawAbility(28, BASE_H-72, 'A', 'SWEEP', 1 - player.sweepCooldown/(currentConfig?.sweepCooldown || .42), '#42e7ff');
+    drawAbility(128, BASE_H-72, 'B', 'DASH', 1 - player.dashCooldown/(currentConfig?.dashCooldown || .78), '#ffc247');
+    ctx.restore();
+  }
+
+  function drawHudPanel(x,y,w,h){
+    ctx.save();
+    ctx.fillStyle = 'rgba(4,14,28,.72)'; ctx.strokeStyle = 'rgba(66,231,255,.48)'; ctx.lineWidth = 1.5;
+    roundRect(x,y,w,h,12,true,true);
+    ctx.restore();
+  }
+
+  function bar(x,y,w,h,p,color){
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,.10)'; roundRect(x,y,w,h,5,true,false);
+    ctx.fillStyle = color; roundRect(x,y,w*clamp(p,0,1),h,5,true,false);
+    ctx.restore();
+  }
+
+  function drawSkulls(x,y,count){
+    ctx.save(); ctx.fillStyle = '#ff7c24'; ctx.font = '900 16px Inter, system-ui';
+    for(let i=0;i<5;i++){ ctx.globalAlpha = i < count ? 1 : .22; ctx.fillText('◆', x + i*18, y+2); }
+    ctx.restore();
+  }
+
+  function drawAbility(x,y,key,label,ready,color){
+    ready = clamp(ready,0,1);
+    ctx.save();
+    ctx.fillStyle = 'rgba(4,14,28,.70)'; ctx.strokeStyle = color; ctx.lineWidth = 2;
+    roundRect(x,y,84,46,12,true,true);
+    ctx.globalAlpha = .25; ctx.fillStyle = color; roundRect(x,y+46-(46*ready),84,46*ready,12,true,false);
+    ctx.globalAlpha = 1; ctx.fillStyle = '#ffffff'; ctx.font = '900 17px Inter, system-ui'; ctx.textAlign='center'; ctx.fillText(key,x+20,y+28);
+    ctx.fillStyle = color; ctx.font = '900 10px Inter, system-ui'; ctx.fillText(label,x+54,y+18);
+    ctx.fillText(ready>=1?'READY':'WAIT',x+54,y+32);
+    ctx.restore();
+  }
+
+  function drawArrowToObjective(){
+    let target = null;
+    if(exit.open) target = {x:exit.x+exit.w/2,y:exit.y+exit.h/2};
+    else {
+      target = nodes.find(n=>!n.restored) || null;
+      if(target && (player.fragments < target.requirement || nodeBlocked(target))){
+        const available = fragments.filter(f=>!f.taken).sort((a,b)=>dist(player.x,player.y,a.x,a.y)-dist(player.x,player.y,b.x,b.y));
+        if(player.fragments < target.requirement && available[0]) target = available[0];
+      }
+    }
+    if(!target) return;
+    const a = Math.atan2(target.y-player.y, target.x-player.x);
+    const x = player.x + Math.cos(a)*44;
+    const y = player.y + Math.sin(a)*44;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(a);
+    ctx.globalAlpha = .88;
+    ctx.fillStyle = exit.open ? '#67ff9d' : '#42e7ff';
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(-8,-8); ctx.lineTo(-3,0); ctx.lineTo(-8,8); ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    const s = worldToScreen(target.x, target.y);
+    if(s.x < 30 || s.x > BASE_W-30 || s.y < 30 || s.y > BASE_H-30){
+      const cx = clamp(s.x, 24, BASE_W-24);
+      const cy = clamp(s.y, 24, BASE_H-24);
+      ctx.save();
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.translate(cx, cy);
+      ctx.rotate(a);
+      ctx.globalAlpha = .9;
+      ctx.fillStyle = exit.open ? '#67ff9d' : '#42e7ff';
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.moveTo(16,0); ctx.lineTo(-10,-9); ctx.lineTo(-4,0); ctx.lineTo(-10,9); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawCenterText(text){
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,.42)'; ctx.fillRect(0,0,BASE_W,BASE_H);
+    ctx.fillStyle = '#eaffff'; ctx.font = '950 48px Inter, system-ui'; ctx.textAlign='center'; ctx.shadowColor='#42e7ff'; ctx.shadowBlur=18;
+    ctx.fillText(text, BASE_W/2, BASE_H/2);
+    ctx.restore();
+  }
+
+  function roundRect(x,y,w,h,r,fill,stroke){
+    r = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+    if(fill) ctx.fill(); if(stroke) ctx.stroke();
+  }
+
+  function loop(time){
+    const dt = Math.min(.033, (time-lastTime)/1000 || .016);
+    lastTime = time;
+    if(pressed.start){ togglePause(); pressed.start=false; }
+    if(pressed.select){ showBriefing(); pressed.select=false; }
+    if(pressed.restart){ if(state === 'levelComplete') startNextLevel(); else if(state === 'fail' || state === 'win' || state === 'intro') startGame(); pressed.restart=false; }
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function codeFor(e){ return e.code || e.key; }
+  window.addEventListener('keydown', e => {
+    const c = codeFor(e);
+    keys[c] = true;
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','Tab'].includes(c)) e.preventDefault();
+    if(c === 'KeyZ' || c === 'Space') { if(state === 'intro' || state === 'win' || state === 'fail' || state === 'levelComplete') pressed.restart = true; else pressed.a = true; }
+    if(c === 'KeyX' || c === 'ShiftLeft' || c === 'ShiftRight') pressed.b = true;
+    if(c === 'Enter') { if(state === 'intro' || state === 'win' || state === 'fail' || state === 'levelComplete') pressed.restart = true; else pressed.start = true; }
+    if(c === 'KeyP') pressed.start = true;
+    if(c === 'Tab' || c === 'Backquote') pressed.select = true;
+    if(c === 'KeyR') pressed.restart = true;
+  }, {passive:false});
+  window.addEventListener('keyup', e => { keys[codeFor(e)] = false; }, {passive:true});
+
+  function bindButton(el, name){
+    const down = e => { e.preventDefault(); el.classList.add('down'); if(state === 'intro' || state === 'win' || state === 'fail' || state === 'levelComplete'){ pressed.restart = true; } else { pressed[name] = true; } };
+    const up = e => { e.preventDefault(); el.classList.remove('down'); };
+    el.addEventListener('pointerdown', down, {passive:false});
+    el.addEventListener('pointerup', up, {passive:false});
+    el.addEventListener('pointercancel', up, {passive:false});
+    el.addEventListener('pointerleave', up, {passive:false});
+  }
+  bindButton(aBtn,'a'); bindButton(bBtn,'b'); bindButton(startBtn,'start'); bindButton(selectBtn,'select');
+
+  let joyPointer = null;
+  function updateJoy(e){
+    const rect = joy.getBoundingClientRect();
+    const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+    let x = (e.clientX - cx) / (rect.width*.38);
+    let y = (e.clientY - cy) / (rect.height*.38);
+    const m = Math.hypot(x,y);
+    if(m > 1){ x/=m; y/=m; }
+    touchMove.x = x; touchMove.y = y;
+    stick.style.transform = `translate(calc(-50% + ${x*30}px), calc(-50% + ${y*30}px))`;
+  }
+  joy.addEventListener('pointerdown', e => { e.preventDefault(); joyPointer = e.pointerId; joy.setPointerCapture(joyPointer); updateJoy(e); }, {passive:false});
+  joy.addEventListener('pointermove', e => { if(e.pointerId === joyPointer) { e.preventDefault(); updateJoy(e); } }, {passive:false});
+  function clearJoy(e){
+    if(joyPointer === null || e.pointerId === joyPointer){
+      touchMove.x = 0; touchMove.y = 0; joyPointer = null;
+      stick.style.transform = 'translate(-50%,-50%)';
+    }
+  }
+  joy.addEventListener('pointerup', clearJoy, {passive:false});
+  joy.addEventListener('pointercancel', clearJoy, {passive:false});
+
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  resetGame();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
