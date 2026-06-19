@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>BREACH DROP v0.1.4</title>
+<style>
+  :root{
+    --bg:#050713;
+    --panel:#0b1020;
+    --panel2:#10172b;
+    --cyan:#6fe8ff;
+    --cyan2:#bdf7ff;
+    --gold:#ffd166;
+    --red:#ff3d68;
+    --mag:#ff4fd8;
+    --green:#68ff9a;
+    --white:#edf7ff;
+    --muted:#71809a;
+    --shadow:rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0;
+    height:100%;
+    background:radial-gradient(circle at 50% 10%,#172042 0%,#070a16 48%,#02030a 100%);
+    color:var(--white);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    overflow:hidden;
+    touch-action:none;
+    user-select:none;
+  }
+  #wrap{
+    width:100vw;
+    height:100dvh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px;
+    position:relative;
+  }
+  #cabinet{
+    position:relative;
+    height:auto;
+    flex:0 1 auto;
+    min-height:0;
+    max-height:calc(100% - 198px);
+    aspect-ratio: 3 / 4;
+    max-width:100%;
+    border-radius:22px;
+    background:linear-gradient(180deg,#17223b,#070914 72%,#03040a);
+    border:2px solid rgba(111,232,255,.25);
+    box-shadow:0 22px 70px rgba(0,0,0,.65), inset 0 0 34px rgba(111,232,255,.08);
+    overflow:hidden;
+  }
+  /* Reserve a dedicated control band below the canvas so the play
+     area never renders behind the buttons, on any input type. On
+     desktop the band is still shown (dimmed, brightens on hover) so
+     mouse/trackpad users keep the original click-to-play behavior;
+     it just no longer floats on top of the game. */
+  #controlBand{
+    display:flex;
+    position:relative;
+    width:min(100%, 620px);
+    height:190px;
+    flex:0 0 auto;
+  }
+  #game{
+    width:100%;
+    height:100%;
+    display:block;
+    image-rendering:auto;
+    background:#040713;
+  }
+  #scanlines{
+    pointer-events:none;
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(rgba(255,255,255,.03) 50%, rgba(0,0,0,.08) 50%),
+      radial-gradient(circle at 50% 35%,rgba(111,232,255,.08),transparent 45%);
+    background-size:100% 4px, 100% 100%;
+    mix-blend-mode:screen;
+    opacity:.42;
+  }
+  #touchLayer{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+  }
+  .touchBtn,.dpadPad{
+    pointer-events:auto;
+    position:absolute;
+    border:1.5px solid rgba(189,247,255,.35);
+    background:linear-gradient(180deg,rgba(12,19,37,.82),rgba(6,9,20,.88));
+    color:var(--white);
+    box-shadow:0 8px 22px rgba(0,0,0,.35), inset 0 0 16px rgba(111,232,255,.08);
+    backdrop-filter: blur(4px);
+    touch-action:none;
+  }
+  .touchBtn.active,.dpadPad.active{
+    transform:translateY(1px) scale(.98);
+    border-color:rgba(255,209,102,.85);
+    box-shadow:0 0 24px rgba(255,209,102,.22), inset 0 0 20px rgba(255,209,102,.12);
+  }
+  .dpadPad{
+    width:132px;
+    height:132px;
+    left:14px;
+    top:10px;
+    border-radius:24px;
+  }
+  .dpadPad:before,.dpadPad:after{
+    content:"";
+    position:absolute;
+    background:rgba(111,232,255,.17);
+    border-radius:12px;
+    left:50%;top:50%;
+    transform:translate(-50%,-50%);
+  }
+  .dpadPad:before{width:30px;height:98px;}
+  .dpadPad:after{width:98px;height:30px;}
+  .dpadLabel{
+    position:absolute;
+    inset:0;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    grid-template-rows:1fr 1fr 1fr;
+    place-items:center;
+    color:rgba(237,247,255,.7);
+    font-weight:900;
+    font-size:18px;
+    letter-spacing:.05em;
+    text-shadow:0 1px 0 #000;
+  }
+  .dpadLabel span:nth-child(1){grid-column:2;grid-row:1;}
+  .dpadLabel span:nth-child(2){grid-column:1;grid-row:2;}
+  .dpadLabel span:nth-child(3){grid-column:3;grid-row:2;}
+  .dpadLabel span:nth-child(4){grid-column:2;grid-row:3;}
+  .touchBtn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-weight:900;
+    letter-spacing:.05em;
+    text-shadow:0 2px 0 #000;
+  }
+  /* A/B/Start positioned within #controlBand. Geometry verified by
+     computed box overlap checks: d-pad, A, and B occupy non-
+     intersecting regions, and Start sits centered below the lowest
+     edge of all three with margin to spare. */
+  #btnA{
+    right:14px;
+    top:6px;
+    width:100px;
+    height:100px;
+    border-radius:50%;
+    font-size:16px;
+    color:#fff7d9;
+    border-color:rgba(255,209,102,.5);
+  }
+  #btnB{
+    right:128px;
+    top:48px;
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    font-size:13px;
+    color:#dffcff;
+  }
+  #btnStart{
+    left:50%;
+    transform:translateX(-50%);
+    bottom:4px;
+    width:112px;
+    height:36px;
+    border-radius:18px;
+    font-size:12px;
+    color:var(--white);
+  }
+  #btnStart.active{transform:translateX(-50%) translateY(1px) scale(.98);}
+  #hint{
+    display:none;
+    position:absolute;
+    left:50%;
+    top:12px;
+    transform:translateX(-50%);
+    padding:7px 10px;
+    border-radius:999px;
+    font-size:11px;
+    color:rgba(237,247,255,.72);
+    border:1px solid rgba(111,232,255,.15);
+    background:rgba(2,4,12,.35);
+    pointer-events:none;
+  }
+  @media (hover:hover) and (pointer:fine) and (min-width:760px){
+    #controlBand{opacity:.28; transition:opacity .2s;}
+    #controlBand:hover{opacity:.85;}
+  }
+  @media (max-height:700px){
+    #cabinet{ max-height:calc(100% - 168px); }
+    #controlBand{ height:160px; }
+    .dpadPad{ width:112px; height:112px; top:6px; }
+    .dpadPad:before{height:82px;width:26px;}
+    .dpadPad:after{width:82px;height:26px;}
+    #btnA{ width:84px; height:84px; top:4px; right:12px; }
+    #btnB{ width:66px; height:66px; top:38px; right:104px; }
+    #btnStart{ height:32px; bottom:4px; width:98px; }
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="cabinet" aria-label="BREACH DROP game cabinet">
+    <canvas id="game" width="540" height="720"></canvas>
+    <div id="scanlines"></div>
+  </div>
+  <div id="controlBand" aria-label="Touch controls">
+    <div id="touchLayer" aria-hidden="false">
+      <div id="dpad" class="dpadPad" role="button" aria-label="Touch D-pad">
+        <div class="dpadLabel"><span>▲</span><span>◀</span><span>▶</span><span>▼</span></div>
+      </div>
+      <div id="btnA" class="touchBtn" role="button" aria-label="A Phase">A<br>PHASE</div>
+      <div id="btnB" class="touchBtn" role="button" aria-label="B Brake">B<br>BRAKE</div>
+      <div id="btnStart" class="touchBtn" role="button" aria-label="Start Pause">START</div>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+'use strict';
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width;
+const H = canvas.height;
+const HUD_H = 78;
+const PLAY_TOP = HUD_H + 8;
+const PLAY_BOTTOM = H - 10;
+const CENTER_X = W * 0.5;
+
+const storageKey = 'breachDropBestDepthV01';
+function readBestDepth(){
+  try { return Number(localStorage.getItem(storageKey) || 0); }
+  catch { return 0; }
+}
+function saveBestDepth(value){
+  try { localStorage.setItem(storageKey, String(value)); }
+  catch { /* Browser storage may be unavailable in strict/private contexts. */ }
+}
+const bestSaved = readBestDepth();
+
+const input = {
+  up:false, down:false, left:false, right:false,
+  a:false, b:false, start:false,
+  aEdge:false, startEdge:false
+};
+const gpInput = { up:false, down:false, left:false, right:false, a:false, b:false, start:false };
+function down(name){ return !!(input[name] || gpInput[name]); }
+let lastA = false;
+let lastStart = false;
+
+const state = {
+  mode:'title',
+  t:0,
+  shake:0,
+  shakeX:0,
+  shakeY:0,
+  flash:0,
+  bestDepth: bestSaved,
+  message:'',
+  messageT:0,
+  gateChain:0,
+  lastFrame: performance.now(),
+  bgOffset:0
+};
+
+const player = {
+  x: CENTER_X,
+  y: H * 0.42,
+  r: 13,
+  speed: 255,
+  integrity:100,
+  key:false,
+  brake:100,
+  phaseCd:0,
+  phaseFlash:0,
+  ghost:0,
+  invuln:0,
+  clean:true
+};
+
+const run = {
+  depth:0,
+  worldDescent:0,    // cumulative downward world-shift; depth tracks its high-water mark
+  score:0,
+  gates:0,
+  keys:0,
+  nearMisses:0,
+  speedRelief:0,
+  dropSpeedDisplay:1,
+  gateNumber:0,
+  // Single-sequence lock: exactly one key+gate sequence is active at
+  // a time. The next sequence cannot spawn until activeGate is
+  // resolved (breached/failed) or has scrolled out of the world
+  // behind the player.
+  activeGate:null,
+  sequenceGapTimer:0.6,
+  sequenceAge:0,
+  sequenceId:0,
+  lastValidationFallback:false
+};
+
+const objects = [];
+const particles = [];
+const floatText = [];
+
+const COLORS = {
+  bg:'#040713', grid:'rgba(111,232,255,.12)', grid2:'rgba(111,232,255,.045)',
+  cyan:'#6fe8ff', cyan2:'#bdf7ff', gold:'#ffd166', red:'#ff3d68', mag:'#ff4fd8',
+  green:'#68ff9a', white:'#edf7ff', muted:'#71809a', dark:'#070a16', panel:'#0b1020'
+};
+
+function resetRun(){
+  // Player can now occupy the full play height -- no bottom reservation.
+  player.x = CENTER_X;
+  player.y = H * 0.38;
+  player.integrity = 100;
+  player.key = false;
+  player.brake = 100;
+  player.phaseCd = 0;
+  player.phaseFlash = 0;
+  player.ghost = 0;
+  player.invuln = 1.1;
+  player.clean = true;
+  run.depth = 0;
+  run.worldDescent = 0;
+  run.score = 0;
+  run.gates = 0;
+  run.keys = 0;
+  run.nearMisses = 0;
+  run.speedRelief = 0;
+  run.dropSpeedDisplay = 1;
+  run.gateNumber = 0;
+  run.activeGate = null;
+  run.sequenceGapTimer = 0.8;
+  run.sequenceAge = 0;
+  run.sequenceId = 0;
+  run.lastValidationFallback = false;
+  objects.length = 0;
+  particles.length = 0;
+  floatText.length = 0;
+  state.t = 0;
+  state.shake = 0;
+  state.flash = 0;
+  state.gateChain = 0;
+  setMessage('DROP INITIATED', 1.0);
+}
+
+function startRun(){
+  resetRun();
+  state.mode = 'playing';
+}
+
+function gameOver(){
+  state.mode = 'gameover';
+  const d = Math.floor(run.depth);
+  if (d > state.bestDepth) {
+    state.bestDepth = d;
+    saveBestDepth(d);
+  }
+  setMessage('SYSTEM SEALED', 2.0);
+  burst(player.x, player.y, COLORS.red, 30, 230);
+  state.shake = .55;
+}
+
+function togglePause(){
+  if (state.mode === 'playing') state.mode = 'paused';
+  else if (state.mode === 'paused') state.mode = 'playing';
+  else if (state.mode === 'title' || state.mode === 'gameover') startRun();
+}
+
+function setMessage(text, seconds){
+  state.message = text;
+  state.messageT = seconds;
+}
+
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function rand(min,max){ return min + Math.random() * (max-min); }
+function choice(a){ return a[(Math.random()*a.length)|0]; }
+function rectCircle(rect, cx, cy, r){
+  const nx = clamp(cx, rect.x, rect.x + rect.w);
+  const ny = clamp(cy, rect.y, rect.y + rect.h);
+  const dx = cx - nx, dy = cy - ny;
+  return dx*dx + dy*dy <= r*r;
+}
+function pointDist(x1,y1,x2,y2){ const dx=x1-x2,dy=y1-y2; return Math.sqrt(dx*dx+dy*dy); }
+
+// --- Forced descent model ---
+// The system always pulls the run downward now. The player can influence
+// the fall, but cannot fully stop or reverse it: down dives faster, up
+// resists the fall, and B/BRAKE buys brief precision control.
+const VERTICAL_SPEED = 255;       // Phase burst / tuning reference.
+const BASE_DROP_SPEED = 132;      // px/s, minimum world scroll while playing.
+const DROP_ACCEL_MULT = 1.55;     // Holding down = risky faster dive.
+const UP_RESIST_MULT = 0.58;      // Holding up slows but never reverses descent.
+const BRAKE_DROP_MULT = 0.42;     // Holding B slows descent while brake remains.
+const SLOW_BUFFER_MULT = 0.55;    // Slow power-up relief.
+
+// --- No-dead-end rule constants ---
+// These guardrails run before forced descent is restored. Every generated
+// sequence must reserve a readable path from entry → key → gate.
+const LANES = [112, 194, 270, 346, 428];
+const SAFE_LANE_WIDTH = 88;
+const FLOW_WIDTH = 94;
+const PLAYER_CLEARANCE = player.r * 2 + 36;
+const MIN_KEY_GATE_DISTANCE = 540;
+const BREACH_ZONE_HEIGHT = 156;
+const PHASE_COOLDOWN = 1.05;
+const PHASE_DASH_X = 78;
+const PHASE_DASH_Y = 96;
+const PHASE_INVULN = 0.28;
+const MAX_SEQUENCE_AGE = 14;
+
+function difficulty(){
+  // Ramp now keyed to lowest depth reached (a distance, not a clock),
+  // so density still grows with progress, not with elapsed time.
+  return clamp(run.depth / 3200, 0, 1.25);
+}
+
+function addScore(points, label, x, y, color=COLORS.gold){
+  run.score += points;
+  if (label) floatText.push({x,y,text:label,color,life:.75,vy:-36});
+}
+
+function shiftWorld(shift){
+  // Positive shift means the player descends: the world moves upward on screen.
+  // Negative shift retreats visually, but depth/score only use the high-water mark.
+  if (!shift) return;
+  for (const o of objects) o.y -= shift;
+  for (const p of particles) p.y -= shift;
+  for (const f of floatText) f.y -= shift;
+  state.bgOffset += shift;
+  run.worldDescent += shift;
+}
+
+// --- Single-sequence spawning ---
+// Exactly one key+gate sequence exists in the world at a time.
+// Firewalls, a possible mine, and a possible power-up are placed
+// along the approach between the key and its gate, as one
+// deliberately composed set piece -- never as independent streams
+// that can stack on top of each other.
+
+function intervalOverlap(a1,a2,b1,b2){ return Math.max(a1,b1) < Math.min(a2,b2); }
+function safeLaneBounds(safeLaneX, safeLaneWidth=SAFE_LANE_WIDTH){
+  return {
+    left: clamp(safeLaneX - safeLaneWidth/2, 34, W-34-safeLaneWidth),
+    right: clamp(safeLaneX + safeLaneWidth/2, 34+safeLaneWidth, W-34)
+  };
+}
+function firewallCoversSafeLane(o, safeLaneX, safeLaneWidth=SAFE_LANE_WIDTH){
+  const s = safeLaneBounds(safeLaneX, safeLaneWidth);
+  return intervalOverlap(o.x, o.x + o.w, s.left, s.right);
+}
+function pointInsideSafeLane(x, radius, safeLaneX, safeLaneWidth=SAFE_LANE_WIDTH){
+  const s = safeLaneBounds(safeLaneX, safeLaneWidth + radius*2);
+  return x >= s.left && x <= s.right;
+}
+function tagSequenceObjects(seq, seqId){
+  for (const o of seq) o.seqId = seqId;
+  return seq;
+}
+function chooseMineXOutsideSafeLane(safeLaneX){
+  // No-dead-end rule: mines may threaten the route, but never sit on the
+  // only guaranteed safe lane. Pick from side lanes first, then clamp as a
+  // backup if the chosen safe lane is near an edge.
+  const candidates = LANES.filter(x => !pointInsideSafeLane(x, 28, safeLaneX, SAFE_LANE_WIDTH));
+  if (candidates.length) return choice(candidates) + rand(-18,18);
+  const side = safeLaneX < CENTER_X ? safeLaneX + SAFE_LANE_WIDTH + 50 : safeLaneX - SAFE_LANE_WIDTH - 50;
+  return clamp(side, 54, W-54);
+}
+
+function buildFirewallPattern(y, d, safeLaneX=CENTER_X, safeLaneWidth=SAFE_LANE_WIDTH){
+  // Validated obstacle row. v0.1.4 uses more full-row blockers with
+  // narrow readable gaps so the player cannot simply camp center.
+  // The reserved lane is always open; the route may bend between rows.
+  for (let attempt=0; attempt<8; attempt++) {
+    const variant = Math.random();
+    const out = [];
+    if (variant < .22) {
+      // Side-block / plug row: useful for clutter, never covers the reserved route.
+      const laneW = rand(54, 84 + d*24);
+      const h = rand(42, 74 + d*20);
+      const lanes = LANES.filter(x => !pointInsideSafeLane(x, laneW/2 + 6, safeLaneX, safeLaneWidth));
+      if (!lanes.length) continue;
+      const x = choice(lanes);
+      out.push({type:'firewall', x:clamp(x-laneW/2, 34, W-34-laneW), y, w:laneW, h, hit:false, pulse:rand(0,9), plug:true});
+    } else {
+      // Choke row: mostly wall, one guaranteed flow gap. This is what turns
+      // the shaft from “stay middle” into “read the route and flow down.”
+      const gapW = Math.max(PLAYER_CLEARANCE + 34, rand(106 - d*4, 136 - d*2));
+      const gapJitter = rand(-10,10);
+      const gapX = clamp(safeLaneX - gapW/2 + gapJitter, 42, W-42-gapW);
+      const h = rand(28, 44 + d*8);
+      const leftW = gapX - 28;
+      const rightX = gapX + gapW;
+      const rightW = W - 28 - rightX;
+      if (leftW > 12) out.push({type:'firewall', x:28, y, w:leftW, h, hit:false, pulse:rand(0,9), choke:true, safeLaneX});
+      if (rightW > 12) out.push({type:'firewall', x:rightX, y, w:rightW, h, hit:false, pulse:rand(0,9), choke:true, safeLaneX});
+    }
+    if (out.length && out.every(o => !firewallCoversSafeLane(o, safeLaneX, safeLaneWidth))) return out;
+  }
+
+  // Guaranteed-safe side block fallback.
+  const s = safeLaneBounds(safeLaneX, safeLaneWidth);
+  const leftSpace = s.left - 34;
+  const rightSpace = W - 34 - s.right;
+  if (leftSpace > rightSpace && leftSpace > 56) {
+    return [{type:'firewall', x:34, y, w:Math.max(38, leftSpace-16), h:36, hit:false, pulse:rand(0,9), safeFallback:true, safeLaneX}];
+  }
+  if (rightSpace > 56) {
+    return [{type:'firewall', x:s.right+16, y, w:Math.max(38, rightSpace-16), h:36, hit:false, pulse:rand(0,9), safeFallback:true, safeLaneX}];
+  }
+  return [];
+}
+
+function nearestPathLane(y, safePathRows){
+  let best = safePathRows[0];
+  let bestD = Infinity;
+  for (const row of safePathRows) {
+    const d = Math.abs(row.y - y);
+    if (d < bestD) { bestD = d; best = row; }
+  }
+  return best.laneX;
+}
+
+function makeFlowPath(rowCount){
+  // Anti-center-camp pathing. Pick a route with real lateral movement,
+  // usually starting off-center and crossing lanes over the chamber.
+  // Adjacent-only steps keep the route readable; center is a crossing lane,
+  // not a default safe highway.
+  const edgeStarts = [0,1,3,4];
+  for (let attempt=0; attempt<20; attempt++) {
+    let idx = choice(edgeStarts);
+    const path = [];
+    let repeat = 0;
+    for (let i=0;i<rowCount;i++){
+      path.push(LANES[idx]);
+      const centerBias = idx === 2;
+      const atLeft = idx <= 1;
+      const atRight = idx >= 3;
+      let steps;
+      if (centerBias) steps = choice([[-1,-1,1,1],[-1,1]]);
+      else if (atLeft) steps = [-1,0,1,1,1];
+      else if (atRight) steps = [-1,-1,-1,0,1];
+      else steps = [-1,0,1];
+      let step = choice(steps);
+      if (repeat >= 1 && step === 0) step = idx < 2 ? 1 : -1;
+      const next = clamp(idx + step, 0, LANES.length-1);
+      repeat = next === idx ? repeat + 1 : 0;
+      idx = next;
+    }
+    const distinct = new Set(path).size;
+    const centerCount = path.filter(x => x === CENTER_X).length;
+    const lateralSpan = Math.max(...path) - Math.min(...path);
+    if (distinct >= 3 && centerCount <= Math.ceil(rowCount*.34) && lateralSpan >= 150) return path;
+  }
+  // Hard fallback: a guaranteed S-curve that cannot be solved by sitting middle.
+  const template = choice([
+    [112,194,270,346,428,346,270,194],
+    [428,346,270,194,112,194,270,346],
+    [194,112,194,270,346,428,346,270],
+    [346,428,346,270,194,112,194,270]
+  ]);
+  const out=[];
+  for (let i=0;i<rowCount;i++) out.push(template[i % template.length]);
+  return out;
+}
+
+function buildWallChunks(y, d, laneX){
+  // Dense map-blockage around the flow corridor. These chunks are not random
+  // damage spam; they are walls that visually herd the player toward the
+  // next safe lane, making Brake and Phase useful without creating dead ends.
+  const out = [];
+  let candidates = LANES.filter(x => !pointInsideSafeLane(x, 44, laneX, FLOW_WIDTH));
+  // If the safe route is not center, deliberately occupy center often so
+  // “stay in the middle” stops being a winning strategy.
+  if (!pointInsideSafeLane(CENTER_X, 42, laneX, FLOW_WIDTH) && Math.random() < .85) {
+    candidates = [CENTER_X, ...candidates.filter(x => x !== CENTER_X)];
+  }
+  const maxCount = Math.min(candidates.length, 2 + (Math.random() < .65 ? 1 : 0));
+  for (let i=0;i<maxCount;i++){
+    if (!candidates.length) break;
+    const pickIndex = (Math.random()*Math.min(candidates.length, i===0 ? 1 : candidates.length))|0;
+    const x = candidates.splice(pickIndex, 1)[0];
+    const w = rand(38, 66 + d*20);
+    const h = rand(48, 92 + d*22);
+    const spec = {type:'firewall', x:clamp(x-w/2, 34, W-34-w), y:y+rand(-18,18), w, h, hit:false, pulse:rand(0,9), wallChunk:true, safeLaneX:laneX};
+    if (!firewallCoversSafeLane(spec, laneX, FLOW_WIDTH)) out.push(spec);
+  }
+  return out;
+}
+
+function tagFirewallLane(seq, laneX){
+  for (const o of seq) {
+    if (o.type === 'firewall') o.safeLaneX = laneX;
+  }
+  return seq;
+}
+
+function validateSequenceLayout(sequenceObjects, safePathRows){
+  // No-dead-end rule: every chamber must preserve one readable route from
+  // entry → key → flow rows → gate. The route may bend, but it may not seal.
+  const key = sequenceObjects.find(o => o.type === 'key');
+  const gate = sequenceObjects.find(o => o.type === 'gate');
+  if (!key || !gate || !safePathRows || safePathRows.length < 3) return false;
+  if (gate.y - key.y < MIN_KEY_GATE_DISTANCE) return false;
+
+  for (let i=1;i<safePathRows.length;i++){
+    const prev = safePathRows[i-1];
+    const cur = safePathRows[i];
+    if (Math.abs(cur.laneX - prev.laneX) > 98) return false;
+    if (cur.y - prev.y < 72) return false;
+  }
+
+  if (!pointInsideSafeLane(key.x, key.r, safePathRows[0].laneX, FLOW_WIDTH + 20)) return false;
+
+  for (const o of sequenceObjects) {
+    const oy = o.y + (o.h ? o.h/2 : 0);
+    const laneX = o.safeLaneX || nearestPathLane(oy, safePathRows);
+    if (o.type === 'firewall') {
+      if (firewallCoversSafeLane(o, laneX, FLOW_WIDTH)) return false;
+      if (Math.abs((o.y + o.h/2) - key.y) < 72 && rectCircle(o, key.x, key.y, key.r + 18)) return false;
+    }
+    if (o.type === 'mine') {
+      const mineLane = nearestPathLane(o.y, safePathRows);
+      if (pointInsideSafeLane(o.x, o.r + player.r + 8, mineLane, FLOW_WIDTH)) return false;
+      if (pointDist(o.x,o.y,key.x,key.y) < o.r + key.r + 46) return false;
+    }
+  }
+  return true;
+}
+
+function makeFallbackSequence(seqId){
+  // Fallback safe chamber: still has two blocker rows, but keeps a clear center flow.
+  const yKey = H + 28;
+  const safeLaneX = CENTER_X;
+  const rowGap = 125;
+  const safePathRows = [
+    {y:yKey, laneX:safeLaneX},
+    {y:yKey + rowGap, laneX:safeLaneX},
+    {y:yKey + rowGap*2, laneX:safeLaneX},
+    {y:yKey + rowGap*3 + 70, laneX:safeLaneX}
+  ];
+  const seq = [];
+  seq.push({type:'key', x:safeLaneX, y:yKey, r:12, taken:false, wob:rand(0,10), safeLaneX});
+  tagFirewallLane(seq, safeLaneX);
+  for (let i=1;i<safePathRows.length-1;i++){
+    const row = safePathRows[i];
+    const specs = buildFirewallPattern(row.y, 0, row.laneX, FLOW_WIDTH);
+    tagFirewallLane(specs, row.laneX);
+    seq.push(...specs);
+  }
+  const gate = {type:'gate', x:34, y:safePathRows.at(-1).y, w:W-68, h:24, n:run.gateNumber, breached:false, failed:false, glow:0, safeLaneX, safePathRows};
+  seq.push(gate);
+  tagSequenceObjects(seq, seqId);
+  return {seq, gate, safePathRows, fallback:true};
+}
+
+function spawnSequence(){
+  const d = difficulty();
+  run.gateNumber++;
+  run.sequenceId++;
+  const seqId = run.sequenceId;
+
+  // v0.1.4: larger chamber, more rows, and a route that bends hard enough
+  // that the middle lane is not a safe default. Still validated before spawn.
+  const rowCount = clamp(5 + Math.floor(d*2) + (Math.random() < .55 ? 1 : 0), 5, 8);
+  const path = makeFlowPath(rowCount + 2);
+  const yKey = H + 34;
+  const rowGap = rand(94, 112);
+  const safePathRows = [];
+  for (let i=0;i<path.length;i++) safePathRows.push({y:yKey + i*rowGap, laneX:path[i]});
+  const yGate = safePathRows.at(-1).y + 78;
+  safePathRows.push({y:yGate, laneX:path.at(-1)});
+
+  const seq = [];
+  // Key is placed on the second path row so the player has to commit to
+  // the chamber route instead of just drifting down the center.
+  const keyLaneX = path[1] || path[0];
+  safePathRows[0].laneX = keyLaneX;
+  seq.push({type:'key', x:keyLaneX + rand(-8,8), y:yKey, r:12, taken:false, wob:rand(0,10), safeLaneX:keyLaneX});
+
+  // Flow chamber rows: multiple choke rows plus extra wall chunks around the
+  // route. Each row has its own reserved lane and is validated against it.
+  for (let i=1;i<safePathRows.length-1;i++){
+    const row = safePathRows[i];
+    const specs = buildFirewallPattern(row.y, d, row.laneX, FLOW_WIDTH);
+    tagFirewallLane(specs, row.laneX);
+    seq.push(...specs);
+
+    // Add offset chunks between rows so the chamber reads like a map, not a
+    // single gate obstacle. The route remains open at row.laneX.
+    const chunkChance = i < safePathRows.length-2 ? .92 : .55;
+    if (Math.random() < chunkChance) seq.push(...buildWallChunks(row.y + rand(34,62), d, row.laneX));
+
+    // Late-run side plug: creates pressure to use Phase/Brake but stays off route.
+    if (d > .28 && Math.random() < .38) {
+      const sideLane = choice(LANES.filter(x => !pointInsideSafeLane(x, 48, row.laneX, FLOW_WIDTH)));
+      const w = rand(44,70), h = rand(36,58);
+      const plug = {type:'firewall', x:clamp(sideLane-w/2,34,W-34-w), y:row.y + rand(70,92), w, h, hit:false, pulse:rand(0,9), pressurePlug:true, safeLaneX:row.laneX};
+      if (!firewallCoversSafeLane(plug, row.laneX, FLOW_WIDTH)) seq.push(plug);
+    }
+  }
+
+  // Mine pockets threaten side choices, never the only flow lane.
+  const mineBase = .52 + d*.22;
+  const mineCount = Math.random() < mineBase ? 1 + (Math.random() < (.25 + d*.25) ? 1 : 0) : 0;
+  for (let i=0;i<mineCount;i++){
+    const row = choice(safePathRows.slice(1,-1));
+    seq.push({type:'mine', x:chooseMineXOutsideSafeLane(row.laneX), y:row.y + rand(38,78), r:12, hit:false, pulse:rand(0,9), warned:false, safeLaneX:row.laneX});
+  }
+
+  if (Math.random() < .34) {
+    const row = choice(safePathRows.slice(1,-1));
+    const px = Math.random() < .62 ? chooseMineXOutsideSafeLane(row.laneX) : row.laneX + rand(-12,12);
+    seq.push({type:'power', subtype:choice(['patch','slow','ghost']), x:clamp(px,58,W-58), y:row.y - rand(42,70), r:13, pulse:rand(0,9), safeLaneX:row.laneX});
+  }
+
+  const gate = {type:'gate', x:34, y:yGate, w:W-68, h:24, n:run.gateNumber, breached:false, failed:false, glow:0, safeLaneX:path.at(-1), safePathRows};
+  seq.push(gate);
+  tagSequenceObjects(seq, seqId);
+
+  let final = {seq, gate, safePathRows, fallback:false};
+  if (!validateSequenceLayout(seq, safePathRows)) {
+    final = makeFallbackSequence(seqId);
+    run.lastValidationFallback = true;
+  } else {
+    run.lastValidationFallback = false;
+  }
+
+  for (const o of final.seq) objects.push(o);
+  run.activeGate = final.gate;
+  run.sequenceAge = 0;
+}
+
+function spawnParticles(x,y,color,count=12,speed=90){
+  for (let i=0;i<count;i++){
+    const a = Math.random()*Math.PI*2;
+    const v = rand(speed*.3, speed);
+    particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rand(.25,.7),max:.7,color,size:rand(1.5,3.5)});
+  }
+}
+function burst(x,y,color,count=20,speed=170){ spawnParticles(x,y,color,count,speed); }
+
+function takeIntegrity(amount, reason){
+  if (player.invuln > 0 || player.ghost > 0) return;
+  player.integrity = clamp(player.integrity - amount, 0, 100);
+  player.invuln = .85;
+  player.clean = false;
+  state.shake = Math.max(state.shake, .32);
+  state.flash = Math.max(state.flash, .16);
+  setMessage(reason, .85);
+  burst(player.x, player.y, COLORS.red, 18, 190);
+  floatText.push({x:player.x, y:player.y-22, text:'-'+amount+' INTEGRITY', color:COLORS.red, life:.9, vy:-30});
+  if (player.integrity <= 0) gameOver();
+}
+
+function completeBreach(target, auto=true){
+  if (!target || target.breached || target.failed) return false;
+  target.breached = true;
+  target.glow = .55;
+  player.key = false;
+  run.gates++;
+  state.gateChain++;
+  run.speedRelief = .55;
+  state.shake = Math.max(state.shake, .24);
+  state.flash = Math.max(state.flash, .10);
+  const cleanBonus = player.clean ? 1000 : 0;
+  addScore(500 + cleanBonus, cleanBonus ? '+1500 CLEAN BREACH' : '+500 AUTO BREACH', target.x + target.w/2, target.y-14, cleanBonus ? COLORS.green : COLORS.gold);
+  setMessage(player.clean ? 'CLEAN AUTO BREACH' : (auto ? 'AUTO BREACH' : 'GATE BREACHED'), .95);
+  player.clean = true;
+  burst(target.x + target.w/2, target.y+12, cleanBonus ? COLORS.green : COLORS.gold, 42, 270);
+  return true;
+}
+
+function checkAutoBreach(){
+  if (!player.key || state.mode !== 'playing') return false;
+  for (const o of objects) {
+    if (o.type === 'gate' && !o.breached && !o.failed) {
+      const dy = Math.abs((o.y + o.h/2) - player.y);
+      if (dy < BREACH_ZONE_HEIGHT) return completeBreach(o, true);
+    }
+  }
+  return false;
+}
+
+function blockedLockedGateInPhasePath(shift){
+  if (player.key || shift <= 0) return null;
+  for (const o of objects) {
+    if (o.type !== 'gate' || o.breached || o.failed) continue;
+    const gateCenter = o.y + o.h/2;
+    const distAhead = gateCenter - player.y;
+    if (distAhead > -20 && distAhead < shift + 36) return o;
+  }
+  return null;
+}
+
+function triggerPhaseBurst(){
+  if (state.mode === 'title' || state.mode === 'gameover') { startRun(); return; }
+  if (state.mode === 'paused') { state.mode = 'playing'; return; }
+  if (state.mode !== 'playing') return;
+  if (player.phaseCd > 0) {
+    setMessage('PHASE RECHARGING', .35);
+    return;
+  }
+
+  let mx = 0, my = 0;
+  if (down('left')) mx -= 1; if (down('right')) mx += 1; if (down('up')) my -= 1; if (down('down')) my += 1;
+  if (!mx && !my) my = 1;
+  const mag = Math.hypot(mx,my) || 1;
+  mx /= mag; my /= mag;
+
+  const shift = my * PHASE_DASH_Y;
+  const lockedGate = blockedLockedGateInPhasePath(shift);
+  if (lockedGate) {
+    lockedGate.failed = true;
+    takeIntegrity(18, 'LOCKED GATE BLOCKED PHASE');
+    burst(lockedGate.x + lockedGate.w/2, lockedGate.y + lockedGate.h/2, COLORS.red, 30, 230);
+    player.phaseCd = PHASE_COOLDOWN * .55;
+    return;
+  }
+
+  player.x = clamp(player.x + mx * PHASE_DASH_X, 30 + player.r, W - 30 - player.r);
+  shiftWorld(shift);
+  player.invuln = Math.max(player.invuln, PHASE_INVULN);
+  player.phaseFlash = .22;
+  player.phaseCd = PHASE_COOLDOWN;
+  state.shake = Math.max(state.shake, .10);
+  setMessage('PHASE BURST', .45);
+  burst(player.x, player.y, COLORS.cyan, 20, 210);
+  checkAutoBreach();
+}
+
+function updateInputEdges(){
+  const aNow = down('a');
+  const startNow = down('start');
+  input.aEdge = aNow && !lastA;
+  input.startEdge = startNow && !lastStart;
+  lastA = aNow;
+  lastStart = startNow;
+}
+
+function update(dt){
+  updateInputEdges();
+  if (input.startEdge) togglePause();
+  if (input.aEdge) triggerPhaseBurst();
+
+  state.t += dt;
+  if (state.messageT > 0) state.messageT -= dt;
+  if (state.shake > 0) {
+    state.shake = Math.max(0, state.shake - dt*1.8);
+    state.shakeX = rand(-1,1) * 10 * state.shake;
+    state.shakeY = rand(-1,1) * 10 * state.shake;
+  } else { state.shakeX = state.shakeY = 0; }
+  if (state.flash > 0) state.flash = Math.max(0, state.flash - dt*2.8);
+
+  // Particles and floating text update in all visible states.
+  for (let i=particles.length-1;i>=0;i--){
+    const p = particles[i];
+    p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 40*dt; p.life -= dt;
+    if (p.life <= 0) particles.splice(i,1);
+  }
+  for (let i=floatText.length-1;i>=0;i--){
+    const f = floatText[i];
+    f.y += f.vy*dt; f.life -= dt;
+    if (f.life <= 0) floatText.splice(i,1);
+  }
+
+  if (state.mode !== 'playing') return;
+
+  run.speedRelief = Math.max(0, run.speedRelief - dt);
+  player.invuln = Math.max(0, player.invuln - dt);
+  player.phaseCd = Math.max(0, player.phaseCd - dt);
+  player.phaseFlash = Math.max(0, player.phaseFlash - dt);
+  player.ghost = Math.max(0, player.ghost - dt);
+
+  if (down('b') && player.brake > 0) player.brake = Math.max(0, player.brake - 34*dt);
+  else player.brake = Math.min(100, player.brake + 18*dt);
+
+  // --- Forced descent world-shift ---
+  // Horizontal input moves the player directly. Vertical input now modifies
+  // the fall rate instead of starting/stopping the world: the shaft keeps
+  // moving even if the player touches nothing.
+  let mx = 0, my = 0;
+  if (down('left')) mx -= 1; if (down('right')) mx += 1; if (down('up')) my -= 1; if (down('down')) my += 1;
+  const braking = down('b') && player.brake > 0;
+  const moveMult = braking ? .78 : 1;
+  if (mx) player.x += mx * player.speed * moveMult * dt;
+  player.x = clamp(player.x, 30 + player.r, W - 30 - player.r);
+
+  let dropMult = 1;
+  if (my > 0) dropMult *= DROP_ACCEL_MULT;
+  if (my < 0) dropMult *= UP_RESIST_MULT;
+  if (braking) dropMult *= BRAKE_DROP_MULT;
+  if (run.speedRelief > 0) dropMult *= SLOW_BUFFER_MULT;
+  const forcedShift = BASE_DROP_SPEED * (1 + difficulty() * 0.55) * dropMult * dt;
+  run.dropSpeedDisplay = (forcedShift / dt) / BASE_DROP_SPEED;
+  shiftWorld(forcedShift);
+
+  // depth is a high-water mark on worldDescent: retreating (moving
+  // back up) does not undo progress already made.
+  if (run.worldDescent > run.depth) {
+    run.score += (run.worldDescent - run.depth) * .12;
+    run.depth = run.worldDescent;
+  }
+
+  const d = difficulty();
+
+  // --- Single active sequence ---
+  // The next key+gate sequence cannot spawn until the current one is resolved.
+  // v0.1.1a adds a no-soft-lock timer: if a sequence somehow stalls longer than
+  // MAX_SEQUENCE_AGE, clear that sequence and allow a new one. This is a guardrail
+  // for forced descent and long-session stability.
+  if (run.activeGate) {
+    run.sequenceAge += dt;
+    if (!(run.activeGate.breached || run.activeGate.failed) && run.sequenceAge > MAX_SEQUENCE_AGE) {
+      const seqId = run.activeGate.seqId;
+      for (let i=objects.length-1;i>=0;i--) {
+        if (objects[i].seqId === seqId) objects.splice(i,1);
+      }
+      run.activeGate = null;
+      run.sequenceAge = 0;
+      run.sequenceGapTimer = .4;
+      setMessage('ROUTE RECALCULATED', .85);
+    }
+  }
+  if (run.activeGate && (run.activeGate.breached || run.activeGate.failed) && run.activeGate.y < -120) {
+    run.activeGate = null;
+    run.sequenceAge = 0;
+  }
+  if (!run.activeGate) {
+    run.sequenceGapTimer -= dt;
+    if (run.sequenceGapTimer <= 0) {
+      spawnSequence();
+      run.sequenceGapTimer = 0.6 + d * 0.3; // tiny breather, grows slightly with difficulty
+    }
+  }
+
+  for (let i=objects.length-1;i>=0;i--){
+    const o = objects[i];
+    o.pulse = (o.pulse || 0) + dt;
+
+    if (o.type === 'key') {
+      if (!o.taken && pointDist(player.x,player.y,o.x,o.y) < player.r + o.r + 5) {
+        o.taken = true;
+        player.key = true;
+        run.keys++;
+        addScore(100, '+100 KEY', o.x, o.y-10, COLORS.gold);
+        setMessage('KEY ACQUIRED', .75);
+        burst(o.x,o.y,COLORS.gold,20,170);
+      }
+    }
+    if (o.type === 'power') {
+      if (pointDist(player.x,player.y,o.x,o.y) < player.r + o.r + 6) {
+        if (o.subtype === 'patch') {
+          player.integrity = clamp(player.integrity + 22, 0, 100);
+          setMessage('INTEGRITY PATCH', .8);
+          addScore(150, '+PATCH', o.x, o.y, COLORS.green);
+          burst(o.x,o.y,COLORS.green,20,160);
+        } else if (o.subtype === 'slow') {
+          run.speedRelief = 2.25;
+          setMessage('SLOW BUFFER', .8);
+          addScore(150, '+SLOW', o.x, o.y, COLORS.cyan);
+          burst(o.x,o.y,COLORS.cyan,20,160);
+        } else if (o.subtype === 'ghost') {
+          player.ghost = 2.2;
+          setMessage('GHOST PASS', .8);
+          addScore(150, '+GHOST', o.x, o.y, '#d59cff');
+          burst(o.x,o.y,'#d59cff',22,180);
+        }
+        objects.splice(i,1); continue;
+      }
+    }
+    if (o.type === 'firewall' && !o.hit) {
+      const hit = rectCircle(o,player.x,player.y,player.r);
+      if (hit) { o.hit = true; takeIntegrity(13, 'FIREWALL CONTACT'); }
+      else if (!o.near && player.y > o.y-24 && player.y < o.y+o.h+24 && player.x > o.x-18 && player.x < o.x+o.w+18) {
+        o.near = true;
+        run.nearMisses++;
+        addScore(25, '+25 NEAR', player.x, player.y-22, COLORS.cyan);
+      }
+    }
+    if (o.type === 'mine' && !o.hit) {
+      const dist = pointDist(player.x,player.y,o.x,o.y);
+      if (dist < player.r + o.r + 2) {
+        o.hit = true;
+        takeIntegrity(18, 'DATA MINE TRIPPED');
+        burst(o.x,o.y,COLORS.mag,28,220);
+      } else if (!o.near && dist < 34) {
+        o.near = true;
+        run.nearMisses++;
+        addScore(25, '+25 NEAR', player.x, player.y-22, COLORS.cyan);
+      }
+    }
+    if (o.type === 'gate' && !o.breached && !o.failed) {
+      const breachReady = player.key && Math.abs((o.y+o.h/2)-player.y) < BREACH_ZONE_HEIGHT;
+      if (breachReady) {
+        completeBreach(o, true);
+      } else {
+        const gateRect = {x:o.x,y:o.y,w:o.w,h:o.h};
+        if (rectCircle(gateRect,player.x,player.y,player.r+3)) {
+          o.failed = true;
+          takeIntegrity(28, 'NO KEY — IMPACT');
+          player.key = false;
+          burst(o.x+o.w/2,o.y+o.h/2,COLORS.red,32,230);
+        }
+      }
+    }
+    if (o.y < -120 || o.taken) {
+      objects.splice(i,1); continue;
+    }
+    if ((o.breached || o.failed) && o.type === 'gate') {
+      // Resolved gates linger in the world (still shifting with it)
+      // so their glow/flash can play out and so the single-sequence
+      // gate above can reliably detect when they've cleared behind
+      // the player, purely by position -- not by a separate timer
+      // that could desync if the player stops moving.
+      if (o.glow > 0) o.glow -= dt;
+      continue;
+    }
+  }
+}
+
+function drawBackground(){
+  ctx.fillStyle = COLORS.bg;
+  ctx.fillRect(0,0,W,H);
+
+  const grad = ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'rgba(25,39,79,.34)');
+  grad.addColorStop(.45,'rgba(6,9,22,.05)');
+  grad.addColorStop(1,'rgba(255,61,104,.07)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+
+  // Shaft walls.
+  ctx.fillStyle = 'rgba(1,2,8,.45)';
+  ctx.fillRect(0,0,28,H);
+  ctx.fillRect(W-28,0,28,H);
+  ctx.strokeStyle = 'rgba(111,232,255,.22)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(30,HUD_H); ctx.lineTo(30,H);
+  ctx.moveTo(W-30,HUD_H); ctx.lineTo(W-30,H);
+  ctx.stroke();
+
+  const off = state.bgOffset % 44;
+  ctx.lineWidth = 1;
+  for (let y = HUD_H - 44 + off; y < H; y += 44){
+    ctx.strokeStyle = y % 88 < 44 ? COLORS.grid : COLORS.grid2;
+    ctx.beginPath(); ctx.moveTo(30,y); ctx.lineTo(W-30,y); ctx.stroke();
+  }
+  for (let x = 72; x < W; x += 76){
+    ctx.strokeStyle = COLORS.grid2;
+    ctx.beginPath(); ctx.moveTo(x,HUD_H); ctx.lineTo(x,H); ctx.stroke();
+  }
+
+  // Moving depth ticks.
+  ctx.fillStyle = 'rgba(111,232,255,.24)';
+  for (let y = HUD_H + (state.bgOffset*1.7 % 90); y < H; y += 90){
+    ctx.fillRect(30,y,10,2);
+    ctx.fillRect(W-40,y,10,2);
+  }
+}
+
+function drawHUD(){
+  ctx.save();
+  ctx.fillStyle = 'rgba(3,6,16,.83)';
+  ctx.fillRect(0,0,W,HUD_H);
+  ctx.strokeStyle = 'rgba(111,232,255,.22)';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0,HUD_H); ctx.lineTo(W,HUD_H); ctx.stroke();
+
+  ctx.fillStyle = COLORS.white;
+  ctx.font = '900 22px ui-monospace, monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('BREACH DROP', 18, 28);
+  ctx.font = '700 11px ui-monospace, monospace';
+  ctx.fillStyle = COLORS.muted;
+  ctx.fillText('DESCEND BEFORE THE SYSTEM SEALS', 20, 47);
+
+  ctx.textAlign = 'right';
+  ctx.font = '800 13px ui-monospace, monospace';
+  ctx.fillStyle = COLORS.gold;
+  ctx.fillText('DEPTH '+Math.floor(run.depth).toString().padStart(4,'0')+'m', W-16, 24);
+  ctx.fillStyle = COLORS.cyan2;
+  ctx.fillText('BEST '+Math.floor(state.bestDepth).toString().padStart(4,'0')+'m', W-16, 44);
+  ctx.fillStyle = COLORS.white;
+  ctx.fillText('SCORE '+Math.floor(run.score).toString().padStart(6,'0'), W-16, 64);
+
+  // Integrity bar.
+  const bx=18, by=57, bw=148, bh=10;
+  ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fillRect(bx,by,bw,bh);
+  ctx.fillStyle=player.integrity > 45 ? COLORS.green : (player.integrity > 20 ? COLORS.gold : COLORS.red);
+  ctx.fillRect(bx,by,bw*(player.integrity/100),bh);
+  ctx.strokeStyle='rgba(237,247,255,.25)'; ctx.strokeRect(bx,by,bw,bh);
+  ctx.font='800 10px ui-monospace, monospace';
+  ctx.textAlign='left'; ctx.fillStyle=COLORS.white;
+  ctx.fillText('INTEGRITY '+Math.ceil(player.integrity)+'%', bx, by-4);
+
+  // Key / gates / brake.
+  ctx.font='900 12px ui-monospace, monospace';
+  ctx.fillStyle = player.key ? COLORS.gold : COLORS.muted;
+  ctx.fillText('KEY: '+(player.key?'YES':'NO'), 188, 58);
+  ctx.fillStyle = COLORS.cyan;
+  ctx.fillText('GATES: '+String(run.gates).padStart(2,'0')+'  FALL '+run.dropSpeedDisplay.toFixed(1)+'x', 188, 72);
+  const brx = 300, bry=70, brw=82, brh=6;
+  ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fillRect(brx,bry,brw,brh);
+  ctx.fillStyle=COLORS.cyan; ctx.fillRect(brx,bry,brw*(player.brake/100),brh);
+  ctx.fillStyle=COLORS.muted; ctx.fillText('BRAKE', brx, bry-6);
+  const phx = 398, phy=70, phw=82, phh=6;
+  const phaseReady = 1 - clamp(player.phaseCd / PHASE_COOLDOWN, 0, 1);
+  ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fillRect(phx,phy,phw,phh);
+  ctx.fillStyle=player.phaseCd <= 0 ? COLORS.gold : COLORS.mag; ctx.fillRect(phx,phy,phw*phaseReady,phh);
+  ctx.fillStyle=COLORS.muted; ctx.fillText('PHASE', phx, phy-6);
+  ctx.restore();
+}
+
+function drawFirewall(o){
+  const p = .5 + .5*Math.sin(o.pulse*8);
+  ctx.save();
+  ctx.fillStyle = o.hit ? 'rgba(255,61,104,.22)' : `rgba(255,61,104,${0.72 + p*.18})`;
+  ctx.fillRect(o.x,o.y,o.w,o.h);
+  ctx.strokeStyle = `rgba(255,79,216,${0.55 + p*.28})`;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(o.x+.5,o.y+.5,o.w-1,o.h-1);
+  ctx.fillStyle = 'rgba(0,0,0,.18)';
+  for(let x=o.x+5; x<o.x+o.w; x+=12){ ctx.fillRect(x,o.y+3,5,o.h-6); }
+  ctx.restore();
+}
+
+function drawMine(o){
+  const p = .5 + .5*Math.sin(o.pulse*9);
+  ctx.save();
+  ctx.translate(o.x,o.y);
+  ctx.strokeStyle = `rgba(255,79,216,${.45+p*.45})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(0,0,o.r+5+p*3,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = COLORS.mag;
+  diamond(0,0,o.r+2);
+  ctx.fillStyle = COLORS.red;
+  ctx.beginPath(); ctx.arc(0,0,4+p*2,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawKey(o){
+  if (o.taken) return;
+  const p = .5 + .5*Math.sin(state.t*5 + o.wob);
+  ctx.save();
+  ctx.translate(o.x,o.y + Math.sin(state.t*4+o.wob)*3);
+  ctx.rotate(Math.sin(state.t*2+o.wob)*.12);
+  ctx.shadowColor = COLORS.gold;
+  ctx.shadowBlur = 16 + p*12;
+  ctx.fillStyle = COLORS.gold;
+  ctx.fillRect(-4,-14,8,28);
+  ctx.fillRect(-11,-14,22,8);
+  ctx.fillRect(4,6,10,6);
+  ctx.fillRect(4,15,7,5);
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = '#fff3bf';
+  ctx.strokeRect(-4.5,-14.5,9,29);
+  ctx.restore();
+}
+
+function drawPower(o){
+  const p = .5 + .5*Math.sin(o.pulse*6);
+  const color = o.subtype === 'patch' ? COLORS.green : (o.subtype === 'slow' ? COLORS.cyan : '#d59cff');
+  ctx.save();
+  ctx.translate(o.x,o.y);
+  ctx.shadowColor = color; ctx.shadowBlur = 16;
+  ctx.strokeStyle = color; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0,0,o.r+p*3,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = color;
+  if (o.subtype === 'patch') { ctx.fillRect(-9,-3,18,6); ctx.fillRect(-3,-9,6,18); }
+  else if (o.subtype === 'slow') { ctx.beginPath(); ctx.moveTo(-7,-9); ctx.lineTo(8,0); ctx.lineTo(-7,9); ctx.closePath(); ctx.fill(); }
+  else { diamond(0,0,11); }
+  ctx.restore();
+}
+
+function drawGate(o){
+  ctx.save();
+  const ready = player.key;
+  const near = Math.abs((o.y+o.h/2)-player.y) < BREACH_ZONE_HEIGHT;
+  const p = .5 + .5*Math.sin(state.t*8);
+  if (o.breached) {
+    ctx.globalAlpha = Math.max(0, o.glow/.45);
+    ctx.fillStyle = COLORS.white;
+    ctx.fillRect(o.x, o.y-8, o.w, o.h+16);
+    ctx.restore(); return;
+  }
+  ctx.fillStyle = ready ? `rgba(255,209,102,${.5+p*.2})` : `rgba(255,61,104,${.58+p*.14})`;
+  ctx.fillRect(o.x,o.y,o.w,o.h);
+  ctx.fillStyle = 'rgba(0,0,0,.45)';
+  for(let x=o.x+10; x<o.x+o.w-10; x+=30){ ctx.fillRect(x,o.y+4,15,o.h-8); }
+  ctx.strokeStyle = ready ? COLORS.gold : COLORS.red;
+  ctx.lineWidth = near ? 4 : 2;
+  ctx.strokeRect(o.x+.5,o.y+.5,o.w-1,o.h-1);
+  ctx.font = '900 12px ui-monospace, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = ready ? '#fff7d9' : '#ffd6df';
+  ctx.fillText(ready ? (near ? 'AUTO BREACHING' : 'AUTO BREACH READY') : 'KEY REQUIRED', o.x+o.w/2, o.y-7);
+  ctx.restore();
+}
+
+function diamond(x,y,r){
+  ctx.beginPath();
+  ctx.moveTo(x,y-r); ctx.lineTo(x+r,y); ctx.lineTo(x,y+r); ctx.lineTo(x-r,y); ctx.closePath(); ctx.fill();
+}
+
+function drawPlayer(){
+  ctx.save();
+  ctx.translate(player.x,player.y);
+  const ghostAlpha = player.ghost > 0 ? .62 + .18*Math.sin(state.t*18) : 1;
+  ctx.globalAlpha = player.invuln > 0 ? (.55 + .35*Math.sin(state.t*28)) : ghostAlpha;
+  // Trail length reflects the current forced descent pressure.
+  const trail = clamp(run.dropSpeedDisplay, 0.25, 1.5);
+  ctx.fillStyle='rgba(111,232,255,.14)';
+  ctx.beginPath(); ctx.ellipse(0,18,11,24*trail,0,0,Math.PI*2); ctx.fill();
+  ctx.shadowColor = player.ghost > 0 ? '#d59cff' : COLORS.cyan;
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = player.ghost > 0 ? '#d59cff' : COLORS.cyan;
+  diamond(0,0,15);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = COLORS.white;
+  diamond(0,-2,7);
+  ctx.fillStyle = COLORS.dark;
+  ctx.fillRect(-3,-5,6,6);
+  if (player.key) {
+    ctx.strokeStyle = COLORS.gold;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0,0,22+Math.sin(state.t*9)*2,0,Math.PI*2); ctx.stroke();
+  }
+  if (player.phaseFlash > 0) {
+    ctx.strokeStyle = 'rgba(255,209,102,.72)';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(0,0,31 + Math.sin(state.t*30)*3,0,Math.PI*2); ctx.stroke();
+  }
+  if (down('b') && player.brake > 0) {
+    ctx.strokeStyle = 'rgba(189,247,255,.55)';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(0,0,25,Math.PI*.25,Math.PI*1.75); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawObjects(){
+  for (const o of objects) {
+    if (o.type === 'firewall') drawFirewall(o);
+    else if (o.type === 'mine') drawMine(o);
+    else if (o.type === 'key') drawKey(o);
+    else if (o.type === 'gate') drawGate(o);
+    else if (o.type === 'power') drawPower(o);
+  }
+}
+
+function drawParticles(){
+  ctx.save();
+  for (const p of particles) {
+    ctx.globalAlpha = clamp(p.life/p.max,0,1);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x-p.size/2, p.y-p.size/2, p.size, p.size);
+  }
+  ctx.restore();
+}
+
+function drawFloatText(){
+  ctx.save();
+  ctx.textAlign='center';
+  ctx.font='900 13px ui-monospace, monospace';
+  for (const f of floatText) {
+    ctx.globalAlpha = clamp(f.life/.75,0,1);
+    ctx.fillStyle = f.color;
+    ctx.fillText(f.text, f.x, f.y);
+  }
+  ctx.restore();
+}
+
+function drawMessage(){
+  if (state.messageT <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = clamp(state.messageT,0,1);
+  ctx.font = '900 18px ui-monospace, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = COLORS.white;
+  ctx.shadowColor = COLORS.cyan;
+  ctx.shadowBlur = 10;
+  ctx.fillText(state.message, W/2, 108);
+  ctx.restore();
+}
+
+function drawOverlay(title, lines){
+  ctx.save();
+  ctx.fillStyle='rgba(1,3,10,.78)';
+  ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(111,232,255,.24)';
+  ctx.lineWidth=2;
+  const x=50,y=148,w=W-100,h=330;
+  ctx.fillStyle='rgba(8,13,29,.92)';
+  roundRect(x,y,w,h,22,true,true);
+  ctx.font='900 36px ui-monospace, monospace';
+  ctx.textAlign='center';
+  ctx.fillStyle=COLORS.white;
+  ctx.shadowColor=COLORS.cyan; ctx.shadowBlur=14;
+  ctx.fillText(title, W/2, y+70);
+  ctx.shadowBlur=0;
+  ctx.font='800 13px ui-monospace, monospace';
+  let yy=y+112;
+  for (const line of lines){
+    ctx.fillStyle = line.color || COLORS.white;
+    ctx.fillText(line.text, W/2, yy);
+    yy += line.gap || 24;
+  }
+  ctx.restore();
+}
+
+function roundRect(x,y,w,h,r,fill,stroke){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  if (fill) ctx.fill(); if (stroke) ctx.stroke();
+}
+
+function render(){
+  ctx.save();
+  ctx.clearRect(0,0,W,H);
+  drawBackground();
+  ctx.translate(state.shakeX,state.shakeY);
+  drawObjects();
+  drawParticles();
+  drawPlayer();
+  drawFloatText();
+  ctx.restore();
+  drawHUD();
+  drawMessage();
+  if (state.flash > 0) {
+    ctx.save(); ctx.globalAlpha = state.flash; ctx.fillStyle = COLORS.red; ctx.fillRect(0,0,W,H); ctx.restore();
+  }
+
+  if (state.mode === 'title') {
+    drawOverlay('BREACH DROP', [
+      {text:'DESCEND BEFORE THE SYSTEM SEALS', color:COLORS.gold, gap:30},
+      {text:'GRAB KEY → GATE AUTO-BREACHES', color:COLORS.cyan2},
+      {text:'A = PHASE THROUGH TROUBLE · B = BRAKE', color:COLORS.white},
+      {text:'START / ENTER / A TO DROP', color:COLORS.green, gap:32},
+      {text:'MOBILE: LEFT D-PAD · RIGHT A/B', color:COLORS.muted}
+    ]);
+  } else if (state.mode === 'paused') {
+    drawOverlay('PAUSED', [
+      {text:'START / ENTER / P TO RESUME', color:COLORS.green, gap:30},
+      {text:'KEY = AUTO BREACH AT GATE', color:COLORS.cyan2},
+      {text:'A = PHASE THROUGH TROUBLE · B = BRAKE', color:COLORS.white},
+      {text:'R = RESTART RUN', color:COLORS.gold}
+    ]);
+  } else if (state.mode === 'gameover') {
+    drawOverlay('SYSTEM SEALED', [
+      {text:'DEPTH '+Math.floor(run.depth)+'m', color:COLORS.gold},
+      {text:'GATES '+run.gates+' · KEYS '+run.keys+' · SCORE '+Math.floor(run.score), color:COLORS.white, gap:30},
+      {text:'BEST '+Math.floor(state.bestDepth)+'m', color:COLORS.cyan2, gap:36},
+      {text:'PRESS START / ENTER / A TO RESTART', color:COLORS.green},
+      {text:'CLEAN BREACHES EARN BIG BONUS', color:COLORS.muted}
+    ]);
+  }
+}
+
+function loop(now){
+  const dt = Math.min(.033, (now - state.lastFrame) / 1000 || .016);
+  state.lastFrame = now;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+// Keyboard.
+const keyMap = new Map([
+  ['ArrowUp','up'],['w','up'],['W','up'],
+  ['ArrowDown','down'],['s','down'],['S','down'],
+  ['ArrowLeft','left'],['a','left'],['A','left'],
+  ['ArrowRight','right'],['d','right'],['D','right'],
+  ['z','a'],['Z','a'],[' ','a'],['j','a'],['J','a'],
+  ['x','b'],['X','b'],['k','b'],['K','b'],['Shift','b'],
+  ['Enter','start'],['p','start'],['P','start']
+]);
+window.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') { startRun(); e.preventDefault(); return; }
+  const k = keyMap.get(e.key);
+  if (k) { input[k] = true; e.preventDefault(); }
+},{passive:false});
+window.addEventListener('keyup', e => {
+  const k = keyMap.get(e.key);
+  if (k) { input[k] = false; e.preventDefault(); }
+},{passive:false});
+
+// Touch controls.
+const dpad = document.getElementById('dpad');
+const btnA = document.getElementById('btnA');
+const btnB = document.getElementById('btnB');
+const btnStart = document.getElementById('btnStart');
+let dpadPointer = null;
+function clearDpad(){ input.up=input.down=input.left=input.right=false; dpad.classList.remove('active'); dpadPointer=null; }
+function setDpadFromPointer(e){
+  const rect = dpad.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top + rect.height/2;
+  const dx = e.clientX - cx;
+  const dy = e.clientY - cy;
+  const threshold = rect.width * .13;
+  input.left = dx < -threshold;
+  input.right = dx > threshold;
+  input.up = dy < -threshold;
+  input.down = dy > threshold;
+}
+dpad.addEventListener('pointerdown', e => { dpadPointer = e.pointerId; dpad.setPointerCapture(e.pointerId); dpad.classList.add('active'); setDpadFromPointer(e); e.preventDefault(); }, {passive:false});
+dpad.addEventListener('pointermove', e => { if (dpadPointer === e.pointerId) { setDpadFromPointer(e); e.preventDefault(); } }, {passive:false});
+dpad.addEventListener('pointerup', e => { if (dpadPointer === e.pointerId) clearDpad(); e.preventDefault(); }, {passive:false});
+dpad.addEventListener('pointercancel', clearDpad);
+
+function bindButton(el, prop){
+  const down = e => { input[prop] = true; el.classList.add('active'); el.setPointerCapture?.(e.pointerId); e.preventDefault(); };
+  const up = e => { input[prop] = false; el.classList.remove('active'); e.preventDefault(); };
+  el.addEventListener('pointerdown', down, {passive:false});
+  el.addEventListener('pointerup', up, {passive:false});
+  el.addEventListener('pointercancel', up, {passive:false});
+  el.addEventListener('pointerleave', e => { if (e.buttons === 0) up(e); }, {passive:false});
+}
+bindButton(btnA, 'a');
+bindButton(btnB, 'b');
+bindButton(btnStart, 'start');
+
+// Gamepad support follows the same retro input language. Optional, no UI dependency.
+// Some hosts (sandboxed iframes, certain embeds/CSP policies) expose
+// navigator.getGamepads as a function but disallow calling it via
+// Permissions Policy, throwing a SecurityError. Detect that once and
+// stop polling rather than retrying every frame.
+let gamepadSupported = !!(navigator.getGamepads);
+function pollGamepad(){
+  if (!gamepadSupported) return;
+  let pads = [];
+  try {
+    pads = navigator.getGamepads() || [];
+  } catch (err) {
+    // Permissions Policy blocked the call (or similar). Disable
+    // future polling silently; keyboard/touch remain unaffected.
+    gamepadSupported = false;
+    return;
+  }
+  const gp = Array.from(pads).find(Boolean);
+  gpInput.up = gpInput.down = gpInput.left = gpInput.right = gpInput.a = gpInput.b = gpInput.start = false;
+  if (gp) {
+    const ax0 = gp.axes[0] || 0, ax1 = gp.axes[1] || 0;
+    const b = gp.buttons;
+    gpInput.left = ax0 < -.35 || !!b[14]?.pressed;
+    gpInput.right = ax0 > .35 || !!b[15]?.pressed;
+    gpInput.up = ax1 < -.35 || !!b[12]?.pressed;
+    gpInput.down = ax1 > .35 || !!b[13]?.pressed;
+    gpInput.a = !!b[0]?.pressed;
+    gpInput.b = !!b[1]?.pressed;
+    gpInput.start = !!b[9]?.pressed;
+  }
+  requestAnimationFrame(pollGamepad);
+}
+requestAnimationFrame(pollGamepad);
+
+// Prevent page gestures during play.
+['touchstart','touchmove','touchend','gesturestart'].forEach(evt => {
+  document.addEventListener(evt, e => e.preventDefault(), {passive:false});
+});
+
+// Seed a faint moving field behind the title.
+for (let i=0;i<12;i++) {
+  for (const spec of buildFirewallPattern(rand(H*.55,H+500), 0)) objects.push(spec);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
