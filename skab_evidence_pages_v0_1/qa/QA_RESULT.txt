@@ -1,5 +1,0 @@
-QA RESULT: PASS
-Checked 9 HTML pages.
-Scope confirmed: no root index.html or 404.html included.
-Required evidence sections confirmed on game pages.
-Relative CSS / JS / internal evidence links resolved.
