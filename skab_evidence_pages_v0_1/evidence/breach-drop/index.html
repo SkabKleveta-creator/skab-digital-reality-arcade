@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Breach Drop Evidence — Skab Digital Reality Arcade</title>
+  <link rel="stylesheet" href="../assets/evidence.css" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to evidence</a>
+<div class="site-shell">
+  <header class="topbar">
+    <div class="brand">Skab Digital Reality Arcade · Evidence Archive</div>
+    <nav class="nav" aria-label="Evidence navigation">
+      <a href="../../index.html">Arcade</a>
+      <a href="../index.html">Evidence</a>
+      <a href="#approval">Approval</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <p class="breadcrumb"><a href="../index.html">Evidence Archive</a> / Breach Drop</p>
+    <section class="hero">
+      <p class="eyebrow">Evidence Page · Candidate Exhibit</p>
+      <h1>Breach Drop</h1>
+      <p class="lede">A downward-flowing route breach demo focused on movement, recovery space, automatic breach behavior, obstacle layout, and no-dead-end path design.</p>
+      <div class="notice">Status: Draft — Ken Approval Required. This page is structured for review and is not final evidence until Ken approves it for publication.</div>
+    </section>
+
+    <section class="section">
+      <h2>Exhibit</h2>
+      <p>A downward-flowing route breach demo focused on movement, recovery space, automatic breach behavior, obstacle layout, and no-dead-end path design.</p>
+      <table class="fact-table">
+        <tr><th>Project Type</th><td>Internal Arcade Demo</td></tr>
+        <tr><th>Evidence Class</th><td>Prototype analysis / build-trail interpretation / approval-gated proof</td></tr>
+        <tr><th>Current State</th><td>Draft — Ken Approval Required</td></tr>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2>Initial Question</h2>
+      <p class="proof-line">Can a descending arcade route create pressure while still preserving player flow and avoiding unfair dead ends?</p>
+    </section>
+
+    <section class="section">
+      <h2>Root Cause</h2>
+      <p>The project tested how quickly a simple falling corridor can become frustrating if gate logic, path space, and obstacle placement do not respect player movement. The deeper problem was how to increase challenge without trapping the player unfairly.</p>
+    </section>
+
+    <section class="section">
+      <h2>Ken’s Logic</h2>
+      <ul>
+        <li>No dead ends: the player should always have a flow path downward.</li>
+        <li>Increase obstacle density without turning the map into a trap.</li>
+        <li>Make key and breach behavior support movement, not interrupt it.</li>
+        <li>Use brake and phase as meaningful defensive tools when direct attack is unavailable.</li>
+      </ul>
+    </section>
+
+    <section class="section two-col">
+      <div>
+        <h2>Observed Failure Modes</h2>
+        <ul><li>The gate required the player to be almost on top of it before unlocking.</li>
+        <li>The path could become too centralized, making “stay in the middle” the winning strategy.</li>
+        <li>Obstacle layout needed to become more map-like without creating dead ends.</li>
+        <li>Visuals needed correction before the descent concept could fully mature.</li></ul>
+      </div>
+      <div>
+        <h2>Corrections Applied</h2>
+        <ul><li>Expanded unlock distance and considered automatic breach behavior with the key.</li>
+        <li>Added more obstacles to prevent a center-lane-only solution.</li>
+        <li>Protected the design rule that the path must always allow downward flow.</li>
+        <li>Clarified brake and phase as the player’s non-attack survival tools.</li></ul>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>The Proof Is</h2>
+      <p class="callout">The proof is not the game by itself. The proof is the visible trail from intent, build decision, failure mode, correction, and reusable finding.</p>
+      <ul><li>Breach Drop is documented as a testable demo in the arcade README.</li>
+        <li>Ken’s live testing identified the gate-unlock distance problem.</li>
+        <li>The design rule “no dead ends” became a specific acceptance constraint.</li>
+        <li>The project showed how player-flow evidence can override simple difficulty escalation.</li></ul>
+    </section>
+
+    <section class="section">
+      <h2>Finding</h2>
+      <p>Difficulty must not be confused with entrapment. Breach Drop showed that a fair arcade route needs pressure, options, and continuous flow.</p>
+      <h3>Relevance Beyond the Game</h3>
+      <p>Useful for system design and change management: adding friction can create challenge, but blocking every path creates failure conditions that users experience as system design defects.</p>
+    </section>
+
+    <section class="section" id="approval">
+      <h2>Approval Control</h2>
+      <p>This evidence page is intentionally approval-gated. Publish only after Ken confirms the analysis, wording, and supporting artifacts.</p>
+      <div class="approval">
+        <div><strong>Draft Owner</strong>Ken / AI-assisted evidence build</div>
+        <div><strong>Approval Status</strong><span class="locked">Pending Ken Review</span></div>
+        <div><strong>Publication Rule</strong>No evidence claim becomes final until approved.</div>
+        <div><strong>Last Package Update</strong>2026-06-19</div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">
+    <span data-build-stamp></span><br />
+    Routes still move. Purpose does not.
+  </footer>
+</div>
+<script src="../assets/evidence.js"></script>
+</body>
+</html>
