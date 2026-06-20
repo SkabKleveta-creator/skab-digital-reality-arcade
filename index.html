@@ -100,12 +100,83 @@
         min-height: 210px !important;
       }
     }
-
+/* Evidence Archive Easter egg: subtle glitch/fire curiosity cue */
+.evidence-easter-trigger{
+  cursor:pointer;
+  position:relative;
+  user-select:none;
+}
+.evidence-easter-trigger::after{
+  content:"";
+  opacity:0;
+  margin-left:.35rem;
+}
+.evidence-easter-trigger.evidence-glitch{
+  animation:evidenceGlitch .18s steps(2,end) infinite;
+  text-shadow:
+    0 0 10px rgba(104,245,255,.55),
+    2px 0 rgba(255,79,109,.45),
+    -2px 0 rgba(141,255,154,.35);
+}
+.evidence-easter-trigger.evidence-glitch::after{
+  content:" 🔥";
+  opacity:1;
+}
+@keyframes evidenceGlitch{
+  0%{transform:translate(0,0)}
+  25%{transform:translate(1px,-1px)}
+  50%{transform:translate(-1px,1px)}
+  75%{transform:translate(1px,1px)}
+  100%{transform:translate(0,0)}
+}
+.evidence-unlock-panel{
+  display:none;
+  margin:14px auto 0;
+  max-width:560px;
+  padding:14px;
+  border:1px solid rgba(104,245,255,.35);
+  border-radius:16px;
+  background:rgba(7,17,29,.94);
+  color:#e8fff3;
+  box-shadow:0 18px 42px rgba(0,0,0,.35);
+}
+.evidence-unlock-panel.is-visible{display:block}
+.evidence-unlock-panel strong{
+  color:#ffb23f;
+  letter-spacing:.08em;
+}
+.evidence-unlock-panel p{
+  margin:8px 0;
+  color:#bcdcc8;
+  line-height:1.45;
+}
+.evidence-unlock-panel a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:10px;
+  min-height:42px;
+  padding:0 13px;
+  border:1px solid rgba(104,245,255,.58);
+  border-radius:10px;
+  color:#e8fff3;
+  text-decoration:none;
+  background:rgba(8,44,60,.82);
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
   </style>
 </head>
 <body>
   <main class="wrap">
-    <div class="topbar"><a class="brand" href="#top" aria-label="Skab Digital Reality Arcade home"><strong>SKAB</strong><span>ARCADE</span></a><nav aria-label="Primary navigation"><a href="#games">Games</a><a href="#build-queue">Build Queue</a><a href="#feedback">Feedback</a><a href="#design-review">Design Review</a><a href="#reintegration-core">Reintegration</a><a href="#about">About</a></nav><div class="core-status" aria-label="Core status online"><span class="status-dot" aria-hidden="true"></span>Core Status: Online</div></div>
+    <div class="topbar"><a class="brand" href="#top" aria-label="Skab Digital Reality Arcade home"><strong>SKAB</strong><span>ARCADE</span></a><nav aria-label="Primary navigation"><a href="#games">Games</a><a href="#build-queue">Build Queue</a><a href="#feedback">Feedback</a><a href="#design-review">Design Review</a><a href="#reintegration-core">Reintegration</a><a href="#about">About</a></nav><div class="core-status evidence-easter-trigger" aria-label="Core status online"><span class="status-dot" aria-hidden="true"></span>Core Status: Online</div></div>
+<div id="evidenceUnlockPanel" class="evidence-unlock-panel" aria-live="polite">
+  <strong>PROOF TRAIL UNLOCKED</strong>
+  <p>The arcade is playable. The build trail is inspectable.</p>
+  <p>Evidence pages are draft-state and pending Ken approval.</p>
+  <a href="evidence/">ENTER EVIDENCE ARCHIVE</a>
+</div>
     <header id="top" class="hero panel"><div class="hero-content"><div class="eyebrow">Browser-first prototype hub</div><h1>Skab Digital Reality Arcade</h1><p class="subtitle">No install. Open the link, test the loop, send what breaks, and keep moving. Built for phone, laptop, tablet, desktop, and connected-display browsers.</p><div class="device-strip" aria-label="Supported device types"><span class="pill">Phone browser</span><span class="pill">Laptop</span><span class="pill">Tablet</span><span class="pill">Desktop</span><span class="pill">Connected display</span></div></div></header>
     <section id="games"><div class="section-head"><h2><span class="icon">▶</span> Live Playable</h2><p class="section-note">Playable prototypes with public links. Feedback goes directly to the developer by email.</p></div><div class="live-grid">
       <article class="game-card panel"><div class="game-art art-fps" aria-hidden="true"></div><div class="card-body"><div><div class="kicker"><span class="tag live">Live</span><span class="tag prototype">FPS-002</span><span class="tag blue">Browser FPS</span></div><h3>Digital Reality Run</h3><p class="desc">A first-person recovery run through fractured digital sectors. Cut the command signal, collapse Replicator Stations, shut down Automatons, and enter the Signal Gate.</p></div><div class="actions"><a class="btn" href="https://skabkleveta-creator.github.io/FPS-002/" target="_blank" rel="noopener">Play Now</a><a class="btn secondary email" href="mailto:skabdigitalarcade@gmail.com?subject=Digital%20Reality%20Run%20Feedback%20-%20Skab%20Digital%20Reality%20Arcade&body=Game:%20Digital%20Reality%20Run%0ADevice:%0ABrowser:%0ALink%20used:%0AWi-Fi%20or%20cellular:%0AWhat%20happened:%0AExpected%20result:%0A">Email Developer</a></div></div></article>
@@ -191,5 +262,55 @@
     <footer><div class="footer-line"><span>© <span id="year"></span> Skab Digital Reality Arcade · Hobbyist prototype hub</span><span>Built for phone, laptop, tablet, desktop, and connected-device browsers.</span></div></footer>
   </main>
   <script>document.getElementById("year").textContent=new Date().getFullYear();</script>
+<script>
+/* Evidence Archive Easter egg: hidden proof trail access */
+(function(){
+  const trigger = document.querySelector(".evidence-easter-trigger");
+  const panel = document.getElementById("evidenceUnlockPanel");
+  if(!trigger || !panel) return;
+
+  let taps = 0;
+  let longPressTimer = null;
+  let unlocked = false;
+  let resetTimer = null;
+
+  function showGlitch(){
+    trigger.classList.add("evidence-glitch");
+    window.setTimeout(() => trigger.classList.remove("evidence-glitch"), 2500);
+  }
+
+  function unlock(){
+    if(unlocked) return;
+    unlocked = true;
+    panel.classList.add("is-visible");
+    showGlitch();
+  }
+
+  function resetTapWindow(){
+    if(resetTimer) window.clearTimeout(resetTimer);
+    resetTimer = window.setTimeout(() => {
+      if(!unlocked) taps = 0;
+    }, 3000);
+  }
+
+  trigger.addEventListener("click", function(){
+    taps += 1;
+    showGlitch();
+    resetTapWindow();
+    if(taps >= 5) unlock();
+  });
+
+  trigger.addEventListener("touchstart", function(){
+    longPressTimer = window.setTimeout(unlock, 2000);
+  }, {passive:true});
+
+  trigger.addEventListener("touchend", function(){
+    if(longPressTimer) window.clearTimeout(longPressTimer);
+  }, {passive:true});
+
+  window.setTimeout(showGlitch, 3000);
+  window.setInterval(showGlitch, 14000);
+})();
+</script>
 </body>
 </html>
