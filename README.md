@@ -1,12 +1,16 @@
 # SKAB DIGITAL REALITY ARCADE
 
-Play original browser-based mini-games, arcade prototypes, and testable browser demos built around systems, signal, recovery, route logic, human judgment, horror, validation, and experimental gameplay.
+Play original browser-based mini-games, arcade prototypes, and live browser demos built around systems, signal, recovery, route logic, human judgment, horror, validation, and experimental gameplay.
 
 Built and maintained by Kenneth Kleveta.
 
 Public arcade:
 
 https://skabkleveta-creator.github.io/skab-digital-reality-arcade/
+
+Current arcade site version:
+
+`2026.06.27.002`
 
 ---
 
@@ -114,13 +118,13 @@ https://skabkleveta-creator.github.io/Human-in-the-Loop/
 
 Status:
 
-Active playable prototype
+Live playable prototype
 
 ---
 
-## INTERNAL ARCADE DEMOS
+## LIVE DEMOS
 
-These demos live inside this arcade repository under the `games/` folder.
+These demos run live from this arcade repository under the `games/` folder.
 
 ### SIGNAL SWEEPER
 
@@ -132,7 +136,7 @@ https://skabkleveta-creator.github.io/skab-digital-reality-arcade/games/signal_s
 
 Status:
 
-Testable Demo
+Live Demo
 
 ---
 
@@ -146,7 +150,7 @@ https://skabkleveta-creator.github.io/skab-digital-reality-arcade/games/relay-ru
 
 Status:
 
-Testable Demo
+Live Demo
 
 ---
 
@@ -160,7 +164,7 @@ https://skabkleveta-creator.github.io/skab-digital-reality-arcade/games/node-bla
 
 Status:
 
-Testable Demo
+Live Demo
 
 ---
 
@@ -174,7 +178,7 @@ https://skabkleveta-creator.github.io/skab-digital-reality-arcade/games/breach-d
 
 Status:
 
-Testable Demo
+Live Demo
 
 ---
 
@@ -260,24 +264,4 @@ https://skabkleveta-creator.github.io/Human-in-the-Loop/
 
 ## FRESH VERSION SYSTEM
 
-The homepage uses version metadata and `site-version.json` to help visitors receive the newest version without needing to manually clear browser cache.
-
-Current arcade landing page release:
-
-`2026.06.27.001`
-
----
-
-## CURRENT OPERATING METHOD
-
-```text
-IDEA → LOOP → TEST → PATCH → PROOF
-```
-
-Working rule:
-
-Small enough to finish. Real enough to judge.
-
----
-
-Routes still move. Purpose does not.
+The homepage uses `site-version.json` to help visitors receive the newest version without needing to manually clear browser cache.
