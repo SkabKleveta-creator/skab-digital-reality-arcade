@@ -1,6 +1,6 @@
 # SKAB DIGITAL REALITY ARCADE
 
-Play original browser-based mini-games, arcade prototypes, and testable browser demos built around systems, signal, recovery, route logic, and experimental gameplay.
+Play original browser-based mini-games, arcade prototypes, and testable browser demos built around systems, signal, recovery, route logic, human judgment, horror, validation, and experimental gameplay.
 
 Built and maintained by Kenneth Kleveta.
 
@@ -21,6 +21,8 @@ This is not a studio launch or storefront. It is a public workshop for browser-f
 The goal is not to pretend every prototype is complete.
 
 The goal is to create enough playable evidence to learn what deserves to grow, what needs to be redesigned, and what should be retired.
+
+The arcade is also a parent proof shell: it shows that small AI-assisted prototypes can be designed, deployed, tested, status-labeled, reviewed, corrected, hidden or revealed, and preserved as an inspectable build trail.
 
 ---
 
@@ -84,6 +86,38 @@ Live playable
 
 ---
 
+### REINTEGRATION CORE
+
+A systems-repair arcade prototype about broken infrastructure, route logic, validation, terminals, ladders, fixed-anchor recovery, and restoring purpose without pretending a green board is proof.
+
+Play:
+
+https://skabkleveta-creator.github.io/Reintegration_Core_HTML/
+
+Status:
+
+Live playable / systems-repair prototype
+
+Note:
+
+Mechanically checked, with continued live phone playtesting expected as the build matures.
+
+---
+
+### HUMAN-IN-THE-LOOP
+
+A mobile-first isometric cybernetic horror shooter about escaping a facility where human judgment has been turned into compliance hardware. Survive the Preservation Wing, manage weapons and cyborg power, energize relays, and push toward the AI Heart.
+
+Play:
+
+https://skabkleveta-creator.github.io/Human-in-the-Loop/
+
+Status:
+
+Active playable prototype
+
+---
+
 ## INTERNAL ARCADE DEMOS
 
 These demos live inside this arcade repository under the `games/` folder.
@@ -98,7 +132,7 @@ https://skabkleveta-creator.github.io/skab-digital-reality-arcade/games/signal_s
 
 Status:
 
-In Build Queue / demo folder available
+Testable Demo
 
 ---
 
@@ -212,58 +246,38 @@ Expected structure:
       └─ index.html
 ```
 
+External playable prototypes currently linked from the arcade:
+
+```text
+https://skabkleveta-creator.github.io/FPS-002/
+https://skabkleveta-creator.github.io/BLACKBOX_SQUADRON_Public_Game/
+https://skabkleveta-creator.github.io/ANCHOR_RUN_Public_Game/
+https://skabkleveta-creator.github.io/Reintegration_Core_HTML/
+https://skabkleveta-creator.github.io/Human-in-the-Loop/
+```
+
 ---
 
 ## FRESH VERSION SYSTEM
 
-The homepage uses `site-version.json` to help visitors receive the newest version without needing to manually clear browser cache.
+The homepage uses version metadata and `site-version.json` to help visitors receive the newest version without needing to manually clear browser cache.
 
-When the arcade homepage is updated, update both:
+Current arcade landing page release:
 
-```text
-index.html
-site-version.json
-```
-
-Current homepage version:
-
-```text
-2026.06.19.008
-```
-
-If the version in `site-version.json` is newer than the loaded page, the homepage redirects itself with a versioned URL.
+`2026.06.27.001`
 
 ---
 
-## DEVELOPMENT METHOD
-
-The arcade is built using a lightweight disciplined process:
+## CURRENT OPERATING METHOD
 
 ```text
 IDEA → LOOP → TEST → PATCH → PROOF
 ```
 
-Working principles:
+Working rule:
 
-* Small enough to finish
-* Real enough to judge
-* Phone-first testing matters
-* One focused patch at a time
-* Design locks prevent drift
-* Field testing beats assumption
-* Broken prototypes are data
+Small enough to finish. Real enough to judge.
 
 ---
 
-## BUILT WITH
-
-* HTML
-* CSS
-* JavaScript
-* GitHub Pages
-
----
-
-Routes still move.
-
-Purpose does not.
+Routes still move. Purpose does not.
