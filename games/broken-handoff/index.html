@@ -3,42 +3,46 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Broken Handoff // Validation Trial</title>
+<title>Broken Handoff // Browser Deck</title>
 <style>
-:root{--bg:#050814;--panel:#101c31;--panel2:#14233d;--line:rgba(151,210,255,.2);--text:#eef7ff;--muted:#a9b8c9;--cyan:#69e3ff;--gold:#ffd166;--green:#8effb0;--red:#ff667d;--shadow:rgba(0,0,0,.42);--radius:22px}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% -10%,#193b61 0,#081225 45%,#03050d 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.shell{width:min(1060px,94vw);margin:0 auto;padding:28px 0 56px}.panel{background:linear-gradient(180deg,rgba(16,28,49,.95),rgba(7,13,26,.96));border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 18px 46px var(--shadow);padding:24px;margin:14px 0}.eyebrow{color:var(--cyan);font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:850;margin:0 0 8px}h1{font-size:clamp(42px,8vw,88px);line-height:.9;letter-spacing:-.06em;margin:0}.promise{font-size:clamp(20px,3vw,30px);font-weight:850;line-height:1.1;margin:18px 0 0;color:#fff}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.card{border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.04);padding:15px}.card h2{font-size:18px;margin:0 0 8px;color:var(--cyan)}p,li{color:#dcecff;line-height:1.55}.muted{color:var(--muted)}.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.badge{border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.06);border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:999px;padding:12px 15px;border:1px solid rgba(105,227,255,.32);background:rgba(105,227,255,.1);color:var(--text);font-weight:850}.btn.primary{background:linear-gradient(90deg,rgba(105,227,255,.95),rgba(142,255,176,.92));color:#06101e;border:0}.sequence{display:grid;gap:10px}.step{border-left:3px solid var(--gold);padding:8px 12px;background:rgba(255,209,102,.06);border-radius:10px}.danger{border-left:3px solid var(--red);padding:8px 12px;background:rgba(255,102,125,.06);border-radius:10px}.note{border-left:3px solid var(--cyan);padding-left:14px;color:#dcecff}@media(max-width:760px){.grid{grid-template-columns:1fr}.panel{padding:18px}h1{font-size:44px}}
+:root{--bg:#050814;--panel:#101c31;--panel2:#14233d;--line:rgba(151,210,255,.2);--text:#eef7ff;--muted:#a9b8c9;--cyan:#69e3ff;--gold:#ffd166;--green:#8effb0;--red:#ff667d;--shadow:rgba(0,0,0,.42);--radius:22px}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 20% -10%,#193b61 0,#081225 45%,#03050d 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.shell{width:min(1180px,94vw);margin:0 auto;padding:28px 0 56px}.hero,.slide,.note{background:linear-gradient(180deg,rgba(16,28,49,.96),rgba(7,13,26,.97));border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 18px 46px var(--shadow);padding:24px;margin:14px 0}.eyebrow{color:var(--cyan);font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:850;margin:0 0 8px}h1{font-size:clamp(42px,8vw,92px);line-height:.88;letter-spacing:-.06em;margin:0}h2{font-size:clamp(25px,4vw,44px);line-height:.98;letter-spacing:-.04em;margin:0 0 12px}.promise{font-size:clamp(20px,3vw,31px);font-weight:850;line-height:1.1;margin:18px 0 0;color:#fff}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.three{grid-template-columns:repeat(3,1fr)}.card{border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.04);padding:15px}.card h3{font-size:17px;margin:0 0 8px;color:var(--cyan)}p,li{color:#dcecff;line-height:1.55}.muted{color:var(--muted)}.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.badge{border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.06);border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:999px;padding:12px 15px;border:1px solid rgba(105,227,255,.32);background:rgba(105,227,255,.1);color:var(--text);font-weight:850}.btn.primary{background:linear-gradient(90deg,rgba(105,227,255,.95),rgba(142,255,176,.92));color:#06101e;border:0}.sequence{display:grid;gap:10px}.step{border-left:3px solid var(--gold);padding:10px 12px;background:rgba(255,209,102,.06);border-radius:10px}.risk{border-left:3px solid var(--red);padding:10px 12px;background:rgba(255,102,125,.06);border-radius:10px}.good{border-left:3px solid var(--green);padding:10px 12px;background:rgba(142,255,176,.06);border-radius:10px}.topnav{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.topnav a{font-size:12px;text-decoration:none;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:8px 10px;color:#dcecff;background:rgba(255,255,255,.05)}table{width:100%;border-collapse:collapse;overflow:hidden;border-radius:12px}th,td{text-align:left;border-bottom:1px solid rgba(255,255,255,.09);padding:10px;color:#dcecff;vertical-align:top}th{color:#fff;background:rgba(255,255,255,.06)}@media(max-width:820px){.grid,.three{grid-template-columns:1fr}.hero,.slide,.note{padding:18px}h1{font-size:44px}}
 </style>
 </head>
 <body>
 <main class="shell">
-<section class="panel">
-<p class="eyebrow">Tabletop Trial · Handoff Validation · Index Page</p>
+<section class="hero">
+<p class="eyebrow">Tabletop Trial · Handoff Validation · Browser Deck</p>
 <h1>Broken Handoff</h1>
-<p class="promise">A mobile-lite validation trial about false-green status, meaning loss, unclear ownership, evidence debt, and whether a handoff is actually repaired.</p>
-<div class="badges"><span class="badge">Format: Tabletop Trial</span><span class="badge">Status: Needs Playtest / Index Holding Page</span><span class="badge">Evidence: Handoff</span></div>
-<div class="actions"><a class="btn primary" href="../../">Back to Arcade</a><a class="btn" href="#quick-run">Read Quick Run</a></div>
+<p class="promise">A visible validation packet for false-green status, meaning loss, unclear ownership, evidence debt, and repair that is not real until validated.</p>
+<div class="badges"><span class="badge">Format: Browser Deck</span><span class="badge">Status: Displayable Trial Packet</span><span class="badge">Evidence: Handoff</span></div>
+<div class="actions"><a class="btn primary" href="../../">Back to Arcade</a><a class="btn" href="#run">Run Structure</a><a class="btn" href="#aar">AAR</a></div>
 </section>
-<section class="panel grid">
-<article class="card"><h2>What it is</h2><p>Broken Handoff is a tabletop/mobile-lite procedure for testing decision quality when a system looks green but the underlying handoff may still be broken.</p></article>
-<article class="card"><h2>Current status</h2><p>Display-worthy validation lane. This index page gives the Arcade a working destination while the fuller mobile validation shell or trial export is staged.</p></article>
-<article class="card"><h2>What it proves</h2><p>Meaning loss, handoff breakdown, and false-green status can be turned into playable decision validation instead of just documentation language.</p></article>
-<article class="card"><h2>Still unproven</h2><p>Whether one player can complete the validation shell and produce a useful after-action review without facilitator friction.</p></article>
+<nav class="topnav"><a href="#intent">Intent</a><a href="#loop">Core Loop</a><a href="#run">Run</a><a href="#undo">Undo Rule</a><a href="#guardrails">Guardrails</a><a href="#aar">AAR</a></nav>
+<section class="slide" id="intent">
+<p class="eyebrow">Slide 1</p><h2>What this is</h2>
+<div class="grid"><div class="card"><h3>Plain language</h3><p>Broken Handoff is a tabletop/mobile-lite validation trial about a system that looks repaired but may still be broken underneath.</p></div><div class="card"><h3>Why it exists</h3><p>It tests whether players preserve judgment when the visible status is green but the evidence, owner, or receiving side is not aligned.</p></div></div>
 </section>
-<section class="panel" id="quick-run">
-<p class="eyebrow">Quick Run Structure</p>
-<div class="sequence">
-<div class="step"><strong>1. Observe:</strong> Read the reported green status and compare it to what the system evidence actually supports.</div>
-<div class="step"><strong>2. Diagnose:</strong> Identify where meaning was lost: owner, evidence, timing, validation, or assumption.</div>
-<div class="step"><strong>3. Stabilize:</strong> Choose the least-damaging action that preserves human judgment and prevents blind escalation.</div>
-<div class="step"><strong>4. Validate:</strong> The handoff is not fixed until evidence confirms the receiving side can act correctly.</div>
-<div class="step"><strong>5. AAR:</strong> Capture what was misunderstood, what was proven, and what should change next time.</div>
-<div class="danger"><strong>Emergency reopen rule:</strong> One reopened decision may be allowed per run, but it costs Strain +1 and must be recorded in the AAR.</div>
-</div>
+<section class="slide" id="loop">
+<p class="eyebrow">Slide 2</p><h2>Core loop</h2>
+<div class="sequence"><div class="step"><strong>Observe:</strong> Read the reported status and compare it to actual evidence.</div><div class="step"><strong>Diagnose:</strong> Identify where meaning was lost: owner, evidence, timing, validation, or assumption.</div><div class="step"><strong>Stabilize:</strong> Choose the least-damaging action that preserves human judgment.</div><div class="step"><strong>Route / repair:</strong> Move the handoff to the correct owner or rebuild the missing evidence path.</div><div class="step"><strong>Validate:</strong> The handoff is not fixed until the receiving side can act correctly.</div></div>
 </section>
-<section class="panel grid">
-<article class="card"><h2>Guardrail</h2><p>Do not overbuild before the first real AAR. Preserve simple one-thumb/mobile-lite procedure and the controlled undo model.</p></article>
-<article class="card"><h2>Next proof question</h2><p>Can a player complete the validation shell and produce a useful AAR in one clean run?</p></article>
+<section class="slide" id="run">
+<p class="eyebrow">Slide 3</p><h2>Suggested one-run flow</h2>
+<table><tr><th>Scene</th><th>Player question</th><th>Failure mode tested</th></tr><tr><td>1. Green report</td><td>What does the system claim?</td><td>Trusting status without evidence.</td></tr><tr><td>2. Evidence pull</td><td>What proves the claim?</td><td>Missing or stale evidence.</td></tr><tr><td>3. Ownership check</td><td>Who can actually act?</td><td>Unclear owner / duplicate routing.</td></tr><tr><td>4. Repair choice</td><td>What is the safest correction?</td><td>Escalation without diagnosis.</td></tr><tr><td>5. Validation gate</td><td>Can the receiver execute correctly?</td><td>Closing on a workaround instead of truth.</td></tr><tr><td>6. AAR</td><td>What was learned?</td><td>No learning capture.</td></tr></table>
 </section>
-<footer class="panel"><p class="note"><strong>Integrity note:</strong> This is a functional index / proof presentation page, not a claim that the final Broken Handoff mobile shell is complete. It prevents the Arcade from dead-linking while preserving the current proof posture.</p></footer>
+<section class="slide" id="undo">
+<p class="eyebrow">Slide 4</p><h2>Controlled undo model</h2>
+<div class="grid"><div class="card"><h3>Before lock</h3><p>The player may review and reconsider before locking a decision. This supports one-thumb/mobile-lite play without punishing careful reading.</p></div><div class="card"><h3>After lock</h3><p>Allow one emergency <strong>Reopen Last Decision</strong> per run. It costs Strain +1 and must be recorded in the AAR as “Decision reopened.”</p></div></div>
+</section>
+<section class="slide" id="guardrails">
+<p class="eyebrow">Slide 5</p><h2>Guardrails</h2>
+<div class="sequence"><div class="risk"><strong>Do not overbuild before first real AAR.</strong> The first proof is whether the procedure produces useful learning.</div><div class="risk"><strong>Do not turn it into a full platform yet.</strong> No scenario builder, campaign layer, or bloated system before validation.</div><div class="risk"><strong>Do not make the right answer obvious.</strong> Options must be similar in length and plausibility to avoid answer-key leakage.</div><div class="good"><strong>Preserve the core lesson.</strong> Repair is not real until validated.</div></div>
+</section>
+<section class="slide" id="aar">
+<p class="eyebrow">Slide 6</p><h2>After-action review prompts</h2>
+<div class="grid"><div class="card"><h3>Player report</h3><ul><li>What did the green status hide?</li><li>Where was the handoff actually broken?</li><li>What evidence changed the decision?</li><li>Did the receiving side validate the repair?</li><li>Was the emergency reopen used?</li></ul></div><div class="card"><h3>Proof question</h3><p>Can one player complete the validation shell and produce a useful AAR in one clean run?</p></div></div>
+</section>
+<footer class="note"><p><strong>Display note:</strong> No separate .pptx file is currently present in this repo for Broken Handoff. This page displays the available trial content directly as a browser deck so the Arcade link opens usable material instead of an empty placeholder.</p></footer>
 </main>
 </body>
 </html>
