@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Connection Trace — Dock Disagreement Prototype</title>
+<style>
+  /*
+    This file contains an improved single‑sector prototype for Connection Trace.
+    It is based on the sector preview but incorporates feedback from the game design
+    review. The goal of this prototype is to prove the player fantasy of fixing
+    broken organizational truth. Stations have been made more recognizable,
+    the scan/trace/repair/validate loop has clearer staging, and the system’s
+    belief visibly changes when the critical connection is repaired.
+    The canvas remains 960×540 but the elements have been enlarged for
+    readability on small screens. Use in a landscape orientation for best
+    experience.
+  */
+  :root{
+    --bg:#0b0e10; --concrete:#1a1f24; --concrete2:#232a30;
+    --strain:#c2453a; --amber:#f0a13a; --signal:#3ad6c2; --stale:#6c5a7a;
+    --ink:#cdd6dd; --ink-dim:#5d6b75; --line:#2c343b;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:var(--bg);color:var(--ink);
+    font-family:"SFMono-Regular","Roboto Mono",Menlo,Consolas,monospace;
+    overflow:hidden}
+  #stage{position:relative;width:100vw;height:100vh;display:flex;
+    align-items:center;justify-content:center}
+  canvas{display:block;background:#07090a;image-rendering:pixelated;
+    max-width:100%;max-height:100%;touch-action:none}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;
+    background:radial-gradient(ellipse at center,rgba(11,14,16,.85),rgba(7,9,10,.97));
+    padding:24px;z-index:10}
+  .screen.active{display:flex}
+  .eyebrow{letter-spacing:.42em;font-size:11px;text-transform:uppercase;
+    color:var(--ink-dim);margin-bottom:14px}
+  .title{font-size:clamp(30px,7vw,58px);font-weight:700;letter-spacing:-.02em;
+    line-height:.92;color:var(--ink)}
+  .title .glitch{color:var(--signal)}
+  .subtitle{margin-top:18px;max-width:520px;color:var(--ink-dim);
+    font-size:13px;line-height:1.7}
+  .brief{margin-top:22px;max-width:500px;color:var(--amber);
+    font-size:13px;line-height:1.7;border-left:2px solid var(--signal);
+    padding-left:14px;text-align:left}
+  .btn{margin-top:32px;background:transparent;border:1px solid var(--amber);
+    color:var(--amber);font-family:inherit;font-size:13px;
+    letter-spacing:.25em;text-transform:uppercase;padding:14px 34px;
+    cursor:pointer;transition:.15s}
+  .btn:hover{background:var(--amber);color:#0b0e10}
+  .hint{margin-top:24px;color:var(--ink-dim);font-size:11px;line-height:1.9}
+  .hint kbd{display:inline-block;border:1px solid var(--line);
+    border-radius:3px;padding:1px 7px;color:var(--ink);
+    background:var(--concrete);font-size:10px;margin:0 1px}
+  .complete .title{color:var(--signal)}
+  .complete .btn{border-color:var(--signal);color:var(--signal)}
+  .complete .btn:hover{background:var(--signal);color:#0b0e10}
+  /* ---- touch controls ---- */
+  #touch{position:absolute;inset:0;display:none;pointer-events:none;z-index:5}
+  #touch.active{display:block}
+  .tbtn{position:absolute;pointer-events:auto;border:1px solid var(--line);
+    background:rgba(26,31,36,.72);color:var(--ink);border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    flex-direction:column;user-select:none;-webkit-user-select:none;
+    backdrop-filter:blur(2px);font-size:20px;width:58px;height:58px;
+    text-align:center}
+  .tbtn:active{background:rgba(240,161,58,.3)}
+  .tbtn small{font-size:8px;letter-spacing:.06em;margin-top:2px}
+  /* dpad lower-left */
+  #t-up{left:74px;bottom:154px} #t-down{left:74px;bottom:90px}
+  #t-left{left:14px;bottom:122px} #t-right{left:134px;bottom:122px}
+  /* actions lower-right */
+  #t-scan{right:140px;bottom:154px;border-color:var(--amber)}
+  #t-work{right:14px;bottom:122px;border-color:var(--signal);width:64px;height:64px}
+  #t-prove{right:80px;bottom:90px;border-color:var(--signal)}
+  #t-trace{right:140px;bottom:90px;border-color:var(--amber)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="game" width="960" height="540"></canvas>
+  <!-- Title screen -->
+  <div class="screen active" id="screen-title">
+    <div class="eyebrow">Reintegration Core · Connectivity Layer · Sector Prototype</div>
+    <div class="title">THE DOCK <span class="glitch">DISAGREEMENT</span></div>
+    <div class="subtitle">A reworked single sector that proves the fantasy: Eli walks
+      through a diagnostic system, reveals hidden truth, fixes the crossed wire, and
+      watches the system update its belief.</div>
+    <div class="brief">
+      The shipping board says Truck 12 left an hour ago.<br>
+      The loading dock says it never moved.<br>
+      Both can’t be true. One wire is crossed — find it, fix it, and prove which one is real.
+    </div>
+    <button class="btn" id="btn-start">Enter Sector</button>
+    <div class="hint">
+      <kbd>WASD</kbd>/<kbd>arrows</kbd> walk Eli &nbsp;·&nbsp; <kbd>Space</kbd> scan &nbsp;·&nbsp;
+      <kbd>Shift</kbd> hold to trace &nbsp;·&nbsp; <kbd>J</kbd> hold to reroute &nbsp;·&nbsp;
+      <kbd>V</kbd> prove it
+    </div>
+  </div>
+  <!-- Complete screen -->
+  <div class="screen complete" id="screen-complete">
+    <div class="eyebrow">Sector Restored</div>
+    <div class="title" id="c-title">TRUTH<br>RESTORED</div>
+    <div class="subtitle" id="c-stats"></div>
+    <button class="btn" id="btn-replay">Run Again</button>
+  </div>
+  <!-- Touch controls -->
+  <div id="touch">
+    <div class="tbtn" id="t-up">▲</div>
+    <div class="tbtn" id="t-down">▼</div>
+    <div class="tbtn" id="t-left">◀</div>
+    <div class="tbtn" id="t-right">▶</div>
+    <div class="tbtn" id="t-scan">⊙<small>SCAN</small></div>
+    <div class="tbtn" id="t-work">⚙<small>WORK</small></div>
+    <div class="tbtn" id="t-prove">✓<small>PROVE</small></div>
+    <div class="tbtn" id="t-trace">⇶<small>TRACE</small></div>
+  </div>
+</div>
+<script>
+"use strict";
+(function(){
+// Colour constants
+const C={bg:'#07090a',concrete:'#1a1f24',concrete2:'#232a30',strain:'#c2453a',
+  amber:'#f0a13a',signal:'#3ad6c2',stale:'#6c5a7a',ink:'#cdd6dd',inkDim:'#5d6b75',line:'#2c343b'};
+const W={w:960,h:540};
+const canvas=document.getElementById('game');
+if(!canvas||!canvas.getContext){console.error('no canvas');return;}
+const ctx=canvas.getContext('2d'); if(!ctx){console.error('no ctx');return;}
+
+/* -----------------------------------------------------------------------
+   SECTOR DATA — This sector is hard‑coded for the prototype. A full game
+   will load other sectors from data. Each station is a recognisable
+   workplace object with an id, position, label, sublabel, and type. The
+   board’s sublabel will update when the critical wire is fixed. Wires link
+   stations. One is the critical (crossed) connection. Decoy wires are
+   hidden or stale. Each wire has a why field used for HUD narration.
+------------------------------------------------------------------------ */
+const STATIONS=[
+  {id:'eli_start', label:'Entry',          sub:'',                           x:100, y:300, kind:'entry'},
+  {id:'board',     label:'Shipping Board', sub:'says: TRUCK 12 — DEPARTED',  x:320, y:140, kind:'screen'},
+  {id:'plan',      label:'Dispatch Plan',  sub:'intended route',            x:320, y:440, kind:'paper'},
+  {id:'dock',      label:'Loading Dock',   sub:'truck still parked',         x:640, y:440, kind:'truck'},
+  {id:'check',     label:'Gate Checkpoint',sub:'confirms what is real',      x:840, y:280, kind:'gate'}
+];
+const WIRES=[
+  {id:'w_board_plan', a:'board', b:'plan',  state:'crossed', critical:true,
+     why:'The board is wired to the plan, not the dock.'},
+  {id:'w_plan_dock',  a:'plan',  b:'dock',  state:'hidden', critical:false,
+     why:'Hidden until you scan — the plan and the dock were never compared.'},
+  {id:'w_dock_check', a:'dock',  b:'check', state:'good',   critical:false,
+     why:'The dock can reach the checkpoint fine.'},
+  {id:'w_board_check',a:'board', b:'check', state:'stale',  critical:false,
+     why:'An old wire. Looks alive, carries yesterday.'}
+];
+function st(id){return STATIONS.find(s=>s.id===id);} // station lookup
+function wire(id){return WIRES.find(w=>w.id===id);}   // wire lookup
+
+/* -----------------------------------------------------------------------
+   PLAYER (Eli) — The operator moves through the system. We enlarge Eli a
+   little for readability but keep the pixel silhouette. The bobbing step
+   and visor remain. Eli faces the last movement direction.
+------------------------------------------------------------------------ */
+const eli={x:100,y:300,vx:0,vy:0,speed:2.6,facing:1,bob:0,stepAcc:0};
+function resetEli(){eli.x=st('eli_start').x; eli.y=st('eli_start').y; eli.vx=eli.vy=0; eli.bob=0; eli.stepAcc=0; eli.facing=1;}
+
+/* -----------------------------------------------------------------------
+   GAME STATE — Tracks phase, scan status, trace toggle, what Eli is near,
+   working progress, fix/validate progress, and logs. The start time is used
+   for completion stats. The tracing state mirrors whether the Shift key
+   (or touch button) is held.
+------------------------------------------------------------------------ */
+const S={
+  phase:'title',          // current screen: title | play | complete
+  scanned:false,          // has the player scanned yet?
+  scanT:0,                // scan animation progress (0→1)
+  tracing:false,          // is trace mode held?
+  nearWire:null,          // wire Eli is near (by midpoint distance)
+  nearStation:null,       // station Eli is near
+  working:false, workT:0, // progress bar when holding work
+  fixed:false,            // critical wire has been rerouted
+  proving:false, proveT:0,// progress bar when validating
+  proved:false,           // validation complete
+  start:0,                // run start timestamp
+  log:[]                 // rolling log of messages
+};
+function logMsg(m){S.log.push(m); if(S.log.length>3)S.log.shift();}
+
+/* -----------------------------------------------------------------------
+   INPUT HANDLING — We track key state manually and show/hide touch
+   controls based on pointer characteristics. A dedicated trace button is
+   included for touch. All keys are released on blur to prevent stuck
+   movement.
+------------------------------------------------------------------------ */
+const keys={};
+window.addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  // ESC to pause/resume (not implemented yet). Do not allow normal key repeat.
+  if(k==='escape')return;
+  keys[k]=true;
+  if([' ','arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','shift'].includes(k)){
+    e.preventDefault();
+  }
+  // actions on keydown for scan/prove. Work and trace handled continuously.
+  if(k===' '&&S.phase==='play')doScan();
+  if(k==='v'&&S.phase==='play')startProve();
+});
+window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
+function held(...ks){return ks.some(k=>keys[k]);}
+// Trace helper: returns true if shift key pressed
+function traceHeld(){return !!keys['shift'];}
+
+/* Touch controls bindings */
+function bindHold(id,key){
+  const el=document.getElementById(id); if(!el)return;
+  const set=v=>e=>{e.preventDefault();keys[key]=v;};
+  ['touchstart','mousedown'].forEach(ev=>el.addEventListener(ev,set(true),{passive:false}));
+  ['touchend','touchcancel','mouseup','mouseleave'].forEach(ev=>el.addEventListener(ev,set(false),{passive:false}));
+}
+function bindTap(id,fn){
+  const el=document.getElementById(id); if(!el)return;
+  ['touchstart','mousedown'].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();if(S.phase==='play')fn();},{passive:false}));
+}
+bindHold('t-up','arrowup'); bindHold('t-down','arrowdown');
+bindHold('t-left','arrowleft'); bindHold('t-right','arrowright');
+bindHold('t-work','j');
+bindHold('t-trace','shift');
+bindTap('t-scan',doScan);
+bindTap('t-prove',startProve);
+// show touch controls on coarse pointer devices
+const isCoarse = !!(window.matchMedia&&window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+
+/* -----------------------------------------------------------------------
+   SOUND — Soft, non‑combat audio feedback using Web Audio. Identical to
+   preview, with added chime for trace activation.
+------------------------------------------------------------------------ */
+const Snd={ctx:null,on:true,
+  init(){ if(this.ctx)return;
+    try{const AC=window.AudioContext||window.webkitAudioContext; if(AC)this.ctx=new AC();}catch(e){this.ctx=null;} },
+  tone(freq,dur,type,vol,slideTo){ if(!this.on||!this.ctx)return; const t=this.ctx.currentTime; const o=this.ctx.createOscillator(), g=this.ctx.createGain(); o.type=type||'sine'; o.frequency.setValueAtTime(freq,t); if(slideTo)o.frequency.exponentialRampToValueAtTime(slideTo,t+dur); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||0.12,t+0.012); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g).connect(this.ctx.destination); o.start(t); o.stop(t+dur+0.02); },
+  scan(){ this.tone(320,0.5,'sine',0.10,760); },       // rising sweep
+  step(){ this.tone(140,0.04,'square',0.03); },         // soft tick
+  workTick(p){ this.tone(180+p*220,0.05,'triangle',0.05); }, // rising pitch
+  snap(){ this.tone(540,0.08,'square',0.10); setTimeout(()=>this.tone(820,0.12,'sine',0.10),60); },
+  proveLaunch(){ this.tone(420,0.18,'sine',0.08,600); },
+  confirm(){ this.tone(660,0.14,'sine',0.11); setTimeout(()=>this.tone(990,0.22,'sine',0.11),130); },
+  block(){ this.tone(200,0.12,'sine',0.07,150); },
+  traceOn(){ this.tone(260,0.18,'triangle',0.05,380); },
+  traceOff(){ this.tone(220,0.14,'triangle',0.04,180); }
+};
+function wireMid(w){const a=st(w.a), b=st(w.b); return {x:(a.x+b.x)/2, y:(a.y+b.y)/2};}
+function dist(ax,ay,bx,by){const dx=ax-bx, dy=ay-by; return Math.sqrt(dx*dx+dy*dy);} 
+function wireVisible(w){return w.state!=='hidden'||S.scanned;}
+
+/* -----------------------------------------------------------------------
+   SCAN & TRACE & PROVE CONTROLS — Triggers and logic for scanning the map,
+   tracing the believed route, rerouting the critical wire, and proving
+   the fix. Messages are logged to help the player understand the system.
+------------------------------------------------------------------------ */
+function doScan(){
+  if(S.scanned){ logMsg('Already scanned.'); return; }
+  S.scanned=true; S.scanT=0; Snd.scan();
+  logMsg('Scan complete. Hidden wires and stale links revealed.');
+}
+function startProve(){
+  if(S.proving||S.proved)return;
+  if(!S.fixed){ Snd.block(); logMsg('Nothing to prove yet — the board is still wrong.'); return; }
+  S.proving=true; S.proveT=0; Snd.proveLaunch();
+  logMsg('Running the live signal from the dock to the checkpoint…');
+}
+
+/* -----------------------------------------------------------------------
+   UPDATE LOOP — Moves Eli, checks proximities, handles work/prove progress,
+   toggles trace state, and triggers audio feedback. The trace state is
+   updated here rather than in render to avoid flicker when holding shift.
+------------------------------------------------------------------------ */
+function update(now, dt){
+  // update trace state based on key / touch
+  const currentlyTracing=traceHeld();
+  if(currentlyTracing && !S.tracing){ S.tracing=true; Snd.traceOn(); logMsg('Tracing current route…'); }
+  if(!currentlyTracing && S.tracing){ S.tracing=false; Snd.traceOff(); logMsg('Trace off.'); }
+  // movement
+  let ax=0, ay=0;
+  if(held('arrowleft','a'))ax-=1;
+  if(held('arrowright','d'))ax+=1;
+  if(held('arrowup','w'))ay-=1;
+  if(held('arrowdown','s'))ay+=1;
+  if(ax!==0)eli.facing=ax>0?1:-1;
+  const moving=(ax!==0||ay!==0);
+  const len=Math.hypot(ax,ay)||1;
+  eli.x+=(ax/len)*eli.speed*(dt/16.7);
+  eli.y+=(ay/len)*eli.speed*(dt/16.7);
+  eli.x=Math.max(20,Math.min(W.w-20,eli.x));
+  eli.y=Math.max(80,Math.min(W.h-40,eli.y));
+  if(moving){
+    eli.bob=(eli.bob||0)+dt*0.012;
+    eli.stepAcc=(eli.stepAcc||0)+dt;
+    if(eli.stepAcc>240){ eli.stepAcc=0; Snd.step(); }
+  } else { eli.bob=0; eli.stepAcc=0; }
+  // scan animation
+  if(S.scanned && S.scanT<1) S.scanT=Math.min(1, S.scanT+dt/600);
+  // determine what Eli is near (wire and station)
+  S.nearWire=null; S.nearStation=null;
+  let bestW=50;
+  for(const w of WIRES){ if(!wireVisible(w))continue; const m=wireMid(w); const d=dist(eli.x,eli.y,m.x,m.y); if(d<bestW){ bestW=d; S.nearWire=w; } }
+  let bestS=54;
+  for(const s of STATIONS){ const d=dist(eli.x,eli.y,s.x,s.y); if(d<bestS){ bestS=d; S.nearStation=s; } }
+  // working on wires (rerouting)
+  const w=S.nearWire;
+  if(held('j','enter') && w && !S.proving){
+    if(w.critical && !S.fixed){
+      const before=S.workT;
+      S.working=true; S.workT=Math.min(1, S.workT + dt/900);
+      if(Math.floor(before*6)!==Math.floor(S.workT*6)) Snd.workTick(S.workT);
+      if(S.workT>=1){
+        // fix the crossed wire
+        w.fixed=true; w.state='good'; S.fixed=true; S.workT=0; S.working=false;
+        w.snapT=1; Snd.snap();
+        // update board belief
+        const board=st('board'); board.sub='reads: TRUCK 12 — STILL AT DOCK';
+        logMsg('Rerouted: the board now reads the dock, not the plan.');
+      }
+    } else {
+      // working on non-critical wire: progress resets after full bar and logs message
+      const before=S.workT;
+      S.working=true; S.workT=Math.min(1, S.workT + dt/900);
+      if(Math.floor(before*6)!==Math.floor(S.workT*6)) Snd.workTick(S.workT);
+      if(S.workT>=1){ S.workT=0; S.working=false;
+        logMsg('That wire is not crossed. The board still disagrees.'); }
+    }
+  } else { S.working=false; S.workT=0; }
+  // decay the wire snap flash
+  WIRES.forEach(wr=>{ if(wr.snapT>0) wr.snapT=Math.max(0, wr.snapT - dt/300); });
+  // proving
+  if(S.proving){
+    S.proveT += dt/1600;
+    if(S.proveT>=1){ S.proveT=1; S.proving=false; S.proved=true; Snd.confirm(); logMsg('Checkpoint confirms: Truck 12 has NOT departed. Board corrected.'); complete(); }
+  }
+}
+
+/* -----------------------------------------------------------------------
+   DRAWING HELPERS — Draw grid, scan pulse, wires, trace overlays, stations,
+   Eli, validation signal, and HUD. Trace overlays highlight the current
+   system belief versus reality. When the critical wire is unfixed, the
+   belief route is board→plan→dock→check. After fix, it becomes
+   board→dock→check.
+------------------------------------------------------------------------ */
+function drawGrid(){ ctx.strokeStyle='rgba(44,52,59,.3)'; ctx.lineWidth=1; for(let x=0;x<W.w;x+=40){ ctx.beginPath(); ctx.moveTo(x+.5,0); ctx.lineTo(x+.5,W.h); ctx.stroke(); } for(let y=0;y<W.h;y+=40){ ctx.beginPath(); ctx.moveTo(0,y+.5); ctx.lineTo(W.w,y+.5); ctx.stroke(); } }
+function drawScanPulse(){ if(!S.scanned || S.scanT>=1) return; const r=S.scanT*640; ctx.save(); ctx.strokeStyle=C.amber; ctx.globalAlpha=(1-S.scanT)*0.8; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(eli.x,eli.y,r,0,Math.PI*2); ctx.stroke(); ctx.globalAlpha=(1-S.scanT)*0.06; ctx.fillStyle=C.amber; ctx.beginPath(); ctx.arc(eli.x,eli.y,r,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+function wireColor(w){ if(!wireVisible(w)) return C.inkDim; if(w.fixed || w.state==='good') return C.signal; if(w.state==='crossed') return C.strain; if(w.state==='stale') return C.stale; return C.inkDim; }
+function drawWires(){ const t=performance.now(); for(const w of WIRES){ const a=st(w.a), b=st(w.b); let reveal=1; if(w.state==='hidden' && S.scanned && S.scanT<1){ const m=wireMid(w); const d=dist(eli.x,eli.y,m.x,m.y); reveal=Math.max(0,Math.min(1,(S.scanT*640 - d)/60)); }
+    ctx.save(); ctx.globalAlpha=reveal; ctx.lineWidth=w.critical?3:2;
+    if(!wireVisible(w)){ ctx.setLineDash([3,7]); ctx.strokeStyle='rgba(93,107,117,.3)'; }
+    else if(w.state==='stale'){ ctx.setLineDash([2,6]); ctx.globalAlpha=reveal*(.4+.4*Math.abs(Math.sin(t/300))); ctx.strokeStyle=wireColor(w); }
+    else if(w.state==='crossed'){ ctx.setLineDash([6,5]); ctx.strokeStyle=wireColor(w); }
+    else { ctx.setLineDash([]); ctx.strokeStyle=wireColor(w); }
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    // snap flash
+    if(w.snapT>0){ ctx.globalAlpha=w.snapT; ctx.setLineDash([]); ctx.strokeStyle=C.signal; ctx.lineWidth=3+w.snapT*5; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+    ctx.restore();
+    // labels
+    if(wireVisible(w) && reveal>0.5){ const m=wireMid(w); const lbl=w.fixed?'FIXED':(w.state==='crossed'?'CROSSED':w.state==='stale'?'STALE':w.state==='good'?'OK':''); if(lbl){ ctx.globalAlpha=1; ctx.fillStyle=wireColor(w); ctx.font='11px monospace'; ctx.textAlign='center'; ctx.fillText(lbl,m.x,m.y-10); } }
+  } }
+// Highlight the believed route when tracing
+function drawTrace(){ if(!S.tracing) return; // only draw when trace held
+  // compute path wires based on whether the critical wire has been fixed
+  const path = [];
+  if(!S.fixed){ // before fix: board→plan→dock→check
+    path.push(wire('w_board_plan'), wire('w_plan_dock'), wire('w_dock_check'));
+  } else {
+    // after fix: board→dock→check
+    path.push(wire('w_board_plan'), wire('w_dock_check')); // w_board_plan is now rerouted to dock and flagged fixed
+  }
+  // draw highlight behind path wires
+  ctx.save(); ctx.globalAlpha=0.18; ctx.lineWidth=8; ctx.setLineDash([]);
+  for(const w of path){ if(!w) continue; const a=st(w.a), b=st(w.b); ctx.strokeStyle=w.fixed||w.state==='good' ? C.signal : C.stale; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+  // highlight nodes along path
+  for(const w of path){ if(!w) continue; const nodes=[st(w.a), st(w.b)]; for(const s of nodes){ ctx.fillStyle=C.signal; ctx.globalAlpha=0.12; ctx.beginPath(); ctx.arc(s.x,s.y,26,0,Math.PI*2); ctx.fill(); } }
+  ctx.restore();
+}
+function drawStation(s){ const t=performance.now(); ctx.save(); // body shape based on kind
+  ctx.fillStyle=C.concrete2; ctx.strokeStyle=C.ink; ctx.lineWidth=2;
+  if(s.kind==='screen'||s.kind==='gate'){
+    ctx.fillRect(s.x-30,s.y-20,60,40);
+    ctx.strokeRect(s.x-30,s.y-20,60,40);
+  } else if(s.kind==='truck'){
+    ctx.fillRect(s.x-34,s.y-14,46,28);
+    ctx.strokeRect(s.x-34,s.y-14,46,28);
+    ctx.fillRect(s.x+12,s.y-4,16,18);
+    ctx.strokeRect(s.x+12,s.y-4,16,18);
+  } else if(s.kind==='paper'){
+    ctx.fillRect(s.x-20,s.y-26,40,52);
+    ctx.strokeRect(s.x-20,s.y-26,40,52);
+  } else {
+    ctx.beginPath(); ctx.arc(s.x,s.y,18,0,Math.PI*2); ctx.stroke();
+  }
+  // gate glow on validation
+  const accent = s.kind==='gate'?C.signal : s.kind==='paper'?C.amber : s.kind==='truck'?C.ink : C.amber;
+  ctx.strokeStyle=accent; ctx.lineWidth=2;
+  if(s.kind==='gate'){
+    ctx.globalAlpha=S.proved?1:.6+.3*Math.sin(t/400);
+    ctx.strokeRect(s.x-30,s.y-20,60,40);
+  }
+  ctx.globalAlpha=1;
+  // labels
+  ctx.fillStyle=C.ink; ctx.font='12px monospace'; ctx.textAlign='center'; ctx.fillText(s.label,s.x,s.y+34);
+  if(s.sub){ ctx.fillStyle=C.inkDim; ctx.font='10px monospace'; ctx.fillText(s.sub,s.x,s.y+48); }
+  ctx.restore(); }
+function drawStations(){ STATIONS.forEach(drawStation); }
+function drawProveSignal(){ if(!S.proving && !S.proved) return; const a=st('dock'), b=st('check'); ctx.save(); ctx.strokeStyle=C.signal; ctx.lineWidth=4; ctx.globalAlpha=.5; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); ctx.globalAlpha=1; const tt=S.proved?1:S.proveT; const px=a.x+(b.x-a.x)*tt, py=a.y+(b.y-a.y)*tt; for(let k=1;k<=5;k++){ const tk=Math.max(0,tt-k*0.04); ctx.globalAlpha=0.18*(1-k/6); ctx.fillStyle=C.signal; ctx.beginPath(); ctx.arc(a.x+(b.x-a.x)*tk,a.y+(b.y-a.y)*tk,6,0,Math.PI*2); ctx.fill(); } ctx.globalAlpha=1; ctx.fillStyle=C.signal; ctx.beginPath(); ctx.arc(px,py,7,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=.4; ctx.beginPath(); ctx.arc(px,py,13,0,Math.PI*2); ctx.fill(); if(S.proved){ const pulse=(Math.sin(performance.now()/120)+1)/2; ctx.globalAlpha=0.3+0.4*pulse; ctx.strokeStyle=C.signal; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(b.x,b.y,28+pulse*8,0,Math.PI*2); ctx.stroke(); } ctx.restore(); }
+function drawEli(){ ctx.save(); const bob=Math.sin(eli.bob||0)*2.0; const x=eli.x-10,y=eli.y-20+bob,w=20,h=34; ctx.fillStyle=C.ink; ctx.fillRect(x,y,w,h); ctx.fillStyle=C.amber; ctx.fillRect(x+1,y+13,w-2,6); ctx.fillStyle=C.concrete2; ctx.fillRect(x+2,y,w-4,10); ctx.fillStyle=C.signal; if(eli.facing>0) ctx.fillRect(x+w-7,y+3,5,5); else ctx.fillRect(x+2,y+3,5,5); ctx.globalAlpha=.25; ctx.fillStyle=C.amber; ctx.beginPath(); ctx.ellipse(eli.x,eli.y+17,16,5,0,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+function drawHUD(){ ctx.fillStyle=C.amber; ctx.font='12px monospace'; ctx.textAlign='left'; let doNow; if(!S.scanned) doNow='Walk around, then press SPACE to scan the area'; else if(!S.fixed) doNow='Stand on the CROSSED (red) wire and hold J to reroute it'; else if(!S.proved) doNow='Press V to prove it — run the live signal to the checkpoint'; else doNow='Done — the board now tells the truth'; ctx.fillText('▶ '+doNow,16,26);
+    // near wire or station message
+    ctx.font='11px monospace'; if(S.nearWire){ ctx.fillStyle=C.ink; ctx.fillText('At this wire: '+S.nearWire.why,16,46); if(S.nearWire.critical && !S.nearWire.fixed){ ctx.fillStyle=C.amber; ctx.fillText('HOLD J to reroute',16,64); } } else if(S.nearStation && S.nearStation.sub){ ctx.fillStyle=C.inkDim; ctx.fillText(S.nearStation.label+': '+S.nearStation.sub,16,46); }
+    // work meter
+    if(S.working || S.workT>0){ const mx=W.w/2-100, my=W.h-42, mw=200; ctx.fillStyle=C.concrete2; ctx.fillRect(mx,my,mw,14); ctx.fillStyle=C.signal; ctx.fillRect(mx,my,mw*S.workT,14); ctx.strokeStyle=C.line; ctx.strokeRect(mx+.5,my+.5,mw-1,13); ctx.fillStyle=C.ink; ctx.font='9px monospace'; ctx.textAlign='center'; ctx.fillText('WORKING…',W.w/2,my-4); ctx.textAlign='left'; }
+    // logs
+    ctx.font='9px monospace'; ctx.textAlign='left'; for(let i=0;i<S.log.length;i++){ ctx.fillStyle=`rgba(205,214,221,${.4+.6*(i/Math.max(1,S.log.length-1))})`; ctx.fillText('> '+S.log[i],16,W.h-80+i*14); }
+}
+/* -----------------------------------------------------------------------
+   SCENE CONTROLS — Show/hide screens and manage phase transitions.
+------------------------------------------------------------------------ */
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); if(id) document.getElementById(id).classList.add('active'); const t=document.getElementById('touch'); if(t && isCoarse){ if(S.phase==='play') t.classList.add('active'); else t.classList.remove('active'); } }
+function startGame(){ Snd.init(); if(Snd.ctx && Snd.ctx.state==='suspended') Snd.ctx.resume(); S.phase='play'; S.scanned=false; S.scanT=0; S.fixed=false; S.proving=false; S.proveT=0; S.proved=false; S.tracing=false; S.working=false; S.workT=0; S.log=[]; S.start=performance.now(); WIRES.forEach(w=>{ w.snapT=0; if(w.id==='w_board_plan'){ w.fixed=false; w.state='crossed'; } }); wire('w_plan_dock').state='hidden'; // hide plan→dock until scan
+  // reset board sub text
+  st('board').sub='says: TRUCK 12 — DEPARTED'; resetEli(); logMsg('Sector online. The board and the dock disagree.'); show(null); }
+function complete(){ S.phase='complete'; const secs=((performance.now()-S.start)/1000).toFixed(1); document.getElementById('c-stats').textContent=`You found the crossed wire and proved the truth in ${secs}s. The board now reads the dock, not the plan.`; show('screen-complete'); }
+document.getElementById('btn-start').addEventListener('click',startGame);
+document.getElementById('btn-replay').addEventListener('click',startGame);
+/* -----------------------------------------------------------------------
+   MAIN LOOP — Updates and renders the game. Each frame is wrapped in a
+   try/catch to prevent crashes. We clamp dt to avoid large jumps.
+------------------------------------------------------------------------ */
+let last=performance.now();
+function loop(now){ try{ const dt=Math.min(33, now-last); last=now; if(S.phase==='play') update(now, dt); ctx.fillStyle=C.bg; ctx.fillRect(0,0,W.w,W.h); if(S.phase!=='title') { drawGrid(); drawTrace(); drawScanPulse(); drawWires(); drawStations(); drawProveSignal(); drawEli(); drawHUD(); } requestAnimationFrame(loop); } catch(err){ if(console&&console.error) console.error('frame', err); last=now; requestAnimationFrame(loop); } }
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
