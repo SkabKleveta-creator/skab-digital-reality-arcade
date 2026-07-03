@@ -1,322 +1,712 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Skab Digital Reality Arcade</title>
-  <meta name="description" content="Skab Digital Reality Arcade — browser-first hobbyist prototypes for phone, laptop, tablet, desktop, and connected displays." />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <meta name="site-version" content="2026.07.03.001" />
-  <style>
-    :root{
-      --bg:#03070d;--panel:rgba(7,17,29,.92);--panel2:rgba(11,24,39,.94);--line:rgba(104,245,255,.32);--line-soft:rgba(104,245,255,.16);--text:#e8fff3;--muted:#98b9aa;--cyan:#68f5ff;--green:#8dff9a;--amber:#ffb23f;--purple:#bf6cff;--red:#ff4f6d;--shadow:rgba(0,0,0,.42);--max:1180px;
-    }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-    html{scroll-behavior:smooth;}
-    body{margin:0;min-height:100vh;color:var(--text);background:radial-gradient(circle at 14% 10%,rgba(104,245,255,.16),transparent 28rem),radial-gradient(circle at 88% 12%,rgba(141,255,154,.10),transparent 22rem),radial-gradient(circle at 50% 100%,rgba(191,108,255,.08),transparent 30rem),linear-gradient(180deg,#02050a 0%,var(--bg) 55%,#02050a 100%);font-family:"Courier New",Courier,monospace;}
-    body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:34px 34px;opacity:.45;}
-    body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:linear-gradient(180deg,transparent 0%,rgba(104,245,255,.045) 50%,transparent 100%);mix-blend-mode:screen;opacity:.55;}
-    a{color:inherit;}.wrap{width:min(var(--max),calc(100% - 32px));margin:0 auto;position:relative;z-index:1;}
-    .topbar{min-height:76px;display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:18px 0 10px;}
-    .brand{display:inline-flex;flex-direction:column;justify-content:center;min-width:92px;min-height:48px;padding:6px 10px;color:var(--green);border:1px solid rgba(141,255,154,.58);border-radius:8px;background:rgba(0,0,0,.34);text-decoration:none;line-height:.82;box-shadow:0 0 18px rgba(141,255,154,.12);}
-    .brand strong{font-size:25px;letter-spacing:.04em;}.brand span{font-size:10px;letter-spacing:.16em;text-align:right;}
-    nav{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;}nav a{min-height:36px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;color:#c9ead7;text-decoration:none;text-transform:uppercase;letter-spacing:.08em;font-size:12px;border-bottom:1px solid transparent;}nav a:hover,nav a:focus-visible{color:var(--cyan);border-bottom-color:var(--cyan);outline:none;}
-    .core-status{min-height:38px;padding:0 14px;border:1px solid rgba(141,255,154,.5);border-radius:9px;color:var(--green);background:rgba(0,0,0,.28);display:inline-flex;align-items:center;gap:9px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;cursor:pointer;}.status-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 14px var(--green);}
-    .evidence-easter-trigger.evidence-glitch{animation:evidenceGlitch .24s steps(2,end) 0s 4;}.evidence-easter-trigger.evidence-glitch::after{content:" 🔥";opacity:1;}@keyframes evidenceGlitch{0%{transform:translate(0,0)}25%{transform:translate(1px,-1px)}50%{transform:translate(-1px,1px)}75%{transform:translate(1px,1px)}100%{transform:translate(0,0)}}
-    .evidence-unlock-panel{display:none;margin:14px auto 0;max-width:560px;padding:14px;border:1px solid rgba(104,245,255,.35);border-radius:16px;background:rgba(7,17,29,.94);color:#e8fff3;box-shadow:0 18px 42px rgba(0,0,0,.35);}.evidence-unlock-panel.is-visible{display:block;}.evidence-unlock-panel strong{color:var(--amber);letter-spacing:.08em;}.evidence-unlock-panel p{margin:8px 0;color:#bcdcc8;line-height:1.45;}.evidence-unlock-panel a{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;min-height:42px;padding:0 13px;border:1px solid rgba(104,245,255,.58);border-radius:10px;color:#e8fff3;text-decoration:none;background:rgba(8,44,60,.82);font-weight:800;letter-spacing:.06em;text-transform:uppercase;}
-    .panel{border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,var(--panel2),rgba(3,8,14,.97));box-shadow:0 22px 70px var(--shadow),inset 0 0 0 1px rgba(255,255,255,.03);overflow:hidden;position:relative;}
-    .hero{margin:12px 0 26px;padding:clamp(24px,4vw,46px);min-height:315px;display:grid;align-items:center;background:linear-gradient(90deg,rgba(0,0,0,.25),rgba(0,0,0,.12)),radial-gradient(circle at 86% 48%,rgba(104,245,255,.22),transparent 14rem),linear-gradient(145deg,rgba(9,31,50,.86),rgba(3,8,14,.97));}.hero:before{content:"";position:absolute;inset:0;opacity:.52;background:linear-gradient(90deg,rgba(104,245,255,.08),transparent 24%),repeating-linear-gradient(90deg,transparent 0 28px,rgba(104,245,255,.09) 29px,transparent 30px),repeating-linear-gradient(0deg,transparent 0 28px,rgba(104,245,255,.05) 29px,transparent 30px);mask-image:linear-gradient(180deg,transparent,black 18%,black 82%,transparent);}.hero:after{content:"";position:absolute;right:5%;top:17%;width:170px;height:170px;border:2px solid rgba(104,245,255,.62);border-radius:50%;box-shadow:0 0 24px rgba(104,245,255,.36),inset 0 0 28px rgba(104,245,255,.2);opacity:.65;}
-    .hero-content{position:relative;z-index:1;text-align:center;max-width:900px;margin:0 auto;}.eyebrow{display:inline-flex;align-items:center;gap:8px;min-height:28px;padding:0 12px;border:1px solid rgba(141,255,154,.4);border-radius:999px;color:var(--green);background:rgba(0,0,0,.26);font-size:12px;text-transform:uppercase;letter-spacing:.12em;}h1{margin:20px 0 12px;font-size:clamp(36px,7vw,76px);line-height:.9;letter-spacing:.03em;text-transform:uppercase;color:var(--cyan);text-shadow:0 0 16px rgba(104,245,255,.36);}.subtitle{margin:0 auto;max-width:780px;color:#d7efe2;font-size:clamp(15px,2vw,18px);line-height:1.55;}.device-strip{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:24px;}
-    .pill,.tag{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border:1px solid rgba(104,245,255,.35);border-radius:999px;background:rgba(0,0,0,.28);color:#d7fff0;font-size:12px;}section{padding:18px 0;}.section-head{display:flex;justify-content:space-between;align-items:end;gap:18px;margin-bottom:14px;}h2{margin:0;display:flex;align-items:center;gap:10px;color:var(--green);text-transform:uppercase;font-size:clamp(24px,4vw,36px);letter-spacing:.02em;line-height:1;}.section-note{margin:0;max-width:520px;color:var(--muted);font-size:13px;line-height:1.45;text-align:right;}.card-stack{display:grid;grid-template-columns:1fr;gap:16px;}
-    .game-card{display:grid;grid-template-columns:250px 1fr;min-height:245px;}.game-art{position:relative;min-height:245px;border-right:1px solid var(--line-soft);overflow:hidden;background:#050b12;}.game-art:before,.game-art:after{content:"";position:absolute;inset:0;}
-    .art-fps:before{background:radial-gradient(circle at 56% 44%,rgba(191,108,255,.5),transparent 6rem),linear-gradient(90deg,rgba(104,245,255,.22),transparent 34%),repeating-linear-gradient(90deg,rgba(104,245,255,.12) 0 5px,transparent 5px 28px),linear-gradient(145deg,#08162b,#02050a);}.art-fps:after{width:132px;height:28px;left:36%;top:58%;transform:rotate(-12deg);background:linear-gradient(90deg,rgba(210,255,255,.94),rgba(104,245,255,.18));border-radius:999px;box-shadow:0 0 18px rgba(104,245,255,.35);}
-    .art-blackbox:before{background:radial-gradient(circle at 50% 62%,rgba(104,245,255,.32),transparent 4rem),repeating-linear-gradient(90deg,transparent 0 42px,rgba(255,178,63,.28) 43px,transparent 45px),repeating-linear-gradient(0deg,transparent 0 36px,rgba(255,79,109,.16) 37px,transparent 39px),linear-gradient(145deg,#090817,#010409);}.art-blackbox:after{left:50%;top:52%;width:0;height:0;transform:translate(-50%,-50%);border-left:26px solid transparent;border-right:26px solid transparent;border-bottom:76px solid rgba(104,245,255,.82);filter:drop-shadow(0 0 16px rgba(104,245,255,.55));}
-    .art-anchor:before{background:radial-gradient(circle at 50% 38%,rgba(141,255,154,.36),transparent 5rem),linear-gradient(135deg,rgba(141,255,154,.22),transparent 34%),repeating-linear-gradient(135deg,transparent 0 36px,rgba(255,178,63,.12) 37px,transparent 40px),linear-gradient(145deg,#07160d,#02060a);}.art-anchor:after{left:18%;right:18%;top:48%;height:5px;background:linear-gradient(90deg,transparent,var(--green),var(--amber),var(--green),transparent);box-shadow:0 0 18px rgba(141,255,154,.58);transform:rotate(-18deg);}
-    .art-core:before{background:radial-gradient(circle at 55% 42%,rgba(141,255,154,.28),transparent 5rem),radial-gradient(circle at 24% 70%,rgba(104,245,255,.24),transparent 4rem),repeating-linear-gradient(90deg,transparent 0 28px,rgba(141,255,154,.11) 29px,transparent 31px),linear-gradient(145deg,#071a14,#02060a);}.art-core:after{left:20%;right:20%;top:54%;height:4px;background:linear-gradient(90deg,var(--green),var(--cyan));box-shadow:0 0 20px rgba(141,255,154,.55);transform:rotate(-32deg);}
-    .art-hitl:before{background:radial-gradient(circle at 64% 48%,rgba(255,79,109,.42),transparent 5rem),radial-gradient(circle at 34% 54%,rgba(104,245,255,.25),transparent 4rem),repeating-linear-gradient(135deg,transparent 0 24px,rgba(255,79,109,.16) 25px,transparent 28px),linear-gradient(145deg,#17070d,#030409);}.art-hitl:after{left:46%;top:18%;width:28px;height:128px;border:2px solid rgba(255,79,109,.65);border-radius:999px;box-shadow:0 0 26px rgba(255,79,109,.38);transform:rotate(19deg);}
-    .card-body{padding:22px;display:flex;flex-direction:column;justify-content:space-between;gap:16px;}.kicker{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}.tag{min-height:24px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;}.tag.live{color:var(--green);border-color:rgba(141,255,154,.45);}.tag.prototype{color:var(--amber);border-color:rgba(255,178,63,.45);}.tag.blue{color:var(--cyan);border-color:rgba(104,245,255,.45);}.tag.purple{color:var(--purple);border-color:rgba(191,108,255,.45);}.tag.red{color:var(--red);border-color:rgba(255,79,109,.45);}h3{margin:0 0 8px;color:var(--text);font-size:clamp(24px,3vw,38px);line-height:1.02;text-transform:uppercase;letter-spacing:-.02em;}.desc{margin:0;color:#bcdcc8;line-height:1.52;font-size:14px;}.actions{display:flex;flex-wrap:wrap;gap:10px;}
-    .btn{min-height:46px;padding:0 16px;border:1px solid rgba(104,245,255,.58);border-radius:10px;background:rgba(8,44,60,.82);color:var(--text);font-weight:800;text-decoration:none;letter-spacing:.06em;text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 0 16px rgba(104,245,255,.12);}.btn:hover,.btn:focus-visible{border-color:var(--cyan);box-shadow:0 0 22px rgba(104,245,255,.26);outline:none;}.btn.secondary{background:rgba(0,0,0,.28);border-color:rgba(255,255,255,.18);color:#d8f4e4;}.btn.email{border-color:rgba(104,245,255,.58);color:var(--cyan);}
-    .celebration-section h2{color:#f6fbff;text-shadow:0 0 16px rgba(104,245,255,.28);}
-    .celebration-section .section-note{color:#ffd6a1;}
-    .celebration-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
-    .celebration-card{min-height:360px;border:1px solid rgba(255,255,255,.18);border-radius:22px;background:linear-gradient(145deg,rgba(19,31,62,.92),rgba(6,9,18,.98));box-shadow:0 22px 70px rgba(0,0,0,.38),inset 0 0 0 1px rgba(255,255,255,.035);overflow:hidden;position:relative;display:flex;flex-direction:column;}
-    .celebration-art{min-height:145px;position:relative;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.12);background:#060913;}
-    .celebration-art:before,.celebration-art:after{content:"";position:absolute;inset:0;}
-    .art-liberty:before{background:radial-gradient(circle at 22% 26%,rgba(141,255,154,.34),transparent 5.5rem),radial-gradient(circle at 78% 34%,rgba(255,79,109,.32),transparent 5rem),repeating-linear-gradient(0deg,transparent 0 26px,rgba(255,255,255,.08) 27px,transparent 29px),linear-gradient(135deg,#061e26,#0d1028 58%,#200610);}
-    .art-liberty:after{left:24%;top:18%;width:38px;height:110px;border:2px solid rgba(141,255,154,.76);border-radius:18px 18px 8px 8px;box-shadow:0 0 20px rgba(141,255,154,.34);background:linear-gradient(180deg,rgba(141,255,154,.36),rgba(104,245,255,.07));transform:rotate(-4deg);}
-    .art-rocket:before{background:radial-gradient(circle at 52% 80%,rgba(255,178,63,.5),transparent 5rem),radial-gradient(circle at 68% 30%,rgba(104,245,255,.28),transparent 6rem),repeating-linear-gradient(115deg,transparent 0 22px,rgba(255,255,255,.08) 24px,transparent 26px),linear-gradient(160deg,#090817,#07122c 58%,#21050b);}
-    .art-rocket:after{left:50%;top:54%;width:0;height:0;transform:translate(-50%,-50%) rotate(18deg);border-left:18px solid transparent;border-right:18px solid transparent;border-bottom:88px solid rgba(255,255,255,.9);filter:drop-shadow(0 0 18px rgba(255,178,63,.48));}
-    .art-grill:before{background:radial-gradient(circle at 48% 74%,rgba(255,178,63,.48),transparent 5.5rem),radial-gradient(circle at 72% 24%,rgba(141,255,154,.25),transparent 6rem),repeating-linear-gradient(90deg,transparent 0 30px,rgba(255,178,63,.13) 31px,transparent 34px),linear-gradient(145deg,#101909,#100b05 58%,#031415);}
-    .art-grill:after{left:20%;right:20%;bottom:27%;height:42px;border:2px solid rgba(255,178,63,.75);border-radius:999px 999px 20px 20px;background:linear-gradient(180deg,rgba(255,178,63,.18),rgba(0,0,0,.42));box-shadow:0 0 24px rgba(255,178,63,.28);}
-    .celebration-body{padding:20px;display:flex;flex-direction:column;justify-content:space-between;gap:16px;flex:1;}
-    .celebration-badge{display:inline-flex;align-items:center;min-height:26px;padding:0 10px;border:1px solid rgba(255,255,255,.22);border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;background:rgba(0,0,0,.26);}
-    .celebration-badge.red{color:#ffd9df;border-color:rgba(255,79,109,.5);}.celebration-badge.blue{color:#d6fbff;border-color:rgba(104,245,255,.5);}.celebration-badge.amber{color:#ffe0a6;border-color:rgba(255,178,63,.55);}
-    .celebration-card h3{font-size:clamp(23px,2.7vw,32px);margin:10px 0 8px;}
-    .celebration-trigger{cursor:pointer;user-select:none;}
-    .celebration-trigger:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-radius:8px;}
-    .america250-overlay{position:fixed;inset:0;z-index:20;pointer-events:none;opacity:0;visibility:hidden;overflow:hidden;background:radial-gradient(circle at 50% 110%,rgba(255,178,63,.20),transparent 32rem),linear-gradient(180deg,rgba(2,5,12,.18),rgba(2,5,12,.04));transition:opacity .35s ease,visibility .35s ease;}
-    .america250-overlay.is-visible{opacity:1;visibility:visible;}
-    .america250-message{position:absolute;left:50%;top:18%;transform:translateX(-50%);width:min(880px,calc(100vw - 24px));padding:16px 18px;border:1px solid rgba(255,255,255,.32);border-radius:22px;background:linear-gradient(145deg,rgba(5,14,38,.68),rgba(45,8,18,.48));text-align:center;box-shadow:0 22px 80px rgba(0,0,0,.38),0 0 38px rgba(104,245,255,.20);backdrop-filter:blur(5px);}
-    .america250-message strong{display:block;color:#f8fdff;font-size:clamp(26px,5vw,58px);line-height:.95;text-transform:uppercase;letter-spacing:.025em;text-shadow:0 0 24px rgba(104,245,255,.42),0 0 12px rgba(255,178,63,.25);}
-    .america250-message span{display:block;margin-top:8px;color:#ffe3ad;font-size:13px;letter-spacing:.16em;text-transform:uppercase;font-weight:900;}
-    .america250-rocket{position:absolute;left:12%;bottom:-90px;width:18px;height:58px;border-radius:18px 18px 8px 8px;background:linear-gradient(180deg,#fff,#68f5ff 46%,#ff4f6d);box-shadow:0 0 20px rgba(255,255,255,.45);transform:rotate(16deg);opacity:0;}
-    .america250-rocket:before{content:"";position:absolute;left:50%;bottom:-44px;width:7px;height:50px;transform:translateX(-50%);border-radius:999px;background:linear-gradient(180deg,#fff4a8,#ffb23f,transparent);filter:blur(.3px);}
-    .america250-overlay.is-visible .america250-rocket{animation:americaRocket 2.6s cubic-bezier(.22,.82,.16,1) forwards;}
-    @keyframes americaRocket{0%{opacity:0;transform:translate(0,0) rotate(16deg)}12%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translate(62vw,-88vh) rotate(16deg)}}
-    .america250-burst{position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 18px #fff;opacity:0;animation:americaBurst 1.35s ease-out forwards;}
-    .america250-burst i{position:absolute;left:50%;top:50%;width:4px;height:22px;margin-left:-2px;margin-top:-22px;border-radius:999px;background:currentColor;transform-origin:50% 22px;box-shadow:0 0 12px currentColor;}
-    @keyframes americaBurst{0%{opacity:0;transform:scale(.2)}12%{opacity:1}75%{opacity:.85}100%{opacity:0;transform:scale(1.4)}}
-    @media(max-width:900px){.celebration-grid{grid-template-columns:1fr;}.celebration-card{min-height:0;}.celebration-art{min-height:120px;}.america250-message{top:13%;}.america250-message strong{font-size:clamp(25px,9vw,46px);}}
-
-    .demo-section h2{color:var(--green);}.demo-card{min-height:210px;padding:22px;border:1px solid rgba(141,255,154,.42);border-radius:18px;background:linear-gradient(145deg,rgba(13,45,27,.62),rgba(7,10,15,.96)),rgba(0,0,0,.24);box-shadow:0 18px 48px rgba(0,0,0,.30),inset 0 0 0 1px rgba(255,255,255,.03);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative;}.demo-card:before{content:"";position:absolute;inset:0;opacity:.24;background:repeating-linear-gradient(90deg,transparent 0 24px,rgba(141,255,154,.12) 25px,transparent 27px),repeating-linear-gradient(0deg,transparent 0 24px,rgba(104,245,255,.08) 25px,transparent 27px);pointer-events:none;}.demo-content{position:relative;z-index:1;}.demo-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px;}.demo-icon{width:58px;height:58px;border:1px solid rgba(141,255,154,.52);border-radius:15px;display:inline-flex;align-items:center;justify-content:center;color:var(--green);background:rgba(0,0,0,.28);font-size:28px;font-weight:900;box-shadow:0 0 18px rgba(141,255,154,.12);}.demo-badge{min-height:38px;padding:0 14px;border:1px solid rgba(141,255,154,.68);border-radius:10px;color:var(--green);background:rgba(0,0,0,.34);font-size:13px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;display:inline-flex;align-items:center;white-space:nowrap;}.demo-card h3{font-size:clamp(25px,3vw,36px);margin-bottom:10px;}.mini-tags{margin-top:14px;display:flex;flex-wrap:wrap;gap:7px;}.mini-tags span{min-height:24px;padding:0 8px;border:1px solid rgba(141,255,154,.36);border-radius:7px;display:inline-flex;align-items:center;color:#ceffd4;font-size:11px;font-weight:800;text-transform:uppercase;background:rgba(0,0,0,.24);}
-    .feedback-section h2{color:var(--cyan);}.email-panel{padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center;}.email-panel p{margin:0 0 16px;color:#bcdcc8;line-height:1.55;}.terminal{border:1px solid rgba(141,255,154,.22);border-radius:14px;background:rgba(0,0,0,.28);padding:14px;color:var(--green);font-size:13px;line-height:1.65;}.review-section h2{color:var(--purple);}.review-card,.systems-card{padding:24px;border-color:rgba(191,108,255,.46);background:linear-gradient(145deg,rgba(30,13,48,.75),rgba(7,8,14,.96));}.systems-card{border-color:rgba(141,255,154,.42);background:linear-gradient(145deg,rgba(9,35,26,.78),rgba(7,8,14,.96));}
-    .about-expanded{padding:24px;}.about-intro{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start;}.about-copy p,.about-callout p{margin:0 0 14px;color:#bcdcc8;line-height:1.62;}.about-copy strong,.about-callout strong{color:var(--cyan);}.about-callout{border:1px solid rgba(255,178,63,.32);border-radius:16px;background:rgba(0,0,0,.22);padding:16px;}.process-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px;}.process-card{border:1px solid rgba(104,245,255,.22);border-radius:14px;background:rgba(0,0,0,.22);padding:14px;}.process-card b{display:block;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-size:12px;}.process-card span{display:block;color:#bcdcc8;font-size:12px;line-height:1.45;}footer{padding:30px 0 36px;color:#789589;font-size:12px;}.footer-line{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;border-top:1px solid rgba(104,245,255,.14);padding-top:18px;}.version-alert{display:none;margin:12px auto 0;max-width:760px;padding:12px 14px;border:1px solid rgba(255,178,63,.46);border-radius:14px;background:rgba(33,20,5,.88);color:#ffd89b;line-height:1.45;}.version-alert.is-visible{display:block;}
-    @media(max-width:900px){.topbar{grid-template-columns:1fr;justify-items:center;}.section-head{align-items:flex-start;flex-direction:column;}.section-note{text-align:left;}.game-card{grid-template-columns:1fr;}.game-art{min-height:150px;border-right:0;border-bottom:1px solid var(--line-soft);}.email-panel,.about-intro{grid-template-columns:1fr;}.process-grid{grid-template-columns:1fr 1fr;}}
-    @media(max-width:560px){.wrap{width:min(100% - 22px,var(--max));}nav a{font-size:11px;padding:0 8px;}.hero{min-height:290px;}.card-body,.demo-card,.celebration-body,.email-panel,.about-expanded,.review-card,.systems-card{padding:18px;}.process-grid{grid-template-columns:1fr;}.btn{width:100%;}.demo-top{flex-direction:column;}}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Skab Digital Reality Arcade // One-Page Launch Wall v0.4.2</title>
+<style>
+  :root {
+    --bg:#050814;--bg2:#0b1224;--panel:#101c31;--panel2:#14233d;--line:rgba(151,210,255,.18);
+    --text:#eef7ff;--muted:#a9b8c9;--dim:#71849a;--cyan:#69e3ff;--gold:#ffd166;--green:#8effb0;--red:#ff667d;--violet:#c994ff;
+    --shadow:rgba(0,0,0,.42);--radius:22px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:radial-gradient(circle at 20% -10%,#193b61 0,#081225 45%,#03050d 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+  a{color:inherit}
+  .shell{width:min(1480px,94vw);margin:0 auto;padding:28px 0 56px}
+  header.hero{display:grid;grid-template-columns:1.12fr .88fr;gap:22px;align-items:stretch;margin-bottom:18px}
+  .hero-copy,.feature-stack,.read-strip,.badge-key,.wall-section,.integrity,.notice-strip{background:linear-gradient(180deg,rgba(16,28,49,.94),rgba(7,13,26,.94));border:1px solid var(--line);box-shadow:0 18px 46px var(--shadow);border-radius:var(--radius);}
+  .hero-copy{padding:30px}
+  .eyebrow{margin:0 0 8px;color:var(--cyan);font-size:12px;text-transform:uppercase;letter-spacing:.16em;font-weight:800}
+  h1{margin:0;font-size:clamp(40px,7vw,88px);line-height:.88;letter-spacing:-.065em}
+  .promise{font-size:clamp(20px,3vw,34px);font-weight:850;color:#fff;margin:16px 0 10px;line-height:1.05}
+  .hero-copy p{font-size:16px;line-height:1.55;color:#d9eaff;max-width:880px}
+  .same-level{border:1px solid rgba(105,227,255,.32);background:rgba(105,227,255,.08);border-radius:16px;padding:13px 15px;margin-top:16px;color:#eafcff;font-weight:750}
+  .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+  .btn,.actions a{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:999px;padding:10px 14px;border:1px solid rgba(105,227,255,.32);background:rgba(105,227,255,.1);font-weight:850;font-size:13px}
+  .btn.primary,.actions a.primary{background:linear-gradient(90deg,rgba(105,227,255,.95),rgba(142,255,176,.92));color:#06101e;border:0}
+  .feature-stack{padding:18px}
+  .feature-stack h2{margin:0 0 12px;font-size:18px}
+  .feature-card{display:grid;grid-template-columns:112px 1fr auto;gap:10px;align-items:center;text-decoration:none;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.045);border-radius:16px;padding:12px;margin-bottom:10px}
+  .feature-card:hover{border-color:rgba(105,227,255,.45);background:rgba(105,227,255,.07)}
+  .feature-card span,.feature-card em{font-size:11px;color:var(--muted);font-style:normal}
+  .feature-card strong{font-size:15px}
+  .read-strip,.notice-strip{padding:14px 18px;margin:16px 0;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .read-strip strong,.notice-strip strong{color:#fff}
+  .read-strip p,.notice-strip p{margin:0;color:#dcecff;line-height:1.4}
+  nav.chips{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 18px}
+  nav.chips a{font-size:13px;text-decoration:none;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.055);border-radius:999px;padding:9px 12px;color:#dcedff}
+  nav.chips a:hover{border-color:rgba(105,227,255,.5);background:rgba(105,227,255,.08)}
+  .badge-key{padding:14px 18px;margin-bottom:18px}
+  .badge-key h2{font-size:15px;margin:0 0 10px;color:#fff}
+  .key-grid,.method-grid,.application-grid,.lane-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .key-grid div,.method-grid article,.application-grid article,.lane-grid article{border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:12px;background:rgba(255,255,255,.035)}
+  .key-grid strong,.method-grid h3,.application-grid h3,.lane-grid h3{display:block;color:var(--cyan);margin:0 0 6px}
+  .key-grid span,.method-grid p,.application-grid p,.lane-grid p{color:var(--muted);font-size:13px;line-height:1.45;margin:0}
+  .wall-section{padding:20px;margin-top:20px}
+  .game-section{scroll-margin-top:16px}
+  .section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .section-head h2{font-size:clamp(24px,3.5vw,42px);line-height:.95;margin:0}
+  .section-head p{margin:7px 0 0;color:var(--muted);line-height:1.45;max-width:880px}
+  .jump-top{font-size:12px;color:var(--muted);text-decoration:none;border:1px solid rgba(255,255,255,.12);padding:8px 10px;border-radius:999px;white-space:nowrap}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .arcade-card{background:linear-gradient(180deg,rgba(20,35,61,.96),rgba(7,13,24,.96));border:1px solid rgba(255,255,255,.1);border-radius:20px;overflow:hidden;box-shadow:0 14px 34px rgba(0,0,0,.24);display:flex;flex-direction:column;min-height:100%}
+  .thumb{height:104px;display:flex;align-items:flex-end;padding:13px;background:linear-gradient(135deg,rgba(105,227,255,.18),rgba(201,148,255,.12)),radial-gradient(circle at 80% 20%,rgba(255,209,102,.22),transparent 42%);border-bottom:1px solid rgba(255,255,255,.08)}
+  .thumb.quick-play{background:linear-gradient(135deg,rgba(255,209,102,.2),rgba(255,102,125,.1)),radial-gradient(circle at 20% 0,rgba(255,255,255,.22),transparent 38%)}
+  .thumb.proof-board,.thumb.tabletop-trial{background:linear-gradient(135deg,rgba(105,227,255,.13),rgba(142,255,176,.10)),repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 1px,transparent 1px 12px)}
+  .thumb.design-review{background:linear-gradient(135deg,rgba(201,148,255,.20),rgba(105,227,255,.08)}
+  .thumb.live-demo{background:linear-gradient(135deg,rgba(105,227,255,.10),rgba(255,209,102,.10)),radial-gradient(circle at 70% 0,rgba(201,148,255,.20),transparent 44%)}
+  .thumb span{font-size:12px;text-transform:uppercase;letter-spacing:.16em;font-weight:900;color:#fff;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.22);border-radius:999px;padding:6px 9px}
+  .card-body{padding:15px;display:flex;flex-direction:column;gap:10px;flex:1}
+  .kicker{margin:0;color:var(--cyan);font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
+  h3{font-size:24px;line-height:1.02;margin:0;letter-spacing:-.03em}
+  .desc{margin:0;color:#dcecff;line-height:1.4;font-size:14px}
+  .badges{display:flex;gap:6px;flex-wrap:wrap}
+  .badge{font-size:10.5px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.055);border-radius:999px;padding:5px 8px;color:#dbeaff;font-weight:750}
+  .badge.format{border-color:rgba(105,227,255,.28);color:#daf9ff;background:rgba(105,227,255,.075)}
+  .badge.evidence{border-color:rgba(255,209,102,.28);color:#fff1c6;background:rgba(255,209,102,.075)}
+  .status.stable-baseline,.status.playable-now{border-color:rgba(142,255,176,.32);color:#dcffe5;background:rgba(142,255,176,.08)}
+  .status.candidate,.status.needs-playtest{border-color:rgba(255,209,102,.32);color:#fff1c6;background:rgba(255,209,102,.08)}
+  .status.under-review,.status.planned{border-color:rgba(201,148,255,.32);color:#f0dfff;background:rgba(201,148,255,.08)}
+  .proof-snapshot{display:grid;gap:8px;border-top:1px solid rgba(255,255,255,.08);padding-top:10px}
+  .proof-snapshot p{margin:0;display:grid;grid-template-columns:62px 1fr;gap:8px;align-items:start;color:var(--muted);font-size:12.5px;line-height:1.35}
+  .proof-snapshot strong{color:#f4fbff;font-size:11px;text-transform:uppercase;letter-spacing:.07em}
+  details{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);border-radius:14px;padding:9px}
+  summary{cursor:pointer;font-weight:850;color:#eaf7ff;font-size:12.5px}
+  dl{margin:9px 0 0;display:grid;gap:7px}
+  dt{font-size:11px;color:var(--cyan);font-weight:850;text-transform:uppercase;letter-spacing:.07em}
+  dd{margin:0;color:var(--muted);font-size:12px;line-height:1.35}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:4px}
+  .method-note{border-left:3px solid rgba(105,227,255,.7);padding-left:14px;color:#dcecff;line-height:1.55;margin-top:14px}
+  .integrity{padding:18px;margin-top:22px;color:#dcecff;line-height:1.5}
+  .integrity strong{color:#fff}
+  .subtle{color:var(--dim);font-size:12px;margin-top:8px}
+  @media (max-width:1100px){header.hero{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}.key-grid,.method-grid,.application-grid,.lane-grid{grid-template-columns:1fr}}
+  @media (max-width:720px){.shell{width:min(94vw,640px);padding-top:14px}.grid{grid-template-columns:1fr}.hero-copy{padding:20px}.feature-card{grid-template-columns:1fr;gap:4px}.section-head{align-items:flex-start;flex-direction:column}h3{font-size:22px}.thumb{height:88px}.proof-snapshot p{grid-template-columns:1fr}}
+</style>
 </head>
-<body>
-  <main class="wrap">
-    <div class="topbar">
-      <a class="brand" href="#top" aria-label="Skab Digital Reality Arcade home"><strong>SKAB</strong><span>ARCADE</span></a>
-      <nav aria-label="Primary navigation">
-        <a href="#america-250">America 250</a>
-        <a href="#games">Games</a>
-        <a href="#live-demos">Live Demos</a>
-        <a href="#feedback">Feedback</a>
-        <a href="#design-review">Design Review</a>
-        <a href="#reintegration-core">Systems Thread</a>
-        <a href="#about">About</a>
-      </nav>
-      <div class="core-status evidence-easter-trigger" aria-label="Core status online" role="button" tabindex="0"><span class="status-dot" aria-hidden="true"></span>Core Status: Online</div>
-    </div>
-
-    <div id="evidenceUnlockPanel" class="evidence-unlock-panel" aria-live="polite">
-      <strong>PROOF TRAIL UNLOCKED</strong>
-      <p>The arcade is playable. The build trail is inspectable.</p>
-      <p>Evidence pages are draft-state and pending Ken approval.</p>
-      <a href="evidence/">Enter Evidence Archive</a>
-    </div>
-
-    <div id="versionAlert" class="version-alert" aria-live="polite">
-      A newer arcade build may be available. Refresh the page if the newest game cards do not appear.
-    </div>
-
-    <div id="america250Overlay" class="america250-overlay" aria-live="polite" aria-hidden="true">
-      <div class="america250-rocket" aria-hidden="true"></div>
-      <div class="america250-message">
-        <strong>Happy Beautiful 250th Birthday America!</strong>
-        <span>America 250 celebration unlocked</span>
-      </div>
-    </div>
-
-    <header id="top" class="hero panel">
-      <div class="hero-content">
-        <div class="eyebrow">Browser-first prototype hub · version 2026.07.03.001</div>
-        <h1>Skab Digital Reality Arcade</h1>
-        <p class="subtitle">No install. Open the link, play the live builds, send what breaks, and keep moving. Built for phone, laptop, tablet, desktop, and connected-display browsers.</p>
-        <div class="device-strip" aria-label="Supported device types"><span class="pill">Phone browser</span><span class="pill">Laptop</span><span class="pill">Tablet</span><span class="pill">Desktop</span><span class="pill">Connected display</span></div>
-      </div>
+<body id="top">
+  <main class="shell">
+    <header class="hero">
+      <section class="hero-copy">
+        <p class="eyebrow">Skab Digital Reality Arcade</p>
+        <h1>Play the work. Inspect the proof.</h1>
+        <p class="promise">Free browser games, serious-play prototypes, proof boards, and visible concepts — all on one Arcade wall.</p>
+        <p>This page leads with the games. Each card is playable or inspectable, then backs itself up with a short proof posture: what it is, where it stands, what it proves, and what question comes next.</p>
+        <div class="same-level">Everything visible sits on the same Arcade floor. Badges show type and maturity. They do not create a lesser shelf.</div>
+        <div class="hero-actions"><a class="btn primary" href="#event-playables">Start Playing</a><a class="btn" href="#live-playable-systems">View Systems</a><a class="btn" href="#proof-boards-tabletop-trials">Inspect Proof Boards</a></div>
+      </section>
+      <aside class="feature-stack" aria-label="Featured start here cards">
+        <p class="eyebrow">Start Here</p>
+        <h2>Games first, proof close behind</h2>
+        
+        <a class="feature-card" href="#bottle-rocket-rodeo">
+          <span>Quick Play</span>
+          <strong>Bottle Rocket Rodeo</strong>
+          <em>Stable Baseline</em>
+        </a>
+        <a class="feature-card" href="#grill-sergeant">
+          <span>Quick Play</span>
+          <strong>Grill Sergeant</strong>
+          <em>Stable Baseline</em>
+        </a>
+        <a class="feature-card" href="#blackbox-squadron">
+          <span>Arcade System</span>
+          <strong>Blackbox Squadron</strong>
+          <em>Playable Now</em>
+        </a>
+        <a class="feature-card" href="#anchor-run">
+          <span>Arcade System</span>
+          <strong>Anchor Run</strong>
+          <em>Stable Baseline</em>
+        </a>
+        <a class="feature-card" href="#trace-chain">
+          <span>Proof Board</span>
+          <strong>TRACE CHAIN</strong>
+          <em>Playable Now</em>
+        </a>
+      </aside>
     </header>
 
-    <section id="america-250" class="celebration-section">
+    <section class="read-strip">
+      <p><strong>How to read this page:</strong> Every card is visible because it has a playable or inspectable proof question. The default card stays short. Open proof notes only when you want the receipts.</p>
+    </section>
+
+    <nav class="chips" aria-label="Arcade section jumps">
+      <a href="#event-playables">Event Playables</a><a href="#live-playable-systems">Live Playable Systems</a><a href="#proof-boards-tabletop-trials">Proof Boards</a><a href="#live-demos-candidate-systems">Live Demos &amp; Candidate Systems</a><a href="#design-review-under-review">Design Review</a>
+      <a href="#what-it-demonstrates">What It Demonstrates</a>
+      <a href="#builder-method">Builder & Method</a>
+      <a href="#top">Show All</a>
+    </nav>
+
+    <section class="badge-key" aria-label="Badge key">
+      <h2>Badge key</h2>
+      <div class="key-grid">
+        <div><strong>Format</strong><span>Quick Play · Arcade System · Proof Board · Tabletop Trial · Live Demo · Design Review</span></div>
+        <div><strong>Status</strong><span>Playable Now · Stable Baseline · Candidate · Needs Playtest · Under Review · Planned</span></div>
+        <div><strong>Evidence</strong><span>Access · Validation · Handoff · Audit · Pressure · Recovery · AAR · Control Logic · Human Judgment</span></div>
+      </div>
+    </section>
+
+    
+    <section class="wall-section game-section" id="event-playables">
       <div class="section-head">
-        <h2 class="celebration-trigger" tabindex="0" role="button" aria-label="America 250 celebration shelf"><span class="icon">★</span> 4th of July Celebration</h2>
-        <p class="section-note">Three quick-play celebration cards up top. Phone-first, browser-first, and built around the 250-point fireworks payoff.</p>
+        <div>
+          <p class="eyebrow">Arcade Row</p>
+          <h2>Event Playables</h2>
+          <p>Fast-entry games built for public play, device testing, and quick proof of feel.</p>
+        </div>
+        <a href="#top" class="jump-top">Back to top</a>
       </div>
-      <div class="celebration-grid">
-        <article class="celebration-card">
-          <div class="celebration-art art-liberty" aria-hidden="true"></div>
-          <div class="celebration-body">
-            <div>
-              <div class="kicker"><span class="celebration-badge red">America 250</span><span class="celebration-badge blue">Five-Lane Shooter</span></div>
-              <h3>Lady Liberty: Street Sweep</h3>
-              <p class="desc">Defend the celebration route in a five-lane zombie shooter. Move Lady Liberty between lanes, blast zombies with the torch, hold the tablet shield, survive the boss rush, and trigger the 250 Years fireworks finale.</p>
-            </div>
-            <div class="actions"><a class="btn" href="/skab-digital-reality-arcade/games/lady_liberty/" target="_blank" rel="noopener">Play Lady Liberty</a></div>
-          </div>
-        </article>
-        <article class="celebration-card">
-          <div class="celebration-art art-rocket" aria-hidden="true"></div>
-          <div class="celebration-body">
-            <div>
-              <div class="kicker"><span class="celebration-badge amber">America 250</span><span class="celebration-badge blue">One-Thumb Climb</span></div>
-              <h3>Bottle Rocket Rodeo</h3>
-              <p class="desc">Ride a bottle rocket through backyard July 4th chaos. Dodge hazards, survive the climb, and hit 250 altitude to trigger the ’Merica fireworks finale.</p>
-            </div>
-            <div class="actions"><a class="btn" href="/skab-digital-reality-arcade/games/bottle_rocket_rodeo/" target="_blank" rel="noopener">Play Bottle Rocket</a></div>
-          </div>
-        </article>
-        <article class="celebration-card">
-          <div class="celebration-art art-grill" aria-hidden="true"></div>
-          <div class="celebration-body">
-            <div>
-              <div class="kicker"><span class="celebration-badge amber">America 250</span><span class="celebration-badge red">Cookout Chaos</span></div>
-              <h3>Grill Sergeant</h3>
-              <p class="desc">Command the cookout. Flip the burgers, prep the buns, stir the chili, and stop Uncle Gary before he weaponizes lighter fluid.</p>
-            </div>
-            <div class="actions"><a class="btn" href="/skab-digital-reality-arcade/games/grill_sergeant/" target="_blank" rel="noopener">Play Grill Sergeant</a></div>
-          </div>
-        </article>
+      <div class="grid">
+    <article class="arcade-card" id="lady-liberty-street-sweep" data-format="Quick Play" data-status="Playable Now" data-evidence="Pressure">
+      <div class="thumb quick-play"><span>Quick Play</span></div>
+      <div class="card-body">
+        <p class="kicker">America 250 Five-Lane Shooter</p>
+        <h3>Lady Liberty: Street Sweep</h3>
+        <p class="desc">A fast, patriotic, phone-first five-lane shooter built for event energy and quick public play.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Quick Play</span>
+          <span class="badge status playable-now">Playable Now</span>
+          <span class="badge evidence">Pressure</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Playable / patched / ready for Digital Arcade intake.</span></p>
+          <p><strong>Proves</strong><span>Five-lane readability, simple lane movement, survival pressure, event-shelf presentation, and lightweight public shareability.</span></p>
+          <p><strong>Next</strong><span>Does the five-lane format remain readable across devices without heavy explanation?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A quick-play lane shooter with simple movement, torch/shield survival pressure, boss escalation, and a 250-point payoff.</dd><dt>Still unproven</dt><dd>Whether the format stays readable across phone, laptop, tablet, and connected-display browsers.</dd><dt>Guardrail</dt><dd>Do not treat seasonal presentation as core doctrine unless gameplay produces a reusable evidence finding.</dd><dt>Current build / version</dt><dd>America 250 event card; exact current file version pending hub inventory.</dd><dt>Latest verified evidence</dt><dd>Seasonal proof card accepted for visible Arcade upgrade.</dd><dt>Known risks</dt><dd>Event polish could be mistaken for validated doctrine.</dd><dt>Do not drift into</dt><dd>Heavy lore, too many controls, or non-event doctrine claims.</dd><dt>Next test</dt><dd>Phone, laptop, tablet, connected display readability pass.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./lady_liberty_street_sweep.html">Play Now</a>
+        </div>
+      </div>
+    </article>
+    <article class="arcade-card" id="bottle-rocket-rodeo" data-format="Quick Play" data-status="Stable Baseline" data-evidence="Pressure">
+      <div class="thumb quick-play"><span>Quick Play</span></div>
+      <div class="card-body">
+        <p class="kicker">America 250 One-Thumb Climb</p>
+        <h3>Bottle Rocket Rodeo</h3>
+        <p class="desc">Steer a bottle rocket upward with one-thumb controls and reach the pure fireworks finale at 250.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Quick Play</span>
+          <span class="badge status stable-baseline">Stable Baseline</span>
+          <span class="badge evidence">Pressure</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Locked playable baseline.</span></p>
+          <p><strong>Proves</strong><span>Simple steering and public-share pacing can deliver event chaos without extra controls or failure clutter.</span></p>
+          <p><strong>Next</strong><span>Does the pacing stay fair and funny across devices?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A one-thumb / arrow-key-only climb with longer-fuse pacing, hazard avoidance, phase progression, and a fireworks finale.</dd><dt>Still unproven</dt><dd>Whether the current pacing holds across phone, laptop, and tablet without feeling rushed, empty, or unfair.</dd><dt>Guardrail</dt><dd>Preserve one-thumb steering, arrow keys, longer fuse, phase progression, and pure 250 fireworks finale. No landing, pool, splashdown, or extra controls.</dd><dt>Current build / version</dt><dd>v0.2.1 locked gameplay baseline; v0.2.3 stability patch noted for touch/keyboard handling.</dd><dt>Latest verified evidence</dt><dd>Pure fireworks finale and input simplification accepted.</dd><dt>Known risks</dt><dd>Adding extra endings or controls would dilute the locked loop.</dd><dt>Do not drift into</dt><dd>Landing game, pool ending, failure overlay after finale, or gamepad polling that interferes with touch/keyboard.</dd><dt>Next test</dt><dd>Public device smoke test after hub placement.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./bottle_rocket_rodeo.html">Play Baseline</a>
+        </div>
+      </div>
+    </article>
+    <article class="arcade-card" id="grill-sergeant" data-format="Quick Play" data-status="Stable Baseline" data-evidence="Recovery">
+      <div class="thumb quick-play"><span>Quick Play</span></div>
+      <div class="card-body">
+        <p class="kicker">America 250 Cookout Chaos</p>
+        <h3>Grill Sergeant</h3>
+        <p class="desc">Run the cookout, manage burgers, buns, chili, and Gary without turning unlocked capacity into punishment.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Quick Play</span>
+          <span class="badge status stable-baseline">Stable Baseline</span>
+          <span class="badge evidence">Recovery</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Locked playable baseline after score-path repair.</span></p>
+          <p><strong>Proves</strong><span>A simple management loop can create comedy and pressure while rewarding capacity expansion instead of punishing it.</span></p>
+          <p><strong>Next</strong><span>Does the current score path reward efficiency without exploit or lockout?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A cookout-management loop with burger flipping, bun prep, chili interaction, Uncle Gary interference, and a 4→6→8 grill capacity ladder.</dd><dt>Still unproven</dt><dd>Whether the score path rewards efficient play without chili farming or accidental finale lockout across all player styles.</dd><dt>Guardrail</dt><dd>Preserve 4→6→8 capacity, chili cooldown, 250 finale trigger from legitimate paths, and earned operational breathing room.</dd><dt>Current build / version</dt><dd>v0.1.5 Score Path Fix over locked capacity-ladder baseline.</dd><dt>Latest verified evidence</dt><dd>Chili farming and finale path concerns addressed.</dd><dt>Known risks</dt><dd>Future patches may accidentally make more grills more punitive.</dd><dt>Do not drift into</dt><dd>Escalation punishment at 6 or 8 grills.</dd><dt>Next test</dt><dd>Full playthrough through 250 finale on phone and keyboard.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./grill_sergeant.html">Play Baseline</a>
+        </div>
+      </div>
+    </article></div>
+    </section>
+    <section class="wall-section game-section" id="live-playable-systems">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Arcade Row</p>
+          <h2>Live Playable Systems</h2>
+          <p>Playable systems and stronger prototypes where the loop carries the proof.</p>
+        </div>
+        <a href="#top" class="jump-top">Back to top</a>
+      </div>
+      <div class="grid">
+    <article class="arcade-card" id="digital-reality-run" data-format="Arcade System" data-status="Playable Now" data-evidence="Recovery">
+      <div class="thumb arcade-system"><span>Arcade System</span></div>
+      <div class="card-body">
+        <p class="kicker">Browser FPS Recovery Loop</p>
+        <h3>Digital Reality Run / FPS-002</h3>
+        <p class="desc">A legacy-sensitive browser FPS proof around fractured sectors, signal disruption, and controlled patch discipline.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Arcade System</span>
+          <span class="badge status playable-now">Playable Now</span>
+          <span class="badge evidence">Recovery</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Live playable / legacy evidence item.</span></p>
+          <p><strong>Proves</strong><span>Browser-first FPS proof, signal disruption, automaton shutdown, gate progression, and drift-control continuity.</span></p>
+          <p><strong>Next</strong><span>Should this remain active, archival, or retired evidence?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A first-person browser prototype with fractured sectors, automata, signal gates, and recovery progression.</dd><dt>Still unproven</dt><dd>Whether FPS-002 still represents the current Arcade direction or should be marked as legacy proof.</dd><dt>Guardrail</dt><dd>Do not let FPS-002 quietly outrank newer system lanes.</dd><dt>Current build / version</dt><dd>Legacy FPS-002 browser proof; current source-of-truth file pending inventory.</dd><dt>Latest verified evidence</dt><dd>Live playable evidence card retained.</dd><dt>Known risks</dt><dd>Legacy prototype may confuse visitors about current design direction.</dd><dt>Do not drift into</dt><dd>Parent doctrine status by age or visibility.</dd><dt>Next test</dt><dd>Decide active / archival / retired label after current run.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./digital_reality_run_fps002.html">Play Now</a>
+        </div>
+      </div>
+    </article>
+    <article class="arcade-card" id="blackbox-squadron" data-format="Arcade System" data-status="Playable Now" data-evidence="Pressure">
+      <div class="thumb arcade-system"><span>Arcade System</span></div>
+      <div class="card-body">
+        <p class="kicker">Compact Vertical Shooter</p>
+        <h3>Blackbox Squadron</h3>
+        <p class="desc">A quick-restart shooter proof for mobile controls, power-up readability, and score pressure.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Arcade System</span>
+          <span class="badge status playable-now">Playable Now</span>
+          <span class="badge evidence">Pressure</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Stable Arcade prototype.</span></p>
+          <p><strong>Proves</strong><span>The Arcade shell can carry fast deployment, quick restarts, power-up readability, and shooter pressure.</span></p>
+          <p><strong>Next</strong><span>Which enemy pattern creates useful pressure without visual noise?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A compact vertical shooter with restarts, power-ups, score-chasing pressure, and mobile control testing.</dd><dt>Still unproven</dt><dd>Which enemy patterns improve pressure without making the game random or visually noisy.</dd><dt>Guardrail</dt><dd>Keep next changes bounded around enemy formations, wave behavior, readability, and difficulty tuning.</dd><dt>Current build / version</dt><dd>Stable Arcade prototype; exact current file version pending hub inventory.</dd><dt>Latest verified evidence</dt><dd>Fast deploy and mobile-friendly shooter loop accepted.</dd><dt>Known risks</dt><dd>Scope creep into a larger system before the shooter loop is judged.</dd><dt>Do not drift into</dt><dd>Large lore/system conversion without playtest evidence.</dd><dt>Next test</dt><dd>Enemy pattern comparison pass.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./blackbox_squadron.html">Play Now</a>
+        </div>
+      </div>
+    </article>
+    <article class="arcade-card" id="anchor-run" data-format="Arcade System" data-status="Stable Baseline" data-evidence="Access">
+      <div class="thumb arcade-system"><span>Arcade System</span></div>
+      <div class="card-body">
+        <p class="kicker">Access-Layer Route Runner</p>
+        <h3>Anchor Run</h3>
+        <p class="desc">Recover anchors, validate sectors, and keep a route alive through unstable floor conditions.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Arcade System</span>
+          <span class="badge status stable-baseline">Stable Baseline</span>
+          <span class="badge evidence">Access</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Existing evidence slice / access-layer proof slice, accepted enough unless a specific defect appears.</span></p>
+          <p><strong>Proves</strong><span>Route preservation, fixed-anchor recovery, access restoration, and validation language can exist inside a compact browser prototype.</span></p>
+          <p><strong>Next</strong><span>Does anchor recovery read as validation, not just collection?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A compact route-running model built around anchor recovery, sector validation, unstable floors, and restored access.</dd><dt>Still unproven</dt><dd>Whether anchor recovery teaches validation and route preservation or reads merely as collection.</dd><dt>Guardrail</dt><dd>Preserve no jump, no functional ladders, fixed anchors, controlled booster bursts, recharge stations, route terminals, and non-combat language.</dd><dt>Current build / version</dt><dd>Accepted live prototype branch; exact current playable file pending hub inventory.</dd><dt>Latest verified evidence</dt><dd>Source-of-truth correction: playable/live/good-enough status is known.</dd><dt>Known risks</dt><dd>Future patches may re-open solved design questions.</dd><dt>Do not drift into</dt><dd>Generic platformer, jump game, ladder game, free-flight booster game, or combat framing.</dd><dt>Next test</dt><dd>First-time player comprehension of route stabilization.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./anchor_run.html">Play Baseline</a>
+        </div>
+      </div>
+    </article>
+    <article class="arcade-card" id="reintegration-core" data-format="Arcade System" data-status="Candidate" data-evidence="Validation">
+      <div class="thumb arcade-system"><span>Arcade System</span></div>
+      <div class="card-body">
+        <p class="kicker">Systems Repair District 01</p>
+        <h3>Reintegration Core</h3>
+        <p class="desc">Repair broken infrastructure, validate routes, and prove a system is fixed by evidence, not appearance.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Arcade System</span>
+          <span class="badge status candidate">Candidate</span>
+          <span class="badge evidence">Validation</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Serious Digital Engine Lane, not merely a minigame card.</span></p>
+          <p><strong>Proves</strong><span>Inside the System can be operationalized as digital repair: Observe → Diagnose → Stabilize → Route / Repair → Validate → Preserve Human Judgment.</span></p>
+          <p><strong>Next</strong><span>Confirm the current playable source-of-truth branch and presentation-only branches.</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A serious digital systems-repair engine with traversal, room validation, route logic, repair evidence, relays, doors, terminals, ladders, and green-board skepticism.</dd><dt>Still unproven</dt><dd>Which version is the current playable source of truth and which visual branches are presentation-only.</dd><dt>Guardrail</dt><dd>Do not demote into a generic platformer or replace real mechanics with UI shells or fake tools.</dd><dt>Current build / version</dt><dd>v1.19/v1.20A/v1.22 lineage exists; exact display candidate needs final source verification.</dd><dt>Latest verified evidence</dt><dd>Mechanics-preserving visual modernization branch passed syntax/runtime harness in prior work.</dd><dt>Known risks</dt><dd>Placeholder branches can strip room logic and validation.</dd><dt>Do not drift into</dt><dd>Generic platformer, fake control shell, invented DASH/SHLD tools, or stripped room logic.</dd><dt>Next test</dt><dd>Source-of-truth file verification before public link.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./reintegration_core_district_01.html">Inspect Loop</a>
+        </div>
+      </div>
+    </article>
+    <article class="arcade-card" id="human-in-the-loop" data-format="Arcade System" data-status="Candidate" data-evidence="Human Judgment">
+      <div class="thumb arcade-system"><span>Arcade System</span></div>
+      <div class="card-body">
+        <p class="kicker">Judgment Under Hostile Automation</p>
+        <h3>Human-in-the-Loop</h3>
+        <p class="desc">A horror systems branch about preserving human judgment under compliance pressure and hostile automation.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Arcade System</span>
+          <span class="badge status candidate">Candidate</span>
+          <span class="badge evidence">Human Judgment</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Candidate System / Human Judgment Evidence Lane.</span></p>
+          <p><strong>Proves</strong><span>A horror/action wrapper can test whether players preserve judgment instead of merely surviving hostile systems.</span></p>
+          <p><strong>Next</strong><span>Does the player feel like they are preserving judgment, or merely surviving?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>An isometric horror/action systems slice built around agency under pressure, compliance versus judgment, relay energizing, and facility escape.</dd><dt>Still unproven</dt><dd>Whether the player feels they are preserving judgment under pressure or merely playing a shooter.</dd><dt>Guardrail</dt><dd>Do not treat horror styling as the evidence. The evidence is the agency/compliance-pressure loop.</dd><dt>Current build / version</dt><dd>human-in-the-loop-iso-v2.0 surfaced in library.</dd><dt>Latest verified evidence</dt><dd>Candidate system evidence card included.</dd><dt>Known risks</dt><dd>Shooter mechanics can overpower the human-judgment thesis.</dd><dt>Do not drift into</dt><dd>Style-first horror without judgment pressure.</dd><dt>Next test</dt><dd>Controlled playability review focused on agency/compliance loop.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./human-in-the-loop-iso-v2.0.html">Try Demo</a>
+        </div>
+      </div>
+    </article></div>
+    </section>
+    <section class="wall-section game-section" id="proof-boards-tabletop-trials">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Arcade Row</p>
+          <h2>Proof Boards &amp; Tabletop Trials</h2>
+          <p>Serious-play boards where decisions, evidence, validation, and AAR are the game.</p>
+        </div>
+        <a href="#top" class="jump-top">Back to top</a>
+      </div>
+      <div class="grid">
+    <article class="arcade-card" id="trace-chain" data-format="Proof Board" data-status="Playable Now" data-evidence="Audit">
+      <div class="thumb proof-board"><span>Proof Board</span></div>
+      <div class="card-body">
+        <p class="kicker">Audit Control Board</p>
+        <h3>TRACE CHAIN</h3>
+        <p class="desc">Balance mission speed, control discipline, evidence, findings, CAPs, and AAR learning before green status lies.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Proof Board</span>
+          <span class="badge status playable-now">Playable Now</span>
+          <span class="badge evidence">Audit</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>v0.2.2 Weekend Lock; same-level playable card with plain-language guidance and Caveman removed by owner authorization at v0.2.1.</span></p>
+          <p><strong>Proves</strong><span>Decision-board play can test mission speed, control discipline, evidence traceability, validation debt, findings, remediation, and AAR.</span></p>
+          <p><strong>Next</strong><span>Can a new player understand the decision pressure in one round?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A board-first serious-play trial about audit readiness as command visibility.</dd><dt>Still unproven</dt><dd>Whether first-time players can run it cleanly without facilitation across phone and desktop.</dd><dt>Guardrail</dt><dd>Do not restore Caveman, do not add Easter Egg effects, and do not demote board-first play below twitch play.</dd><dt>Current build / version</dt><dd>v0.2.2 Weekend Lock from v0.2.1 Clean Chain.</dd><dt>Latest verified evidence</dt><dd>Six-event clean path reaches Final AAR; same-level Arcade rule accepted.</dd><dt>Known risks</dt><dd>Jargon density and scoring may still require human playtest feedback.</dd><dt>Do not drift into</dt><dd>Generic card battler, corporate dashboard, or lesser proof-board shelf.</dd><dt>Next test</dt><dd>Real iPhone playthrough and first-time player clarity check.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./trace_chain_audit_control_board_v0_2_2_weekend_lock.html">View Board</a>
+        </div>
+      </div>
+    </article>
+    <article class="arcade-card" id="broken-handoff" data-format="Tabletop Trial" data-status="Needs Playtest" data-evidence="Handoff">
+      <div class="thumb tabletop-trial"><span>Tabletop Trial</span></div>
+      <div class="card-body">
+        <p class="kicker">Handoff Validation Trial</p>
+        <h3>Broken Handoff</h3>
+        <p class="desc">Test whether a green status reflects ground truth, or whether the system only looks repaired.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Tabletop Trial</span>
+          <span class="badge status needs-playtest">Needs Playtest</span>
+          <span class="badge evidence">Handoff</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Display-worthy TTRPG / validation lane; not a conventional Arcade minigame.</span></p>
+          <p><strong>Proves</strong><span>Meaning loss, handoff breakdown, and false-green status can be operationalized into playable decision validation.</span></p>
+          <p><strong>Next</strong><span>Can one player complete the validation shell and produce a useful AAR?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A tabletop/mobile-lite validation procedure for decision quality, handoff failure, evidence validation, strain, AAR value, and human judgment under uncertainty.</dd><dt>Still unproven</dt><dd>Whether the mobile validation shell can carry a clean first-time run without facilitator friction.</dd><dt>Guardrail</dt><dd>Do not overbuild before first real AAR. Preserve simple one-thumb/mobile-lite procedure and controlled undo model.</dd><dt>Current build / version</dt><dd>v0.1R mobile validation shell direction; v0.3.2 scope includes trial export and 15-minute playability lane.</dd><dt>Latest verified evidence</dt><dd>Validation lane accepted with high confidence in evidence archive.</dd><dt>Known risks</dt><dd>Scenario/content expansion before first real AAR.</dd><dt>Do not drift into</dt><dd>Full platform, scenario builder, or campaign before validation procedure is proven.</dd><dt>Next test</dt><dd>First real playthrough using the mobile validation shell.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./broken_handoff_mobile_validation.html">View Trial</a>
+        </div>
+      </div>
+    </article>
+    <article class="arcade-card" id="gator-raid" data-format="Proof Board" data-status="Candidate" data-evidence="AAR">
+      <div class="thumb proof-board"><span>Proof Board</span></div>
+      <div class="card-body">
+        <p class="kicker">Planning Recovery Board Trial</p>
+        <h3>GATOR RAID</h3>
+        <p class="desc">A board-first amphibious planning and AAR tool for beach setup, pressure, recovery, and preparation logic.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Proof Board</span>
+          <span class="badge status candidate">Candidate</span>
+          <span class="badge evidence">AAR</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Arcade proof slice / planning tool candidate.</span></p>
+          <p><strong>Proves</strong><span>The AAV/amphibious idea may be stronger as a board-first planning and AAR tool than as a conventional arcade action game.</span></p>
+          <p><strong>Next</strong><span>Should GATOR RAID become a tabletop/planning tool lane entry?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A planning/preparation board candidate that tests terrain setup, force package planning, trial execution, and AAR reflection.</dd><dt>Still unproven</dt><dd>Whether it should remain a mini-game demo or move into the tabletop/planning tool lane.</dd><dt>Guardrail</dt><dd>Do not force into arcade-action framing if the stronger value is planning, preparation, and AAR.</dd><dt>Current build / version</dt><dd>Planning Recovery Board Trial evidence card; exact current file pending hub inventory.</dd><dt>Latest verified evidence</dt><dd>YAT YAS UP pivot accepted toward planning/preparation TTRPG tool direction.</dd><dt>Known risks</dt><dd>Arcade-action framing may obscure the planning value.</dd><dt>Do not drift into</dt><dd>Conventional action minigame if board-first procedure is stronger.</dd><dt>Next test</dt><dd>One clean planning trial with AAR.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./gator_raid.html">Inspect Loop</a>
+        </div>
+      </div>
+    </article>
+    <article class="arcade-card" id="warehouse-in-the-loop" data-format="Live Demo" data-status="Candidate" data-evidence="Control Logic">
+      <div class="thumb live-demo"><span>Live Demo</span></div>
+      <div class="card-body">
+        <p class="kicker">Guided Stack / Flow Lab</p>
+        <h3>Warehouse-in-the-Loop</h3>
+        <p class="desc">Diagnose physical, labor, data, system, and support constraints before speed becomes drift.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Live Demo</span>
+          <span class="badge status candidate">Candidate</span>
+          <span class="badge evidence">Control Logic</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>P0-B.1 Guided Stack Tutorial / P0-A Flow Lab lineage visible in library.</span></p>
+          <p><strong>Proves</strong><span>Diagnosis itself can be gameplay: Receive → QA → Rack → Pick → Pack → Ship → Validate → AAR.</span></p>
+          <p><strong>Next</strong><span>Can a first-time player understand the flow path before optimizing stack decisions?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A mobile/browser serious-game simulation where play is flow observation, diagnosis, stabilization, validation, and enterprise tradeoff decisions.</dd><dt>Still unproven</dt><dd>Whether the warehouse sim belongs as a public Arcade card, a serious systems lane, or a proof-board bridge.</dd><dt>Guardrail</dt><dd>Do not treat automation or movement as magical. Every improvement must require evidence.</dd><dt>Current build / version</dt><dd>ISO P0-B.1 Guided Stack Tutorial and P0-A Flow Lab files surfaced in library.</dd><dt>Latest verified evidence</dt><dd>Warehouse ideation says enterprise logistics improves only when infrastructure, process, people, data, systems, and support are redesigned together and validated under pressure.</dd><dt>Known risks</dt><dd>Looks like a warehouse game while the actual proof is enterprise flow validation.</dd><dt>Do not drift into</dt><dd>Box-moving toy or automation-first fantasy.</dd><dt>Next test</dt><dd>Guided tutorial comprehension and end-of-shift AAR quality.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./warehouse-in-the-loop-iso-p0b1-guided-stack.html">Try Demo</a>
+        </div>
+      </div>
+    </article></div>
+    </section>
+    <section class="wall-section game-section" id="live-demos-candidate-systems">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Arcade Row</p>
+          <h2>Live Demos &amp; Candidate Systems</h2>
+          <p>Focused demos testing one pressure model, mechanic, or possible future system.</p>
+        </div>
+        <a href="#top" class="jump-top">Back to top</a>
+      </div>
+      <div class="grid">
+    <article class="arcade-card" id="shift-33" data-format="Live Demo" data-status="Candidate" data-evidence="Human Judgment">
+      <div class="thumb live-demo"><span>Live Demo</span></div>
+      <div class="card-body">
+        <p class="kicker">Compartment Clearing / Room Authority</p>
+        <h3>SHIFT 33: Skeleton Watch</h3>
+        <p class="desc">A blue-collar shipboard horror systems candidate built around compartment clearing, pressure seals, and Everything by Three.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Live Demo</span>
+          <span class="badge status candidate">Candidate</span>
+          <span class="badge evidence">Human Judgment</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Candidate system slice; not promoted to locked source-of-truth status yet.</span></p>
+          <p><strong>Proves</strong><span>Compartment clearing, keyboard-first playability, and skeleton-crew decision logic can support a larger systems-horror branch.</span></p>
+          <p><strong>Next</strong><span>Can it stabilize one build lane and one controlled playability review?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A candidate horror/systems branch with enter/sweep/identify/contain/secure/advance rhythm, motion tracker pressure, RoomAuthority, and skeleton crew doctrine.</dd><dt>Still unproven</dt><dd>Whether SHIFT 33 is an Arcade demo, standalone horror systems game, or proof branch under Inside the System.</dd><dt>Guardrail</dt><dd>Preserve keyboard-first playability and do not promote beyond candidate status before one stable build lane and controlled review.</dd><dt>Current build / version</dt><dd>Skeleton Watch candidate after RoomAuthority / pressure-seal panel smoke discussion.</dd><dt>Latest verified evidence</dt><dd>Evidence archive accepts as candidate, not locked source of truth.</dd><dt>Known risks</dt><dd>Promoting too early; mobile-only drift; color/readability defects for Spitters.</dd><dt>Do not drift into</dt><dd>Controller/mobile-only at expense of keyboard.</dd><dt>Next test</dt><dd>Stable lane smoke test and one controlled playthrough.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./shift_33_skeleton_watch.html">Inspect Loop</a>
+        </div>
+      </div>
+    </article>
+    <article class="arcade-card" id="signal-sweeper" data-format="Live Demo" data-status="Candidate" data-evidence="Control Logic">
+      <div class="thumb live-demo"><span>Live Demo</span></div>
+      <div class="card-body">
+        <p class="kicker">Containment / Grid / Arcade</p>
+        <h3>Signal Sweeper</h3>
+        <p class="desc">Clean corrupted signal fragments under grid pressure and test fast containment readability.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Live Demo</span>
+          <span class="badge status candidate">Candidate</span>
+          <span class="badge evidence">Control Logic</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Existing evidence slice.</span></p>
+          <p><strong>Proves</strong><span>Fast containment and signal cleanup can create readable systems pressure.</span></p>
+          <p><strong>Next</strong><span>Does cleanup feel purposeful rather than arbitrary?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A containment/grid cleanup loop involving corrupted data, signal restoration, difficulty ramp, and closing-grid pressure.</dd><dt>Still unproven</dt><dd>Whether the player understands cleanup/containment logic quickly enough to make useful decisions.</dd><dt>Guardrail</dt><dd>Keep as mechanics evidence unless playtest confirms broader system value.</dd><dt>Current build / version</dt><dd>Live demo evidence card; exact file pending hub inventory.</dd><dt>Latest verified evidence</dt><dd>Accepted as live demo evidence card.</dd><dt>Known risks</dt><dd>May read as generic grid arcade unless validation meaning is clear.</dd><dt>Do not drift into</dt><dd>Broad system claim without playtest.</dd><dt>Next test</dt><dd>First-time comprehension of containment objective.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./signal_sweeper.html">Try Demo</a>
+        </div>
+      </div>
+    </article>
+    <article class="arcade-card" id="relay-rush" data-format="Live Demo" data-status="Candidate" data-evidence="Pressure">
+      <div class="thumb live-demo"><span>Live Demo</span></div>
+      <div class="card-body">
+        <p class="kicker">Routing / Speed Pressure</p>
+        <h3>Relay Rush</h3>
+        <p class="desc">Route signals under timing pressure while obstacles grow and mobile control flow is tested.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Live Demo</span>
+          <span class="badge status candidate">Candidate</span>
+          <span class="badge evidence">Pressure</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Existing evidence slice.</span></p>
+          <p><strong>Proves</strong><span>Routing pressure can be tested quickly through speed, obstacles, and mobile control flow.</span></p>
+          <p><strong>Next</strong><span>Is the pressure really routing, or just speed?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A signal-routing pressure demo with timing, difficulty progression, obstacle growth, and mobile-friendly controls.</dd><dt>Still unproven</dt><dd>Whether the pressure comes from routing decisions or merely speed.</dd><dt>Guardrail</dt><dd>Do not expand until the core routing loop is clearly judged.</dd><dt>Current build / version</dt><dd>Live demo evidence card; exact file pending hub inventory.</dd><dt>Latest verified evidence</dt><dd>Accepted as live demo evidence card.</dd><dt>Known risks</dt><dd>Could become reflex-only without route decision meaning.</dd><dt>Do not drift into</dt><dd>Obstacle game without routing proof.</dd><dt>Next test</dt><dd>Player explanation after one run: routing decision or speed reaction?</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./relay_rush.html">Try Demo</a>
+        </div>
+      </div>
+    </article>
+    <article class="arcade-card" id="node-blaster" data-format="Live Demo" data-status="Candidate" data-evidence="Pressure">
+      <div class="thumb live-demo"><span>Live Demo</span></div>
+      <div class="card-body">
+        <p class="kicker">Nodes / Action Loop</p>
+        <h3>Node Blaster</h3>
+        <p class="desc">A continuous side-scrolling node-clearing action proof for prioritization and digital tunnel readability.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Live Demo</span>
+          <span class="badge status candidate">Candidate</span>
+          <span class="badge evidence">Pressure</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Existing evidence slice.</span></p>
+          <p><strong>Proves</strong><span>Simple node clearing can create a readable digital pressure loop.</span></p>
+          <p><strong>Next</strong><span>Does node-clearing feel purposeful?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A node-action demo with continuous movement, target prioritization, node interaction, and digital-world pressure.</dd><dt>Still unproven</dt><dd>Whether node-clearing feels purposeful or merely like shooting targets.</dd><dt>Guardrail</dt><dd>Keep scoped as node-action proof unless promoted by AAR.</dd><dt>Current build / version</dt><dd>Live demo evidence card; exact file pending hub inventory.</dd><dt>Latest verified evidence</dt><dd>Accepted as live demo evidence card.</dd><dt>Known risks</dt><dd>Generic shooting can erase the node/system metaphor.</dd><dt>Do not drift into</dt><dd>Target shooting without system logic.</dd><dt>Next test</dt><dd>AAR asks what the player thought nodes represented.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./node_blaster.html">Try Demo</a>
+        </div>
+      </div>
+    </article>
+    <article class="arcade-card" id="breach-drop" data-format="Live Demo" data-status="Candidate" data-evidence="Recovery">
+      <div class="thumb live-demo"><span>Live Demo</span></div>
+      <div class="card-body">
+        <p class="kicker">Descent / Route Flow</p>
+        <h3>Breach Drop</h3>
+        <p class="desc">A downward route-breach demo testing recoverable pressure and no-dead-end escape design.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Live Demo</span>
+          <span class="badge status candidate">Candidate</span>
+          <span class="badge evidence">Recovery</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Existing evidence slice.</span></p>
+          <p><strong>Proves</strong><span>A route breach can create pressure without trapping the player in unavoidable failure.</span></p>
+          <p><strong>Next</strong><span>Does the descent feel recoverable?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A descent-flow route pressure demo built around movement recovery, controlled escape, and no-dead-end path design.</dd><dt>Still unproven</dt><dd>Whether the descent creates recoverable pressure or unavoidable failure.</dd><dt>Guardrail</dt><dd>Preserve no-dead-end design as the core evidence question.</dd><dt>Current build / version</dt><dd>Live demo evidence card; exact file pending hub inventory.</dd><dt>Latest verified evidence</dt><dd>Accepted as live demo evidence card.</dd><dt>Known risks</dt><dd>Pressure can become unfair if recovery routes are unreadable.</dd><dt>Do not drift into</dt><dd>Dead-end punishment.</dd><dt>Next test</dt><dd>Failure recovery timing and player frustration check.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="./breach_drop.html">Try Demo</a>
+        </div>
+      </div>
+    </article></div>
+    </section>
+    <section class="wall-section game-section" id="design-review-under-review">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Arcade Row</p>
+          <h2>Design Review / Under Review</h2>
+          <p>Visible concepts that matter enough to inspect without pretending they are finished.</p>
+        </div>
+        <a href="#top" class="jump-top">Back to top</a>
+      </div>
+      <div class="grid">
+    <article class="arcade-card" id="connection-trace" data-format="Design Review" data-status="Under Review" data-evidence="Validation">
+      <div class="thumb design-review"><span>Design Review</span></div>
+      <div class="card-body">
+        <p class="kicker">Connectivity Puzzle Under Review</p>
+        <h3>Connection Trace</h3>
+        <p class="desc">A visible concept for diagnosing the one broken relationship that prevents a system from validating truth.</p>
+        <div class="badges" aria-label="Card badges">
+          <span class="badge format">Design Review</span>
+          <span class="badge status under-review">Under Review</span>
+          <span class="badge evidence">Validation</span>
+        </div>
+        <div class="proof-snapshot" aria-label="Proof snapshot">
+          <p><strong>Status</strong><span>Under Review / Redesign Candidate. Visible for inspection; not promoted, not abandoned.</span></p>
+          <p><strong>Proves</strong><span>The problem space is worth inspecting: broken relationships can prevent a system from validating truth.</span></p>
+          <p><strong>Next</strong><span>What specific playable decision does this create?</span></p>
+        </div>
+        <details>
+          <summary>Proof notes</summary>
+          <dl><dt>What it is</dt><dd>A compact diagnostic puzzle concept about connection failure, signal-path reasoning, and truth-validation metaphor.</dd><dt>Still unproven</dt><dd>Whether the loop is playable, transferable, build-worthy, or too abstract/easy to brute force.</dd><dt>Guardrail</dt><dd>Visibility is not promotion. Do not list as live or validated until redesign produces a playable loop.</dd><dt>Current build / version</dt><dd>Design review card; no live validated gameplay claim.</dd><dt>Latest verified evidence</dt><dd>Included as under-review evidence card.</dd><dt>Known risks</dt><dd>May become abstract, tedious, or brute-forceable.</dd><dt>Do not drift into</dt><dd>Front-page live claim without playable loop.</dd><dt>Next test</dt><dd>Define one decision the player must make to diagnose connection failure.</dd></dl>
+        </details>
+        <div class="actions">
+          <a class="primary" href="#connection-trace">View Review Card</a>
+        </div>
+      </div>
+    </article></div>
+    </section>
+
+    <section class="wall-section" id="what-it-demonstrates">
+      <div class="section-head">
+        <div><p class="eyebrow">Capability View</p><h2>What this work demonstrates</h2><p>The Arcade is fun on the surface, but the deeper value is the repeatable way concepts move from rough idea to playable proof.</p></div>
+        <a href="#top" class="jump-top">Back to top</a>
+      </div>
+      <div class="lane-grid">
+        <article><h3>Browser-first delivery</h3><p>Single-page games and demos that run through simple links, making proof easier to share, test, and revise without a platform build.</p></article>
+        <article><h3>Input discipline</h3><p>Phone-first and keyboard-friendly controls that keep the player focused on the loop instead of learning a control scheme.</p></article>
+        <article><h3>Validation as gameplay</h3><p>Several builds treat evidence, repair, routing, handoffs, and AAR as the actual win condition instead of background paperwork.</p></article>
+        <article><h3>Operational translation</h3><p>Abstract problems become playable: supply flow, audit controls, broken handoffs, planning pressure, recovery, and human judgment.</p></article>
+        <article><h3>Evidence discipline</h3><p>Each serious card states what it proves, what it does not prove, and what should not drift in the next patch.</p></article>
+        <article><h3>Human-led AI production</h3><p>AI accelerates drafts, code, critique, and continuity; the human owner sets direction, judges quality, and approves baselines.</p></article>
       </div>
     </section>
 
-    <section id="games">
-      <div class="section-head"><h2><span class="icon">▶</span> Live Playable</h2><p class="section-note">Playable external prototypes with public links. Feedback goes directly to the developer by email.</p></div>
-      <div class="card-stack">
-        <article class="game-card panel"><div class="game-art art-fps" aria-hidden="true"></div><div class="card-body"><div><div class="kicker"><span class="tag live">Live</span><span class="tag prototype">FPS-002</span><span class="tag blue">Browser FPS</span></div><h3>Digital Reality Run</h3><p class="desc">A first-person recovery run through fractured digital sectors. Cut the command signal, collapse Replicator Stations, shut down Automatons, and enter the Signal Gate.</p></div><div class="actions"><a class="btn" href="https://skabkleveta-creator.github.io/FPS-002/" target="_blank" rel="noopener">Play Now</a><a class="btn secondary email" href="mailto:skabdigitalarcade@gmail.com?subject=Digital%20Reality%20Run%20Feedback%20-%20Skab%20Digital%20Reality%20Arcade&body=Game:%20Digital%20Reality%20Run%0ADevice:%0ABrowser:%0ALink%20used:%0AWi-Fi%20or%20cellular:%0AWhat%20happened:%0AExpected%20result:%0A">Email Developer</a></div></div></article>
-        <article class="game-card panel"><div class="game-art art-blackbox" aria-hidden="true"></div><div class="card-body"><div><div class="kicker"><span class="tag live">Live</span><span class="tag blue">Shooter</span></div><h3>Blackbox Squadron</h3><p class="desc">Retro vertical dogfights with power-ups, quick restarts, mobile controls, and score-chasing arcade pressure.</p></div><div class="actions"><a class="btn" href="https://skabkleveta-creator.github.io/BLACKBOX_SQUADRON_Public_Game/" target="_blank" rel="noopener">Play Now</a><a class="btn secondary email" href="mailto:skabdigitalarcade@gmail.com?subject=Blackbox%20Squadron%20Feedback%20-%20Skab%20Digital%20Reality%20Arcade&body=Game:%20Blackbox%20Squadron%0ADevice:%0ABrowser:%0ALink%20used:%0AWi-Fi%20or%20cellular:%0AWhat%20happened:%0AExpected%20result:%0A">Email Developer</a></div></div></article>
-        <article class="game-card panel"><div class="game-art art-anchor" aria-hidden="true"></div><div class="card-body"><div><div class="kicker"><span class="tag live">Live</span><span class="tag prototype">Prototype</span><span class="tag blue">Route Runner</span></div><h3>Anchor Run</h3><p class="desc">Compact route-running through unstable floors. Recover anchors, validate sectors, and keep the route alive.</p></div><div class="actions"><a class="btn" href="https://skabkleveta-creator.github.io/ANCHOR_RUN_Public_Game/" target="_blank" rel="noopener">Play Now</a><a class="btn secondary email" href="mailto:skabdigitalarcade@gmail.com?subject=Anchor%20Run%20Feedback%20-%20Skab%20Digital%20Reality%20Arcade&body=Game:%20Anchor%20Run%0ADevice:%0ABrowser:%0ALink%20used:%0AWi-Fi%20or%20cellular:%0AWhat%20happened:%0AExpected%20result:%0A">Email Developer</a></div></div></article>
-        <article class="game-card panel"><div class="game-art art-core" aria-hidden="true"></div><div class="card-body"><div><div class="kicker"><span class="tag live">Live</span><span class="tag prototype">Systems Repair</span><span class="tag blue">District 01</span></div><h3>Reintegration Core</h3><p class="desc">A systems-repair arcade prototype about broken infrastructure, route logic, validation, terminals, ladders, fixed-anchor recovery, and restoring purpose without pretending a green board is proof.</p></div><div class="actions"><a class="btn" href="https://skabkleveta-creator.github.io/Reintegration_Core_HTML/" target="_blank" rel="noopener">Play Now</a><a class="btn secondary email" href="mailto:skabdigitalarcade@gmail.com?subject=Reintegration%20Core%20Feedback%20-%20Skab%20Digital%20Reality%20Arcade&body=Game:%20Reintegration%20Core%0ADevice:%0ABrowser:%0ALink%20used:%0AWi-Fi%20or%20cellular:%0AWhat%20happened:%0AExpected%20result:%0A">Email Developer</a></div></div></article>
-        <article class="game-card panel"><div class="game-art art-hitl" aria-hidden="true"></div><div class="card-body"><div><div class="kicker"><span class="tag live">Live</span><span class="tag red">Horror</span><span class="tag purple">Isometric Shooter</span></div><h3>Human-in-the-Loop</h3><p class="desc">A mobile-first isometric cybernetic horror shooter about escaping a facility where human judgment has been turned into compliance hardware. Survive the Preservation Wing, energize relays, and push toward the AI Heart.</p></div><div class="actions"><a class="btn" href="https://skabkleveta-creator.github.io/Human-in-the-Loop/" target="_blank" rel="noopener">Play Now</a><a class="btn secondary email" href="mailto:skabdigitalarcade@gmail.com?subject=Human-in-the-Loop%20Feedback%20-%20Skab%20Digital%20Reality%20Arcade&body=Game:%20Human-in-the-Loop%0ADevice:%0ABrowser:%0ALink%20used:%0AWi-Fi%20or%20cellular:%0AWhat%20happened:%0AExpected%20result:%0A">Email Developer</a></div></div></article>
+    <section class="wall-section" id="builder-method">
+      <div class="section-head">
+        <div><p class="eyebrow">Builder & Method</p><h2>Built by Kenneth “Ken” Kleveta</h2><p>This page is also a public proof of process: practical ideas turned into small, inspectable working artifacts.</p></div>
+        <a href="#top" class="jump-top">Back to top</a>
+      </div>
+      <div class="method-grid">
+        <article><h3>Operator judgment</h3><p>Marine Corps logistics, business development, audit/readiness, and systems-thinking experience shape what gets built and what gets rejected.</p></article>
+        <article><h3>Build small, test fast</h3><p>The working rhythm is concept → playable loop → smoke test → evidence note → guarded baseline → next proof question.</p></article>
+        <article><h3>Public-safe process</h3><p>The page shows the workflow and proof logic without exposing private prompts, internal scratchpads, or sensitive implementation details.</p></article>
+      </div>
+      <p class="method-note"><strong>Collaboration stack:</strong> Ken leads product direction, quality judgment, testing, and final calls. ChatGPT, Claude/Fable, and Gemini/SkabGPT support ideation, critique, coding, continuity, and alternate-angle review. GitHub Pages provides a free public deployment layer. The evidence loop keeps the work honest.</p>
+    </section>
+
+    <section class="wall-section" id="future-applications">
+      <div class="section-head">
+        <div><p class="eyebrow">Future Application Direction</p><h2>Beyond free demos and games</h2><p>The long-term question is whether lightweight playable prototypes can support real training, operations, logistics, audit, readiness, and human-AI collaboration.</p></div>
+        <a href="#top" class="jump-top">Back to top</a>
+      </div>
+      <div class="application-grid">
+        <article><h3>Training & Serious Play</h3><p>Short browser scenarios for practicing judgment, tradeoffs, recovery, and prioritization without needing a major software platform.</p></article>
+        <article><h3>Operations & Handoffs</h3><p>Playable models for false-green status, unclear ownership, handoff failure, validation debt, and after-action learning.</p></article>
+        <article><h3>Logistics / Audit / Readiness</h3><p>Prototype paths for supply flow, control discipline, evidence traceability, planning pressure, and readiness reporting.</p></article>
       </div>
     </section>
 
-    <section id="live-demos" class="demo-section">
-      <div class="section-head"><h2><span class="icon">▣</span> Live Demos</h2><p class="section-note">Playable internal arcade demos that now run live from the arcade repository, including new proof-of-loop prototypes staged directly inside this hub.</p></div>
-      <div class="card-stack">
-        <article class="demo-card"><div class="demo-content"><div class="demo-top"><div class="demo-icon" aria-hidden="true">⚓</div><span class="demo-badge">Live Demo</span></div><h3>GATOR RAID</h3><p class="desc">Board-first amphibious planning trial. Build the beach, run the pressure/recovery loop, and use the AAR to fix the next attempt.</p><div class="mini-tags"><span>Planning</span><span>Recovery</span><span>Board Trial</span></div><div class="actions" style="margin-top:14px;"><a class="btn" href="/skab-digital-reality-arcade/games/gator_raid/" target="_blank" rel="noopener">Play Demo</a></div></div></article>
-        <article class="demo-card"><div class="demo-content"><div class="demo-top"><div class="demo-icon" aria-hidden="true">☣</div><span class="demo-badge">Live Demo</span></div><h3>SHIFT 33: Skeleton Watch</h3><p class="desc">Blue-collar shipboard horror built around compartment clearing: enter, sweep, identify, contain, secure, and advance before the company edits the contact report.</p><div class="mini-tags"><span>Compartment Clearing</span><span>Motion Tracker</span><span>Room Authority</span></div><div class="actions" style="margin-top:14px;"><a class="btn" href="/skab-digital-reality-arcade/games/shift-33-skeleton-watch/" target="_blank" rel="noopener">Play Demo</a></div></div></article>
-        <article class="demo-card"><div class="demo-content"><div class="demo-top"><div class="demo-icon" aria-hidden="true">◉</div><span class="demo-badge">Live Demo</span></div><h3>Signal Sweeper</h3><p class="desc">Fast containment arcade prototype about sweeping corrupted data, restoring signal fragments, and escaping before the grid closes.</p><div class="mini-tags"><span>Containment</span><span>Grid</span><span>Arcade</span></div><div class="actions" style="margin-top:14px;"><a class="btn" href="/skab-digital-reality-arcade/games/signal_sweeper/" target="_blank" rel="noopener">Play Demo</a></div></div></article>
-        <article class="demo-card"><div class="demo-content"><div class="demo-top"><div class="demo-icon" aria-hidden="true">↯</div><span class="demo-badge">Live Demo</span></div><h3>Relay Rush</h3><p class="desc">Signal-routing arcade demo focused on timing, pressure, and clean mobile-friendly control flow.</p><div class="mini-tags"><span>Demo</span><span>Routing</span><span>Speed</span></div><div class="actions" style="margin-top:14px;"><a class="btn" href="/skab-digital-reality-arcade/games/relay-rush/" target="_blank" rel="noopener">Play Demo</a></div></div></article>
-        <article class="demo-card"><div class="demo-content"><div class="demo-top"><div class="demo-icon" aria-hidden="true">✣</div><span class="demo-badge">Live Demo</span></div><h3>Node Blaster</h3><p class="desc">Side-scrolling digital tunnel action demo built around continuous movement, pressure, and node-clearing.</p><div class="mini-tags"><span>Demo</span><span>Nodes</span><span>Action</span></div><div class="actions" style="margin-top:14px;"><a class="btn" href="/skab-digital-reality-arcade/games/node-blaster/" target="_blank" rel="noopener">Play Demo</a></div></div></article>
-        <article class="demo-card"><div class="demo-content"><div class="demo-top"><div class="demo-icon" aria-hidden="true">↓</div><span class="demo-badge">Live Demo</span></div><h3>Breach Drop</h3><p class="desc">Downward-flowing route breach demo focused on movement, recovery space, and no-dead-end path design.</p><div class="mini-tags"><span>Demo</span><span>Descent</span><span>Flow</span></div><div class="actions" style="margin-top:14px;"><a class="btn" href="/skab-digital-reality-arcade/games/breach-drop/" target="_blank" rel="noopener">Play Demo</a></div></div></article>
+    <section class="wall-section" id="version-status">
+      <div class="section-head">
+        <div><p class="eyebrow">Version Status</p><h2>v0.4.2 Professional Review Draft</h2><p>One public Arcade wall. Games first. Proof embedded. Builder and method visible, but not over-labeled. No separate evidence site. No hidden Easter Egg layer.</p></div>
+        <a href="#top" class="jump-top">Back to top</a>
       </div>
+      <p class="subtle">Primary game links are still relative placeholders until matched to deployed GitHub Pages filenames.</p>
     </section>
 
-    <section id="feedback" class="feedback-section"><div class="section-head"><h2><span class="icon">✉</span> Email Developer</h2><p class="section-note">One feedback path: email the developer directly. No public form is active.</p></div><div class="panel email-panel"><div><p>Found a bug, broken link, mobile layout issue, or gameplay note? Send it directly to the developer. Include the game name, device, browser, link used, Wi-Fi or cellular, what happened, and what you expected.</p><div class="actions"><a class="btn email" href="mailto:skabdigitalarcade@gmail.com?subject=Skab%20Digital%20Reality%20Arcade%20Feedback&body=Game:%0ADevice:%0ABrowser:%0ALink%20used:%0AWi-Fi%20or%20cellular:%0AWhat%20happened:%0AExpected%20result:%0A">Email Developer</a></div></div><div class="terminal">&gt; FEEDBACK TEMPLATE<br />&gt; Game:<br />&gt; Device: phone / laptop / tablet / desktop / connected display<br />&gt; Browser:<br />&gt; Link used:<br />&gt; Wi-Fi or cellular:<br />&gt; What happened:<br />&gt; Expected result:</div></div></section>
-
-    <section id="design-review" class="review-section"><div class="section-head"><h2><span class="icon">⌕</span> Design Review</h2><p class="section-note">Concepts under review before they become public playable builds.</p></div><div class="panel review-card"><div class="kicker"><span class="tag purple">Concept Under Review</span><span class="tag prototype">Connectivity Puzzle</span></div><h3>Connection Trace</h3><p class="desc">Being redesigned as a compact diagnostic puzzle about finding the one broken relationship that prevents a system from validating truth.</p></div></section>
-
-    <section id="reintegration-core"><div class="section-head"><h2><span class="icon">▱</span> Systems Thread</h2><p class="section-note">The arcade now carries both the restoration branch and the horror branch of the same proof question.</p></div><div class="panel systems-card"><div class="kicker"><span class="tag live">Reintegration Core</span><span class="tag red">Human-in-the-Loop</span><span class="tag blue">Human Judgment</span></div><h3>Repair the system. Do not become the system.</h3><p class="desc">Reintegration Core tests restoration, route validation, and broken infrastructure. Human-in-the-Loop tests agency, compliance pressure, and horror inside hostile automation. Together, they expand the arcade from one genre into a browser-first prototype portfolio.</p><div class="terminal" style="margin-top:16px;">&gt; ROUTES STILL MOVE. PURPOSE DOES NOT.<br />&gt; HUMAN JUDGMENT IS NOT COMPLIANCE HARDWARE.<br />&gt; GREEN IS NOT PROOF.</div></div></section>
-
-    <section id="about"><div class="section-head"><h2>About The Arcade</h2><p class="section-note">Why this exists, what it is testing, and how the prototypes are being built.</p></div><div class="panel about-expanded"><div class="about-intro"><div class="about-copy"><p><strong>Skab Digital Reality Arcade</strong> started as a practical experiment: could small browser games become a low-cost way to learn game design, test ideas quickly, and turn creative momentum into playable proof?</p><p>I am not building this as a studio launch or storefront. I am building it as a public workshop: a place where rough ideas can become playable loops, where broken designs can be redesigned, and where the process is allowed to stay visible instead of hidden behind a finished-product mask.</p><p>The arcade also reflects how I tend to think: systems, signals, routes, recovery, pressure, feedback, and validation. Most of these games are small, but the method behind them is serious: define the loop, build the simplest playable version, test what feels wrong, patch one thing at a time, and keep the work moving.</p></div><aside class="about-callout"><strong>Purpose</strong><p>The goal is not to pretend every prototype is complete. The goal is to create enough playable evidence to learn what deserves to grow, what needs to be redesigned, and what should be retired.</p></aside></div><div class="process-grid" aria-label="Arcade development process"><div class="process-card"><b>Design Lock</b><span>Capture the core idea, player verb, theme, controls, and what should not be changed during a patch.</span></div><div class="process-card"><b>Playable Loop</b><span>Build the smallest version that can be played, judged, and improved without needing a full production cycle.</span></div><div class="process-card"><b>Field Test</b><span>Run the prototype on real devices, especially phones, and look for friction, confusion, dead space, and broken links.</span></div><div class="process-card"><b>Patch Discipline</b><span>Improve one focused area at a time: controls, visuals, difficulty, layout, feedback, or deployment stability.</span></div></div><div class="terminal" style="margin-top:18px;">&gt; METHOD: IDEA → LOOP → TEST → PATCH → PROOF<br />&gt; RULE: SMALL ENOUGH TO FINISH. REAL ENOUGH TO JUDGE.<br />&gt; STATUS: HOBBYIST ARCADE, ACTIVE BUILD SYSTEM.</div></div></section>
-
-    <footer><div class="footer-line"><span>© <span id="year"></span> Skab Digital Reality Arcade · Hobbyist prototype hub · v2026.07.03.001</span><span>Built for phone, laptop, tablet, desktop, and connected-device browsers.</span></div></footer>
+    <footer class="integrity">
+      <strong>Integrity note:</strong> Visibility is not a claim of completion. Some cards are stable, some are candidate loops, and some are under review. The point is to show playable work, honest proof posture, developer judgment, AI-supported production, and a repeatable path from idea to working demo.
+    </footer>
   </main>
-
-  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
-  <script>
-    /* Evidence Archive Easter egg: hidden proof trail access */
-    (function(){
-      const trigger = document.querySelector(".evidence-easter-trigger");
-      const panel = document.getElementById("evidenceUnlockPanel");
-      if(!trigger || !panel) return;
-      let taps = 0;
-      let longPressTimer = null;
-      let unlocked = false;
-      let resetTimer = null;
-      function showGlitch(){trigger.classList.add("evidence-glitch");window.setTimeout(() => trigger.classList.remove("evidence-glitch"), 2500);}
-      function unlock(){if(unlocked) return;unlocked = true;panel.classList.add("is-visible");showGlitch();}
-      function resetTapWindow(){if(resetTimer) window.clearTimeout(resetTimer);resetTimer = window.setTimeout(() => { if(!unlocked) taps = 0; }, 3000);}
-      trigger.addEventListener("click", function(){taps += 1;showGlitch();resetTapWindow();if(taps >= 5) unlock();});
-      trigger.addEventListener("keydown", function(event){if(event.key === "Enter" || event.key === " "){event.preventDefault();taps += 1;showGlitch();resetTapWindow();if(taps >= 5) unlock();}});
-      trigger.addEventListener("touchstart", function(){ longPressTimer = window.setTimeout(unlock, 2000); }, {passive:true});
-      trigger.addEventListener("touchend", function(){ if(longPressTimer) window.clearTimeout(longPressTimer); }, {passive:true});
-      window.setTimeout(showGlitch, 3000);
-      window.setInterval(showGlitch, 14000);
-    })();
-  </script>
-  <script>
-    /* America 250 Easter egg: separate from Evidence Archive.
-       Triggers: type AMERICA250, open ?america250=1 or ?party=250, click/tap celebration title five times, or long-press the celebration title. */
-    (function(){
-      const overlay = document.getElementById("america250Overlay");
-      const trigger = document.querySelector(".celebration-trigger");
-      if(!overlay) return;
-      let active = false;
-      let typed = "";
-      let taps = 0;
-      let tapTimer = null;
-      let longPressTimer = null;
-      const colors = ["#68f5ff","#8dff9a","#ffb23f","#ff4f6d","#ffffff"];
-
-      function makeBurst(x, y, color){
-        const burst = document.createElement("div");
-        burst.className = "america250-burst";
-        burst.style.left = x + "vw";
-        burst.style.top = y + "vh";
-        burst.style.color = color;
-        burst.style.background = color;
-        for(let i = 0; i < 12; i += 1){
-          const ray = document.createElement("i");
-          ray.style.transform = "rotate(" + (i * 30) + "deg) translateY(-18px)";
-          burst.appendChild(ray);
-        }
-        overlay.appendChild(burst);
-        window.setTimeout(() => burst.remove(), 1500);
-      }
-
-      function launchAmerica250(){
-        if(active) return;
-        active = true;
-        overlay.classList.add("is-visible");
-        overlay.setAttribute("aria-hidden", "false");
-
-        let count = 0;
-        const show = () => {
-          makeBurst(18 + Math.random() * 66, 18 + Math.random() * 46, colors[count % colors.length]);
-          count += 1;
-        };
-        show();
-        const fireworks = window.setInterval(show, 320);
-        window.setTimeout(() => {
-          window.clearInterval(fireworks);
-          overlay.classList.remove("is-visible");
-          overlay.setAttribute("aria-hidden", "true");
-          active = false;
-        }, 10500);
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      if(params.has("america250") || params.get("party") === "250"){
-        window.setTimeout(launchAmerica250, 650);
-      }
-
-      document.addEventListener("keydown", function(event){
-        if(event.ctrlKey || event.metaKey || event.altKey) return;
-        typed = (typed + String(event.key || "").toUpperCase()).slice(-10);
-        if(typed.endsWith("AMERICA250")) launchAmerica250();
-      });
-
-      if(trigger){
-        function tapTrigger(){
-          taps += 1;
-          if(tapTimer) window.clearTimeout(tapTimer);
-          tapTimer = window.setTimeout(() => { taps = 0; }, 3500);
-          if(taps >= 5){
-            taps = 0;
-            launchAmerica250();
-          }
-        }
-        trigger.addEventListener("click", tapTrigger);
-        trigger.addEventListener("keydown", function(event){
-          if(event.key === "Enter" || event.key === " "){
-            event.preventDefault();
-            tapTrigger();
-          }
-        });
-        trigger.addEventListener("touchstart", function(){
-          longPressTimer = window.setTimeout(launchAmerica250, 1776);
-        }, {passive:true});
-        trigger.addEventListener("touchend", function(){
-          if(longPressTimer) window.clearTimeout(longPressTimer);
-        }, {passive:true});
-      }
-    })();
-  </script>
-  <script>
-    /* Lightweight freshness check. The page still works if the version file is unavailable. */
-    (function(){
-      const current = document.querySelector('meta[name="site-version"]')?.content || "2026.07.03.001";
-      const alertBox = document.getElementById("versionAlert");
-      fetch("/skab-digital-reality-arcade/site-version.json", {cache:"no-store"})
-        .then(response => response.ok ? response.json() : null)
-        .then(data => { if(data && data.version && data.version !== current && alertBox){ alertBox.classList.add("is-visible"); } })
-        .catch(() => {});
-    })();
-  </script>
 </body>
 </html>
