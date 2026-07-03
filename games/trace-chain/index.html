@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRACE CHAIN // Proof Board</title>
+<style>
+:root{--bg:#050814;--panel:#101c31;--panel2:#14233d;--line:rgba(151,210,255,.2);--text:#eef7ff;--muted:#a9b8c9;--cyan:#69e3ff;--gold:#ffd166;--green:#8effb0;--red:#ff667d;--shadow:rgba(0,0,0,.42);--radius:22px}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% -10%,#193b61 0,#081225 45%,#03050d 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.shell{width:min(1060px,94vw);margin:0 auto;padding:28px 0 56px}.panel{background:linear-gradient(180deg,rgba(16,28,49,.95),rgba(7,13,26,.96));border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 18px 46px var(--shadow);padding:24px;margin:14px 0}.eyebrow{color:var(--cyan);font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:850;margin:0 0 8px}h1{font-size:clamp(42px,8vw,88px);line-height:.9;letter-spacing:-.06em;margin:0}.promise{font-size:clamp(20px,3vw,30px);font-weight:850;line-height:1.1;margin:18px 0 0;color:#fff}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.card{border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.04);padding:15px}.card h2{font-size:18px;margin:0 0 8px;color:var(--cyan)}p,li{color:#dcecff;line-height:1.55}.muted{color:var(--muted)}.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.badge{border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.06);border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:999px;padding:12px 15px;border:1px solid rgba(105,227,255,.32);background:rgba(105,227,255,.1);color:var(--text);font-weight:850}.btn.primary{background:linear-gradient(90deg,rgba(105,227,255,.95),rgba(142,255,176,.92));color:#06101e;border:0}.sequence{display:grid;gap:10px}.step{border-left:3px solid var(--gold);padding:8px 12px;background:rgba(255,209,102,.06);border-radius:10px}.note{border-left:3px solid var(--cyan);padding-left:14px;color:#dcecff}@media(max-width:760px){.grid{grid-template-columns:1fr}.panel{padding:18px}h1{font-size:44px}}
+</style>
+</head>
+<body>
+<main class="shell">
+<section class="panel">
+<p class="eyebrow">Proof Board · Audit Control · v0.2.2 Holding Page</p>
+<h1>TRACE CHAIN</h1>
+<p class="promise">A board-first serious-play trial about audit readiness, control discipline, evidence traceability, findings, CAPs, and AAR learning.</p>
+<div class="badges"><span class="badge">Format: Proof Board</span><span class="badge">Status: Playable / Index Holding Page</span><span class="badge">Evidence: Audit</span></div>
+<div class="actions"><a class="btn primary" href="../../">Back to Arcade</a><a class="btn" href="#quick-run">Read Quick Run</a></div>
+</section>
+<section class="panel grid">
+<article class="card"><h2>What it is</h2><p>TRACE CHAIN is a decision-board proof where the player balances mission speed, control discipline, documentation, validation debt, findings, remediation, and after-action learning before a green status lies.</p></article>
+<article class="card"><h2>Current status</h2><p>v0.2.2 Weekend Lock is the current named baseline. This page is a deployable index so the Arcade card loads something useful while the full board file is staged or rebuilt.</p></article>
+<article class="card"><h2>What it proves</h2><p>Decision-board play can model audit pressure without pretending a clean dashboard equals validated truth.</p></article>
+<article class="card"><h2>Still unproven</h2><p>Whether a first-time player can run one clean round without a facilitator and still produce a useful AAR.</p></article>
+</section>
+<section class="panel" id="quick-run">
+<p class="eyebrow">Quick Run Structure</p>
+<div class="sequence">
+<div class="step"><strong>1. Mission pressure:</strong> The player receives a control/audit situation with speed pressure and incomplete visibility.</div>
+<div class="step"><strong>2. Evidence choice:</strong> The player chooses whether to verify, document, defer, or push forward.</div>
+<div class="step"><strong>3. Control consequence:</strong> Weak evidence creates validation debt; strong evidence costs time but improves traceability.</div>
+<div class="step"><strong>4. Finding / CAP path:</strong> Bad assumptions become findings; disciplined recovery becomes a CAP or corrective action.</div>
+<div class="step"><strong>5. AAR:</strong> The run ends by explaining what was proven, what remained unproven, and what would be changed next.</div>
+</div>
+</section>
+<section class="panel grid">
+<article class="card"><h2>Guardrail</h2><p>Do not restore Caveman, do not add hidden Easter Egg effects, and do not demote board-first play below twitch play.</p></article>
+<article class="card"><h2>Next proof question</h2><p>Can a new player understand the decision pressure in one round?</p></article>
+</section>
+<footer class="panel"><p class="note"><strong>Integrity note:</strong> This is a functional index / proof presentation page, not a claim that the full TRACE CHAIN board file has been redeployed. It prevents the Arcade from dead-linking while preserving the current proof posture.</p></footer>
+</main>
+</body>
+</html>
