@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Grill Sergeant // v0.1.5 Score Path Fix</title>
+<style>
+  :root{--bg:#07101e;--text:#f8fafc;--muted:#aab7ca;--good:#5cf2ae;--warn:#ffd166;--bad:#ff607d;--blue:#7dd3fc;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{margin:0;height:100%;overflow:hidden;background:#07101e;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
+  canvas{display:block;width:100vw;height:100vh;background:radial-gradient(circle at 50% 0%,#274690 0%,#14213d 44%,#070a14 100%)}
+  .note{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));text-align:center;color:rgba(248,250,252,.66);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-shadow:0 3px 18px rgba(0,0,0,.7);pointer-events:none}
+  @media(max-height:610px){.note{display:none}}
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Grill Sergeant game canvas"></canvas>
+<div class="note">v0.1.5 · score paths fixed · more grills slow time · chili score gated</div>
+<script>
+(() => {
+'use strict';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const C={text:'#f8fafc',muted:'#aab7ca',good:'#5cf2ae',warn:'#ffd166',bad:'#ff607d',blue:'#7dd3fc',dark:'#07101e'};
+const FOOD={
+  burger:{label:'Burger',short:'BGR',cook:8.8,flipStart:.42,flipEnd:.72,ready:.80,burn:1.18,base:12},
+  dog:{label:'Hot Dog',short:'DOG',cook:7.4,flipStart:.40,flipEnd:.73,ready:.81,burn:1.18,base:11},
+  corn:{label:'Corn',short:'CORN',cook:9.8,flipStart:.43,flipEnd:.74,ready:.82,burn:1.20,base:13}
+};
+const KEYS=Object.keys(FOOD);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rand=(a,b)=>a+Math.random()*(b-a);
+const choice=a=>a[(Math.random()*a.length)|0];
+const time=()=>performance.now()/1000;
+let W=innerWidth,H=innerHeight,DPR=1,last=time(),mode='title';
+let score=0,served=0,missed=0,mood=100,clock=0,selected='burger';
+let orders=[],slots=[],buttons=[],particles=[],floaters=[];
+let prep={buns:2,max:6,cool:0,btn:{x:0,y:0,w:0,h:0}};
+let spawnTimer=0,garyTimer=0,uncle=null,finale=false,finaleTime=0,shake=0,msg='',msgT=0,endTitle='',endSub='';
+let grillLevel=4,chiliUnlocked=false,chili={temp:42,warning:false,penaltyT:0,cool:0,x:0,y:0,w:0,h:0};
+function grillCount(){return grillLevel;}
+function relief(){return grillLevel>=8?.38:grillLevel>=6?.22:0;}
+function timeScale(){return grillLevel>=8?.72:grillLevel>=6?.86:1;}
+function slowLabel(){return grillLevel>=8?'TIME x0.72':grillLevel>=6?'TIME x0.86':'TIME x1.00';}
+function maxOrders(){let m=grillLevel>=8?5:grillLevel>=6?4:3;return finale?Math.min(6,m+1):m;}
+function fit(){DPR=Math.min(2.5,Math.max(1,devicePixelRatio||1));W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);layout();}
+addEventListener('resize',fit,{passive:true});
+function layout(){
+  const prev=new Map(slots.map(s=>[s.id,s.item]));
+  const bh=62,bw=Math.min(114,(W-44)/3),bx=(W-bw*3-20)/2,by=H-bh-38;
+  buttons=KEYS.map((k,i)=>({type:k,x:bx+i*(bw+10),y:by,w:bw,h:bh}));
+  const prepW=Math.min(W-34,420),prepH=42;
+  prep.btn={x:W/2-prepW/2,y:by-52,w:prepW,h:prepH};
+  const count=grillCount(),cols=2,rows=Math.ceil(count/2),gapX=14,gapY=rows>=4?5:10;
+  const gx=W*.075,gy=H<640?H*.315:H*.335,gw=W*.85;
+  const startY=gy+(rows>=4?16:20);
+  const chiliH=46;
+  const bottomLimit=chiliUnlocked?prep.btn.y-chiliH-10:prep.btn.y-18;
+  const availableH=Math.max(132,bottomLimit-startY);
+  const sh=clamp((availableH-(rows-1)*gapY)/rows,rows>=4?38:52,104);
+  const sw=Math.min(104,(gw-34-gapX)/2);
+  const totalW=cols*sw+gapX,totalH=rows*sh+(rows-1)*gapY;
+  const startX=W/2-totalW/2;
+  slots=[];
+  for(let i=0;i<count;i++){
+    const r=Math.floor(i/cols),c=i%cols;
+    slots.push({x:startX+c*(sw+gapX),y:startY+r*(sh+gapY),w:sw,h:sh,id:i,item:prev.get(i)||null,locked:false});
+  }
+  prep.max=grillLevel>=8?10:grillLevel>=6?8:6;
+  prep.buns=clamp(prep.buns||0,0,prep.max);
+  if(chiliUnlocked){
+    const cw=Math.min(250,W-80),ch=chiliH;
+    chili.x=W/2-cw/2; chili.y=startY+totalH+10; chili.w=cw; chili.h=ch;
+  }
+}
+function reset(){score=0;served=0;missed=0;mood=100;clock=0;selected='burger';orders=[];particles=[];floaters=[];uncle=null;finale=false;finaleTime=0;shake=0;spawnTimer=.4;garyTimer=30;msg='Experience reward: more grills slow the cookout clock.';msgT=4;endTitle='';endSub='';grillLevel=4;chiliUnlocked=false;chili={temp:42,warning:false,penaltyT:0,cool:0,x:0,y:0,w:0,h:0};prep={buns:2,max:6,cool:0,btn:{x:0,y:0,w:0,h:0}};layout();slots.forEach(s=>s.item=null);}
+function start(){reset();mode='playing';}
+function say(t,d=2){msg=t;msgT=d;}
+function floater(t,x,y,c='#fff'){floaters.push({t,x,y,c,life:1.15,vy:-34});}
+function puff(x,y,kind,n=16){for(let i=0;i<n;i++){const a=rand(0,Math.PI*2),s=rand(35,155);particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-rand(18,70),life:rand(.35,.95),kind,r:rand(2,5)});}}
+function checkUnlocks(){
+  if(score>=50&&grillLevel<6){grillLevel=6;layout();spawnTimer+=2.0;say('50 points: six grills unlocked. Cookout time slows as your reward.',3.4);puff(W/2,H*.42,'good',44);}
+  if(score>=150&&grillLevel<8){grillLevel=8;layout();spawnTimer+=2.5;say('150 points: eight grills unlocked. Time slows again. Experience pays.',3.6);puff(W/2,H*.45,'good',58);}
+  if(score>=200&&!chiliUnlocked){chiliUnlocked=true;chili.temp=42;chili.cool=0;layout();spawnTimer+=1.8;garyTimer+=4;say('200 points: chili burner online. Tap it when it runs hot.',3.6);puff(W/2,chili.y||H*.76,'spark',52);}
+  if(score>=250&&!finale){finale=true;finaleTime=38;spawnTimer=2.4;garyTimer=11*(1+relief());shake=8;say('250 POINT FINALE. Full grill line, slower clock, controlled rush.',3.2);}
+}
+function spawnOrder(forced){if(orders.length>=maxOrders())return;let type=forced||choice(KEYS);let base;if(served<2)base=30;else base=finale?rand(15,20):rand(21,29);let pat=base*(1+relief()*2.0);orders.push({type,pat,max:pat,id:Math.random()});}
+function spawnGary(){if(uncle||served<4)return;const t=(finale?5.4:7.4)*(1+relief());uncle={x:rand(W*.18,W*.82),y:rand(H*.17,H*.31),r:38,t:t,max:t};say('Uncle Gary arrived with lighter fluid. Tap him once.',2.4);}
+function stage(it){const f=FOOD[it.type],p=it.p/f.cook;if(p<f.flipStart)return'raw';if(p<f.flipEnd&&!it.flipped)return'flip';if(p<f.ready)return it.flipped?'cooking':'missedFlip';if(p<f.burn)return it.flipped?'ready':'bad';return'burnt';}
+function place(s,type){s.item={type,p:0,flipped:false,penalized:false};puff(s.x+s.w/2,s.y+s.h/2,'steam',8);}
+function tapSlot(s){
+  if(!s.item){place(s,selected);return;}
+  const st=stage(s.item),cx=s.x+s.w/2,cy=s.y+s.h/2;
+  if(st==='flip'){s.item.flipped=true;score+=1;checkUnlocks();floater('FLIP +1',cx,s.y+18,C.warn);puff(cx,cy,'spark',14);return;}
+  if(st==='ready'){serve(s);return;}
+  if(st==='bad'||st==='burnt'){s.item=null;mood=clamp(mood-4,0,100);floater('TRASH',cx,s.y+18,C.bad);puff(cx,cy,'smoke',20);return;}
+  floater(st==='raw'?'WAIT':'COOKING',cx,s.y+18,C.muted);
+}
+function serve(s){
+  const type=s.item.type,idx=orders.findIndex(o=>o.type===type),cx=s.x+s.w/2,cy=s.y+s.h/2;
+  if(idx<0){score=Math.max(0,score-2);mood=clamp(mood-2,0,100);floater('NO ORDER',cx,s.y+18,C.bad);s.item=null;return;}
+  const needsBun=(type==='burger'||type==='dog');
+  const o=orders.splice(idx,1)[0],bonus=Math.ceil(4*(o.pat/o.max));
+  let mealBonus=0,mealText='';
+  if(needsBun&&prep.buns>0){prep.buns--;mealBonus=5;mealText=' MEAL READY';mood=clamp(mood+1,0,100);}
+  else if(needsBun){mealText=' NO BUN';say('Prep buns during gaps for meal-ready bonuses.',2.1);}
+  const pts=FOOD[type].base+bonus+mealBonus+(finale?3:0);
+  score+=pts;served++;mood=clamp(mood+2,0,100);floater('+'+pts+mealText,cx,s.y+18,mealBonus?C.warn:C.good);puff(cx,cy,mealBonus?'spark':'good',mealBonus?28:22);s.item=null;checkUnlocks();
+}
+function stirChili(){
+  if(!chiliUnlocked)return;
+  if(chili.cool>0){floater('STIRRING',chili.x+chili.w/2,chili.y+10,C.muted);return;}
+  const hot=chili.temp>=60;
+  chili.cool=1.25;
+  chili.temp=clamp(chili.temp-28,18,100);
+  chili.warning=false;
+  if(!hot){floater('SIMMERING',chili.x+chili.w/2,chili.y+10,C.muted);puff(chili.x+chili.w/2,chili.y+chili.h/2,'steam',10);return;}
+  score+=2;checkUnlocks();floater('STIR +2',chili.x+chili.w/2,chili.y+10,C.warn);puff(chili.x+chili.w/2,chili.y+chili.h/2,'steam',18);
+}
+function prepBuns(){
+  if(prep.cool>0)return;
+  prep.cool=.32;
+  const b=prep.btn;
+  if(prep.buns>=prep.max){floater('BUNS FULL',b.x+b.w/2,b.y+14,C.muted);return;}
+  prep.buns++;
+  score+=1;
+  checkUnlocks();
+  floater('BUN READY +1',b.x+b.w/2,b.y+14,C.warn);
+  puff(b.x+b.w/2,b.y+b.h/2,'steam',12);
+}
+
+function stopGary(){if(!uncle)return;score+=4;checkUnlocks();floater('NOPE, GARY',uncle.x,uncle.y-42,C.blue);puff(uncle.x,uncle.y,'good',28);uncle=null;garyTimer=(finale?10:16)*(1+relief());}
+function garyFlare(){if(!uncle)return;shake=11;mood=clamp(mood-8,0,100);slots.forEach(s=>{if(s.item)s.item.p+=FOOD[s.item.type].cook*.06});puff(uncle.x,uncle.y,'fire',44);say('Gary accelerated the grill. Rude, but survivable.',2.5);uncle=null;garyTimer=(finale?11:18)*(1+relief());}
+function updateChili(dt){
+  if(!chiliUnlocked)return;
+  if(chili.cool>0)chili.cool=Math.max(0,chili.cool-dt);
+  const heatRate=(finale?7.6:5.1)*(1-relief()*.35);
+  chili.temp=clamp(chili.temp+heatRate*dt,0,115);
+  chili.penaltyT-=dt;
+  if(chili.temp>=78&&!chili.warning){chili.warning=true;say('Chili is running hot. Tap the burner to stir.',2.4);}
+  if(chili.temp>=100&&chili.penaltyT<=0){chili.penaltyT=3.8;chili.temp=82;mood=clamp(mood-8,0,100);shake=8;floater('CHILI BOILOVER',chili.x+chili.w/2,chili.y+8,C.bad);puff(chili.x+chili.w/2,chili.y+chili.h/2,'fire',34);say('Chili boiled over. Manageable, but not free.',2.5);}
+}
+function update(dt){
+  if(mode!=='playing')return;dt=Math.min(dt,.045);const pdt=dt*timeScale();clock+=dt;if(prep.cool>0)prep.cool-=dt;if(msgT>0)msgT-=dt;if(shake>0)shake=Math.max(0,shake-20*dt);
+  spawnTimer-=pdt; if(spawnTimer<=0){if(served===0&&orders.length===0)spawnOrder('burger');else spawnOrder();let base=finale?rand(3.4,4.9):(served<3?rand(6.2,8.2):rand(5.2,7.4));spawnTimer=base*(1+relief()*1.8);}
+  garyTimer-=pdt; if(garyTimer<=0){spawnGary();garyTimer=(finale?rand(11.5,15.5):rand(18,26))*(1+relief());}
+  updateChili(pdt);
+  orders.forEach(o=>o.pat-=pdt);
+  for(let i=orders.length-1;i>=0;i--){if(orders[i].pat<=0){const o=orders.splice(i,1)[0];missed++;mood=clamp(mood-(finale?6:7),0,100);floater('MISSED '+FOOD[o.type].short,W/2,H*.2,C.bad);say('One guest wandered off. Not fatal. Keep cooking.',2);}}
+  const cookRelief=1-relief()*.18;
+  slots.forEach(s=>{if(!s.item)return;let rate=1;if(stage(s.item)==='missedFlip')rate=1.12;if(stage(s.item)==='bad')rate=1.20;if(finale)rate*=1.04;rate*=cookRelief;s.item.p+=pdt*rate;if(stage(s.item)==='burnt'&&!s.item.penalized){s.item.penalized=true;mood=clamp(mood-4,0,100);floater('BURNT',s.x+s.w/2,s.y+18,C.bad);puff(s.x+s.w/2,s.y+s.h/2,'smoke',18);}});
+  if(uncle){uncle.t-=pdt;if(uncle.t<=0)garyFlare();}
+  if(finale){finaleTime-=pdt;if(finaleTime<=0){mode='win';endTitle='Cookout Saved.';endSub='The grill line expanded, the buns were ready, the chili behaved, and the 250-point party survived without turning into a panic simulator.';puff(W/2,H*.25,'firework',90);}}
+  if(mood<=0){mode='gameover';endTitle='Cookout Collapsed.';endSub='The pacing stayed fair, but the neighborhood morale finally gave out.';}
+  for(let i=floaters.length-1;i>=0;i--){let f=floaters[i];f.life-=dt;f.y+=f.vy*dt;if(f.life<=0)floaters.splice(i,1);}
+  for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=90*dt;if(p.life<=0)particles.splice(i,1);}
+}
+function rr(x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function pill(x,y,w,h,fill,stroke){rr(x,y,w,h,h/2);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.2;ctx.stroke();}}
+function txt(t,x,y,s=14,w='800',a='center',c=C.text){ctx.save();ctx.fillStyle=c;ctx.font=`${w} ${s}px Inter,system-ui,sans-serif`;ctx.textAlign=a;ctx.textBaseline='middle';ctx.fillText(t,x,y);ctx.restore();}
+function wrap(t,x,y,max,s=14,c=C.muted){ctx.save();ctx.font=`800 ${s}px Inter,system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=c;let words=t.split(' '),line='',lines=[];for(const w of words){const test=line?line+' '+w:w;if(ctx.measureText(test).width>max&&line){lines.push(line);line=w}else line=test}if(line)lines.push(line);lines.forEach((l,i)=>ctx.fillText(l,x,y+i*(s+6)));ctx.restore();}
+function bg(){
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#274690');g.addColorStop(.45,'#14213d');g.addColorStop(1,'#070a14');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.save();
+  ctx.globalAlpha=.32;ctx.strokeStyle='rgba(255,255,255,.42)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(18,H*.105);ctx.quadraticCurveTo(W*.5,H*.155,W-18,H*.105);ctx.stroke();
+  for(let i=0;i<12;i++){const x=28+i*(W-56)/11,y=H*.108+Math.sin(i*.8+clock)*8;ctx.fillStyle=i%3===0?'#ef4444':i%3===1?'#f8fafc':'#38bdf8';ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();}
+  ctx.globalAlpha=.14;for(let i=0;i<30;i++){ctx.fillStyle=i%3===0?'#ef4444':i%3===1?'#f8fafc':'#38bdf8';ctx.beginPath();ctx.arc((i*83+clock*10)%(W+80)-40,H*.08+(i%8)*H*.052,2+(i%3),0,Math.PI*2);ctx.fill();}
+  ctx.restore();
+  const rg=ctx.createRadialGradient(W/2,H*.72,10,W/2,H*.78,W*.78);rg.addColorStop(0,'rgba(255,209,102,.24)');rg.addColorStop(1,'rgba(255,209,102,0)');ctx.fillStyle=rg;ctx.fillRect(0,H*.38,W,H*.62);
+  ctx.save();ctx.globalAlpha=.13;ctx.fillStyle='#f8fafc';for(let x=-40;x<W+40;x+=36){ctx.fillRect(x,H*.86,18,H*.18);ctx.fillRect(x+18,H*.86,18,H*.18);}ctx.restore();
+}
+function topHud(){
+  pill(12,12,W-24,74,'rgba(255,255,255,.095)','rgba(255,255,255,.18)');txt('GRILL SERGEANT',28,31,15,'950','left');txt(finale?`FINALE ${Math.ceil(Math.max(0,finaleTime))}s`:'SCORE FIX v0.1.5',W-28,31,12,'900','right',finale?C.warn:C.muted);
+  const x=28,y=53,w=W-56,h=12;pill(x,y,w,h,'rgba(255,255,255,.14)');const pct=finale?clamp(finaleTime/38,0,1):clamp(score/250,0,1),gr=ctx.createLinearGradient(x,0,x+w,0);gr.addColorStop(0,C.blue);gr.addColorStop(.5,C.text);gr.addColorStop(1,'#ef4444');pill(x,y,w*pct,h,gr);txt(`${score} pts`,x+4,y+6,10,'900','left','#07101e');txt(`Mood ${Math.round(mood)}%`,x+w-4,y+6,10,'900','right','#07101e');
+  const gx=28,gy=70,gw=W-56;ctx.save();ctx.globalAlpha=.88;txt(`${grillLevel} grills · ${slowLabel()}${chiliUnlocked?' · chili':''} · buns ${prep.buns}/${prep.max}`,gx,gy+2,10,'850','left',C.muted);txt(score<50?'Next: 6 grills at 50':score<150?'Next: 8 grills at 150':score<200?'Next: chili at 200':'Full cookout line active',gx+gw,gy+2,10,'850','right',score<200?C.muted:C.warn);ctx.restore();
+}
+function ordersDraw(){const y=102,cw=Math.min(88,(W-32)/Math.max(3.2,maxOrders()+.1));orders.forEach((o,i)=>{const x=14+i*(cw+6),pct=clamp(o.pat/o.max,0,1);pill(x,y,cw,56,'rgba(255,255,255,.105)','rgba(255,255,255,.18)');food(o.type,x+cw/2,y+22,.78);pill(x+8,y+45,cw-16,7,'rgba(255,255,255,.16)');pill(x+8,y+45,(cw-16)*pct,7,pct<.25?C.bad:pct<.5?C.warn:C.good);});if(!orders.length)txt('No orders yet. Load a burger and breathe.',W/2,y+28,13,'800','center','rgba(248,250,252,.52)');}
+function grill(){const gx=W*.075,gy=H*.345,gw=W*.85;const bottom=chiliUnlocked?chili.y-10:prep.btn.y-12;const gh=Math.max(226,bottom-gy);pill(gx,gy,gw,gh,'rgba(2,6,23,.64)','rgba(255,255,255,.17)');ctx.save();ctx.strokeStyle='rgba(226,232,240,.30)';ctx.lineWidth=2;for(let x=gx+24;x<gx+gw-20;x+=20){ctx.beginPath();ctx.moveTo(x,gy+24);ctx.lineTo(x,gy+gh-24);ctx.stroke();}ctx.restore();slots.forEach(slot);if(chiliUnlocked)chiliDraw();}
+function slot(s){const it=s.item,st=it?stage(it):'',col=st==='ready'?'rgba(92,242,174,.22)':st==='flip'?'rgba(255,209,102,.24)':(st==='bad'||st==='burnt')?'rgba(255,96,125,.20)':'rgba(255,255,255,.08)';pill(s.x,s.y,s.w,s.h,col,'rgba(255,255,255,.18)');if(!it){txt('EMPTY',s.x+s.w/2,s.y+s.h/2,12,'900','center','rgba(248,250,252,.42)');return;}food(it.type,s.x+s.w/2,s.y+s.h*.48,Math.min(1.22,s.h/90),it.flipped,st);const p=clamp(it.p/FOOD[it.type].cook,0,1),bx=s.x+10,by=s.y+s.h-18,bw=s.w-20;let fill=C.muted;if(st==='flip')fill=C.warn;if(st==='ready')fill=C.good;if(st==='bad'||st==='burnt')fill=C.bad;pill(bx,by,bw,7,'rgba(255,255,255,.14)');pill(bx,by,bw*p,7,fill);const label=st==='flip'?'FLIP':st==='ready'?'READY':st==='burnt'?'TRASH':st==='bad'?'MISSED':'COOKING';txt(label,s.x+s.w/2,s.y+14,10,'950','center',fill);}
+function chiliDraw(){
+  const pct=clamp(chili.temp/100,0,1);let fill=C.good;if(chili.temp>=78)fill=C.warn;if(chili.temp>=95)fill=C.bad;
+  pill(chili.x,chili.y,chili.w,chili.h,'rgba(255,255,255,.105)','rgba(255,255,255,.18)');
+  ctx.save();ctx.fillStyle='rgba(127,29,29,.78)';rr(chili.x+12,chili.y+9,54,28,14);ctx.fill();ctx.strokeStyle=fill;ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#7f1d1d';ctx.beginPath();ctx.arc(chili.x+39,chili.y+22,14,0,6.28);ctx.fill();ctx.fillStyle='#ffd166';ctx.beginPath();ctx.arc(chili.x+35,chili.y+19,3,0,6.28);ctx.arc(chili.x+43,chili.y+24,2.3,0,6.28);ctx.fill();ctx.restore();
+  txt('CHILI',chili.x+82,chili.y+15,11,'950','left',fill);txt(chili.temp>=78?'TAP TO STIR':'SIMMERING',chili.x+82,chili.y+31,10,'850','left',C.muted);
+  pill(chili.x+150,chili.y+18,chili.w-165,10,'rgba(255,255,255,.15)');pill(chili.x+150,chili.y+18,(chili.w-165)*pct,10,fill);
+}
+function prepDraw(){
+  const b=prep.btn,full=prep.buns>=prep.max,cool=prep.cool>0;
+  const fill=full?'rgba(92,242,174,.18)':cool?'rgba(255,255,255,.08)':'rgba(255,209,102,.18)';
+  pill(b.x,b.y,b.w,b.h,fill,full?'rgba(92,242,174,.54)':'rgba(255,209,102,.52)');
+  ctx.save();ctx.translate(b.x+28,b.y+b.h/2);ctx.fillStyle='#f6c177';rr(-16,-7,32,15,8);ctx.fill();ctx.fillStyle='rgba(255,255,255,.55)';ctx.beginPath();ctx.arc(-6,-3,1.5,0,6.28);ctx.arc(4,-4,1.5,0,6.28);ctx.fill();ctx.restore();
+  txt(full?'BUNS READY':'PREP BUNS',b.x+58,b.y+14,12,'950','left',full?C.good:C.warn);
+  txt(`${prep.buns}/${prep.max} ready · burgers/dogs get +5`,b.x+58,b.y+29,10,'800','left',C.muted);
+  const dots=Math.min(prep.max,10),gap=10,start=b.x+b.w-18-dots*gap;
+  for(let i=0;i<dots;i++){ctx.fillStyle=i<prep.buns?C.warn:'rgba(255,255,255,.16)';ctx.beginPath();ctx.arc(start+i*gap,b.y+b.h/2,3.2,0,6.28);ctx.fill();}
+}
+function food(type,x,y,s=1,flipped=false,st=''){ctx.save();ctx.translate(x,y);ctx.scale(s,s);const burn=st==='bad'||st==='burnt';if(type==='burger'){ctx.fillStyle=burn?'#3a2417':'#f59e0b';rr(-25,-15,50,13,8);ctx.fill();ctx.fillStyle=burn?'#130e0b':'#6b3f22';rr(-27,-3,54,10,5);ctx.fill();ctx.fillStyle=burn?'#30291c':'#22c55e';rr(-24,5,48,7,4);ctx.fill();ctx.fillStyle=burn?'#4b2f1a':'#fbbf24';rr(-25,11,50,12,8);ctx.fill();}else if(type==='dog'){ctx.rotate(flipped?.08:-.08);ctx.fillStyle=burn?'#3a2417':'#f6c177';rr(-32,-9,64,18,10);ctx.fill();ctx.fillStyle=burn?'#170f0b':'#d1432f';rr(-25,-6,50,12,8);ctx.fill();ctx.strokeStyle=burn?'#5f4634':'#ffd166';ctx.lineWidth=3;ctx.beginPath();for(let i=-22;i<22;i+=8){ctx.moveTo(i,-2);ctx.quadraticCurveTo(i+4,-8,i+8,-2);}ctx.stroke();}else{ctx.rotate(flipped?-.14:.14);ctx.fillStyle=burn?'#443013':'#facc15';rr(-13,-28,26,56,13);ctx.fill();ctx.strokeStyle=burn?'#15110c':'#ca8a04';ctx.lineWidth=2;for(let i=-6;i<=6;i+=6){ctx.beginPath();ctx.moveTo(i,-24);ctx.lineTo(i,24);ctx.stroke();}ctx.fillStyle='#22c55e';ctx.beginPath();ctx.ellipse(-16,8,7,22,-.28,0,6.28);ctx.fill();ctx.beginPath();ctx.ellipse(16,8,7,22,.28,0,6.28);ctx.fill();}ctx.restore();}
+function buttonsDraw(){buttons.forEach(b=>{const on=b.type===selected;pill(b.x,b.y,b.w,b.h,on?'rgba(125,211,252,.24)':'rgba(255,255,255,.10)',on?'rgba(125,211,252,.78)':'rgba(255,255,255,.18)');food(b.type,b.x+b.w/2,b.y+25,.76);txt(FOOD[b.type].short,b.x+b.w/2,b.y+b.h-13,11,'950','center',on?C.blue:'rgba(248,250,252,.72)');});}
+function gary(){if(!uncle)return;ctx.save();ctx.translate(uncle.x,uncle.y);const p=1+Math.sin(clock*8)*.04;ctx.scale(p,p);pill(-58,-44,116,88,'rgba(255,96,125,.20)','rgba(255,96,125,.62)');ctx.fillStyle='#f4c7a1';ctx.beginPath();ctx.arc(0,-8,18,0,6.28);ctx.fill();ctx.fillStyle='#111827';ctx.beginPath();ctx.arc(-7,-11,2,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(7,-11,2,0,6.28);ctx.fill();ctx.strokeStyle='#111827';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-4,8,0,Math.PI);ctx.stroke();ctx.fillStyle='#ef4444';rr(-22,13,44,26,10);ctx.fill();ctx.fillStyle='#facc15';rr(20,6,14,32,5);ctx.fill();txt('GARY',0,51,10,'950','center','#ffccd5');ctx.strokeStyle='rgba(255,255,255,.23)';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,-2,40,0,6.28);ctx.stroke();ctx.strokeStyle=uncle.t/uncle.max<.35?C.bad:C.warn;ctx.beginPath();ctx.arc(0,-2,40,-Math.PI/2,-Math.PI/2+Math.PI*2*(uncle.t/uncle.max));ctx.stroke();ctx.restore();}
+function fx(){particles.forEach(p=>{ctx.save();ctx.globalAlpha=clamp(p.life,0,1);if(p.kind==='smoke'||p.kind==='steam'){ctx.fillStyle=p.kind==='smoke'?'rgba(71,85,105,.74)':'rgba(226,232,240,.62)';ctx.beginPath();ctx.arc(p.x,p.y,p.r*2.2,0,6.28);ctx.fill();}else{ctx.fillStyle=p.kind==='good'?C.good:p.kind==='fire'?C.bad:p.kind==='firework'?choice([C.bad,C.blue,C.warn,C.text]):C.warn;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.28);ctx.fill();}ctx.restore();});floaters.forEach(f=>{ctx.save();ctx.globalAlpha=clamp(f.life,0,1);txt(f.t,f.x,f.y,14,'950','center',f.c);ctx.restore();});}
+function message(){if(msgT<=0)return;ctx.save();ctx.globalAlpha=clamp(msgT,0,1);const w=Math.min(W-34,430),h=38,x=(W-w)/2,y=H*.292;pill(x,y,w,h,'rgba(2,6,23,.64)','rgba(255,255,255,.15)');txt(msg,W/2,y+h/2,13,'850','center');ctx.restore();}
+function title(){bg();txt('GRILL',W/2,H*.18,54,'950');txt('SERGEANT',W/2,H*.18+50,46,'950','center',C.warn);wrap('v0.1.5 Score Path Fix: more grills are a reward, chili score is gated, and every score path can trigger the finale cleanly.',W/2,H*.305,Math.min(W-54,430),14,'rgba(248,250,252,.76)');const pw=Math.min(W-38,430),ph=H<640?204:232,px=(W-pw)/2,py=H<640?H*.385:H*.43;pill(px,py,pw,ph,'rgba(255,255,255,.105)','rgba(255,255,255,.18)');['Tap food, then tap an empty grill slot.','When the slot says FLIP, tap it once.','More grills slow cooking, orders, Gary, chili, and finale pressure.','At 200, stir chili only when it runs hot.'].forEach((l,i)=>txt(l,px+22,py+34+i*(H<640?31:38),H<640?13:15,'800','left','#e5e7eb'));const bw=Math.min(270,W-84),bh=58,btnY=Math.min(H-bh-34,Math.max(H*.80,py+ph+16));pill((W-bw)/2,btnY,bw,bh,'rgba(239,68,68,.86)','rgba(255,255,255,.35)');txt('START COOKOUT',W/2,btnY+bh/2,16,'950');txt('Keyboard: Q/W/E select · 1-8 grill · B buns · C chili · G Gary · P pause',W/2,H*.925,11,'750','center','rgba(248,250,252,.58)');}
+function end(){bg();fx();const pw=Math.min(W-38,430),ph=292,px=(W-pw)/2,py=H*.27;pill(px,py,pw,ph,'rgba(255,255,255,.11)','rgba(255,255,255,.19)');txt(endTitle,W/2,py+54,30,'950','center',mode==='win'?C.good:C.bad);wrap(endSub,W/2,py+104,pw-58,14,'rgba(248,250,252,.78)');txt(`${score} points · ${served} plates · ${missed} missed orders`,W/2,py+176,15,'850');const bw=Math.min(260,W-80),bh=58;pill((W-bw)/2,py+214,bw,bh,'rgba(125,211,252,.22)','rgba(125,211,252,.75)');txt('RUN IT BACK',W/2,py+214+bh/2,16,'950');}
+function render(){ctx.save();if(shake){ctx.translate(rand(-shake,shake),rand(-shake,shake));}if(mode==='title'){title();ctx.restore();return;}if(mode==='win'||mode==='gameover'){end();ctx.restore();return;}bg();topHud();ordersDraw();grill();prepDraw();buttonsDraw();gary();fx();message();if(mode==='paused'){ctx.fillStyle='rgba(2,6,23,.65)';ctx.fillRect(0,0,W,H);txt('PAUSED',W/2,H/2-12,38,'950');txt('Tap or press P to resume',W/2,H/2+34,15,'850','center','rgba(248,250,252,.72)');}ctx.restore();}
+function loop(){const n=time(),dt=n-last;last=n;update(dt);render();requestAnimationFrame(loop);}
+function hit(r,x,y){return x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h}
+function tap(x,y){if(mode==='title'||mode==='win'||mode==='gameover'){start();return;}if(mode==='paused'){mode='playing';return;}if(uncle&&Math.hypot(x-uncle.x,y-uncle.y)<64){stopGary();return;}if(chiliUnlocked&&hit(chili,x,y)){stirChili();return;}if(hit(prep.btn,x,y)){prepBuns();return;}for(const b of buttons){if(hit(b,x,y)){selected=b.type;floater(FOOD[b.type].short,b.x+b.w/2,b.y-5,C.blue);return;}}for(const s of slots){if(hit(s,x,y)){tapSlot(s);return;}}}
+canvas.addEventListener('pointerdown',e=>{e.preventDefault();const r=canvas.getBoundingClientRect();tap(e.clientX-r.left,e.clientY-r.top);},{passive:false});
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='p'||k==='escape'){if(mode==='playing')mode='paused';else if(mode==='paused')mode='playing';return;}if((mode==='title'||mode==='win'||mode==='gameover')&&(k===' '||k==='enter')){start();return;}if(mode!=='playing')return;if(k==='q')selected='burger';if(k==='w')selected='dog';if(k==='e')selected='corn';if(k==='b')prepBuns();if(k==='c')stirChili();if(k>='1'&&k<='8'){const idx=parseInt(k,10)-1;if(slots[idx])tapSlot(slots[idx]);}if(k==='g')stopGary();},{passive:true});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='playing')mode='paused'});
+fit();loop();
+})();
+</script>
+</body>
+</html>
