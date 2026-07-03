@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>SHIFT 33: Skeleton Watch // MIL-P2D Spitter Color Pass</title>
+<style>
+:root{--bg:#05070a;--panel:rgba(5,12,17,.82);--line:rgba(130,215,210,.32);--cyan:#74f1e6;--green:#79ff9b;--amber:#ffc766;--red:#ff4e62;--text:#ecfbff;--muted:#8ea5a9}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020304;color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}#wrap{position:relative;width:100vw;height:100dvh;overflow:hidden;background:radial-gradient(circle at 45% 0%,#15242d 0%,#071015 48%,#020304 100%)}canvas{position:absolute;inset:0;width:100%;height:100%;display:block}.hud{position:absolute;inset:0;pointer-events:none;z-index:2}.top{position:absolute;top:env(safe-area-inset-top,0);left:8px;right:8px;padding-top:8px;display:flex;gap:8px;justify-content:space-between}.box{border:1px solid var(--line);background:linear-gradient(135deg,rgba(4,12,16,.86),rgba(10,29,34,.68));border-radius:14px;padding:8px 10px;box-shadow:0 10px 30px rgba(0,0,0,.35);backdrop-filter:blur(7px)}.status{width:min(340px,52vw)}.toolbox{width:min(310px,42vw);text-align:right}.label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:950;color:#eaffff}.row{display:flex;gap:8px;align-items:center;justify-content:space-between;color:var(--muted);font-size:11px}.pill{border:1px solid rgba(116,241,230,.36);border-radius:999px;padding:2px 7px;font-size:10px;font-weight:950;color:var(--cyan);background:rgba(116,241,230,.07)}.barShell{height:8px;margin:5px 0;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}.bar{height:100%;width:100%;background:linear-gradient(90deg,var(--green),var(--cyan));box-shadow:0 0 12px rgba(116,241,230,.45)}.bar.red{background:linear-gradient(90deg,#ff4e62,#ffc766)}.objective{position:absolute;top:92px;left:50%;transform:translateX(-50%);width:min(690px,calc(100vw - 18px));text-align:center;border:1px solid rgba(116,241,230,.22);background:rgba(3,9,12,.68);border-radius:13px;padding:7px 10px;color:#ddfbff;font-size:12px;font-weight:800}.message{position:absolute;bottom:176px;left:50%;transform:translateX(-50%);width:min(560px,calc(100vw - 22px));text-align:center;border:1px solid rgba(116,241,230,.28);background:rgba(2,7,10,.84);border-radius:15px;padding:10px 12px;font-size:12px;font-weight:850;box-shadow:0 14px 38px rgba(0,0,0,.45);opacity:0;transition:.15s}.message.show{opacity:1}.topBtns{position:absolute;top:calc(env(safe-area-inset-top,0) + 8px);right:8px;display:flex;gap:6px;pointer-events:auto;z-index:5}.miniBtn{width:52px;height:35px;border-radius:12px;display:grid;place-items:center;border:1px solid rgba(116,241,230,.28);background:rgba(4,13,18,.72);color:#eaffff;font-weight:950;font-size:11px}.controls{position:absolute;inset:0;z-index:3;pointer-events:none}.dpad{position:absolute;left:16px;bottom:18px;width:154px;height:154px;pointer-events:auto}.dkey{position:absolute;width:54px;height:54px;border-radius:17px;border:1px solid rgba(116,241,230,.35);background:linear-gradient(180deg,rgba(20,48,54,.78),rgba(5,15,20,.70));color:#eaffff;font-weight:950;display:grid;place-items:center;box-shadow:0 8px 22px rgba(0,0,0,.34);touch-action:none}.dkey.active,.btn.active{border-color:rgba(121,255,155,.8);transform:scale(.97);box-shadow:0 0 18px rgba(121,255,155,.18),0 8px 22px rgba(0,0,0,.34)}.up{left:50px;top:0}.down{left:50px;bottom:0}.left{left:0;top:50px}.right{right:0;top:50px}.actions{position:absolute;right:12px;bottom:12px;width:224px;height:180px;pointer-events:auto}.btn{position:absolute;width:58px;height:58px;border-radius:21px;display:grid;place-items:center;text-align:center;color:#eaffff;font-weight:950;border:1px solid rgba(116,241,230,.32);background:linear-gradient(180deg,rgba(20,48,54,.78),rgba(5,15,20,.70));box-shadow:0 9px 24px rgba(0,0,0,.34);touch-action:none}.btn small{font-size:9px;color:#a9c1c4}.fire{right:0;bottom:60px;width:70px;height:70px;border-radius:25px}.power{right:78px;bottom:94px}.use{right:78px;bottom:20px;color:var(--green)}.swap{right:150px;bottom:58px}.overlay{position:absolute;inset:0;display:none;align-items:flex-start;justify-content:center;padding:14px;background:rgba(0,0,0,.32);z-index:7;overflow-y:auto;-webkit-overflow-scrolling:touch}.overlay.show{display:flex}.card{width:min(820px,calc(100vw - 24px));margin:auto;border:1px solid rgba(116,241,230,.28);background:linear-gradient(160deg,rgba(4,12,16,.96),rgba(11,29,34,.92));border-radius:24px;padding:20px;box-shadow:0 24px 90px rgba(0,0,0,.7),inset 0 0 80px rgba(116,241,230,.04)}.card h1{font-size:clamp(30px,6vw,56px);line-height:.94;letter-spacing:-.05em;margin:0 0 8px}.card h2{margin:0 0 10px;color:var(--cyan);font-size:13px;text-transform:uppercase;letter-spacing:.18em}.card p{color:#c9dadd;line-height:1.42;margin:8px 0}.footer{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-top:14px;color:var(--muted);font-size:12px}.uiBtn{border:1px solid rgba(116,241,230,.38);background:linear-gradient(180deg,rgba(116,241,230,.17),rgba(116,241,230,.06));color:#eaffff;border-radius:14px;padding:10px 14px;font-weight:950;text-transform:uppercase;letter-spacing:.05em}.hint{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);color:#87a1a5;font-size:10px;text-align:center;z-index:2;pointer-events:none}.scan:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(rgba(255,255,255,.025) 50%,rgba(0,0,0,.04) 50%);background-size:100% 4px;mix-blend-mode:overlay;opacity:.22;z-index:6}
+#wrap.keyMode .dpad,#wrap.keyMode .actions{opacity:0;pointer-events:none;transition:opacity .25s}
+.dpad,.actions{transition:opacity .25s}.tracker{position:absolute;left:8px;bottom:calc(env(safe-area-inset-bottom,0) + 8px);width:190px;border:1px solid rgba(116,241,230,.25);background:rgba(3,10,13,.68);border-radius:14px;padding:8px 9px;box-shadow:0 10px 30px rgba(0,0,0,.35);backdrop-filter:blur(6px);font-size:10px;color:#a9c1c4}.tracker .trackHead{display:flex;justify-content:space-between;align-items:center;gap:6px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;color:#eaffff}.tracker .trackPing{color:var(--green)}.tracker .trackBar{height:4px;border-radius:999px;background:rgba(255,255,255,.08);margin:6px 0;overflow:hidden}.tracker .trackFill{height:100%;width:0%;background:linear-gradient(90deg,var(--green),var(--cyan));box-shadow:0 0 10px rgba(116,241,230,.5)}.tracker .trackLine{display:flex;justify-content:space-between;gap:8px;white-space:nowrap}.tracker.amber{border-color:rgba(255,199,102,.45)}.tracker.red{border-color:rgba(255,78,98,.48)}.tracker.black{border-color:rgba(255,46,72,.75);box-shadow:0 0 24px rgba(255,46,72,.18),0 10px 30px rgba(0,0,0,.35)}
+@media(max-width:760px){.toolbox{display:none}.status{width:50vw;max-width:235px}.objective{top:112px;font-size:10.5px;padding:6px 8px}.dpad{transform:scale(.92);transform-origin:bottom left;left:8px;bottom:8px}.actions{transform:scale(.9);transform-origin:bottom right;right:6px;bottom:6px}.message{bottom:154px}.top{right:124px}.card{padding:13px;border-radius:18px}.card h1{font-size:28px}.card h2{font-size:10px}.card p{font-size:13px;line-height:1.25}}
+.trackerCanvas{position:absolute;right:8px;bottom:calc(env(safe-area-inset-bottom,0) + 8px);width:86px;height:86px;border-radius:50%;border:1px solid rgba(116,241,230,.25);background:radial-gradient(circle,rgba(116,241,230,.06),rgba(2,7,10,.64));box-shadow:0 10px 28px rgba(0,0,0,.35);pointer-events:none;z-index:2}
+@media(max-width:760px){.tracker{display:none}.trackerCanvas{right:auto;left:calc(50% - 43px);bottom:8px;opacity:.72}}
+</style>
+</head>
+<body>
+<div id="wrap" class="scan" tabindex="0">
+<canvas id="game"></canvas>
+<div class="hud">
+ <div class="top">
+  <div class="box status"><div class="row"><span class="label">SHIFT 33</span><span class="pill">Skeleton Watch MIL-P2D-A</span></div><div class="barShell"><div class="bar" id="hpBar"></div></div><div class="row"><span id="hpText">CREW 100%</span><span id="nestText">NESTS 0/3</span></div><div class="barShell"><div class="bar red" id="pressureBar"></div></div><div class="row"><span id="condText" style="font-weight:950;letter-spacing:.1em;color:#79ff9b">CONDITION GREEN</span><span id="condTag" style="color:#87a1a5">routine sweep</span></div></div>
+  <div class="box toolbox"><div class="row"><span class="label" id="toolName">COIL CARBINE</span><span class="pill" id="chargeText">READY</span></div><div class="barShell"><div class="bar" id="heatBar"></div></div><div class="row"><span id="xText">X: SUPPRESS</span><span id="objSmall">Clear contact</span></div></div>
+ </div>
+ <div class="objective" id="objective">Wake 33. Cargo-security sweep. Possible hostile stowaways. The manifest said spare parts. The walls disagreed.</div>
+ <div class="message" id="message"></div>
+ <div class="tracker" id="trackerPanel"><div class="trackHead"><span>MOTION TRACKER</span><span class="trackPing" id="trackerState">QUIET</span></div><div class="trackBar"><div class="trackFill" id="trackerFill"></div></div><div class="trackLine"><span id="trackerRange">No contact</span><span id="trackerBearing">--</span></div></div>
+ <canvas class="trackerCanvas" id="trackerCanvas" width="172" height="172"></canvas>
+</div>
+<div class="topBtns"><div class="miniBtn" id="mapBtn">MAP</div><div class="miniBtn" id="pauseBtn">PAUSE</div></div>
+<div class="controls" id="controls">
+ <div class="dpad" id="dpad">
+  <div class="dkey up" data-dir="up">▲</div><div class="dkey down" data-dir="down">▼</div><div class="dkey left" data-dir="left">◀</div><div class="dkey right" data-dir="right">▶</div>
+ </div>
+ <div class="actions">
+  <div class="btn fire" data-act="fire">B<br><small>TOOL</small></div>
+  <div class="btn power" data-act="power">X<br><small>SHOCK</small></div>
+  <div class="btn use" data-act="use">Y<br><small>SEAL</small></div>
+  <div class="btn swap" data-act="swap">R<br><small>TOOL</small></div>
+ </div>
+</div>
+<div class="hint">Keyboard: WASD/Arrows move • Space/Z/B tool • X shock • E/Y seal/use • Q/R/Tab rotate • M map • P/Esc pause</div>
+<div class="overlay show" id="boot"><div class="card"><h2>VESTRA Transit Assurance // Cycle 33</h2><h1>SHIFT 33:<br>Skeleton Watch</h1><p>Third Shift wakes for a "minor" cargo-security sweep. The vents are moving. The security detachment never woke. Something has been breeding aboard since Wake 23.</p><p><strong>Goal:</strong> grab the boarding kit, restore the Vent Junction pressure seal, clear 3 nests, kill the brood guard, recover the contact report, reach the Extraction Lift.</p><p><strong>Controls:</strong> D-pad / WASD move · B/Space fire · X suppression pulse · Y/E seal &amp; use · R/Tab swap tool. Ship-safe tools only — coil, arc, foam, thermal.</p><div class="footer"><span>Clear a nest, breathe, then move. Spitter pools deny careless holds.</span><button class="uiBtn" id="startBtn">Start Sweep</button></div></div></div>
+<div class="overlay" id="pause"><div class="card"><h2>Paused</h2><h1>Condition Black Hold</h1><p>Wide rooms. Swarm pressure. Clear compartments, seal nests, and transmit the contact report before VESTRA edits the after-action.</p><div class="footer"><span>The manifest said spare parts. The walls disagreed.</span><button class="uiBtn" id="resumeBtn">Resume</button></div></div></div>
+<div class="overlay" id="mapOverlay"><div class="card"><h2>Ship Security Map</h2><h1>SEC 01 — Cargo Security Deck</h1><p id="mapText">Wake Bay → Emergency Locker → Cargo Service Hall → Vent Junction → Galley / Worker Bar → Cargo Bay Nest → Records Locker → Extraction Lift.</p><div class="footer"><span id="mapStatus">Nests remaining.</span><button class="uiBtn" id="closeMapBtn">Close</button></div></div></div>
+<div class="overlay" id="gameOver"><div class="card"><h2>Contact Report Failed</h2><h1>Boarding Anomaly Uncontained</h1><p>VESTRA has logged this as crew error pending review.</p><div class="footer"><span>Restart the sweep.</span><button class="uiBtn" id="restartBtn">Restart</button></div></div></div>
+<div class="overlay" id="win"><div class="card"><h2>Contact Report Transmitted</h2><h1>The Manifest Lied</h1><p>You cleared the nests, dropped the brood guard, and reached extraction with evidence. VESTRA called it a minor discrepancy. Shift 33 filed contact.</p><div class="footer"><span>Contact report: hostile biological stowaways aboard. Prior Wake 23 after-action suspected altered.</span><button class="uiBtn" id="restartWinBtn">Restart Sweep</button></div></div></div>
+</div>
+<script>
+(()=>{'use strict';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),wrap=document.getElementById('wrap');
+let W=innerWidth,H=innerHeight,DPR=1;function resize(){DPR=Math.max(1,Math.min(2,devicePixelRatio||1));W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}addEventListener('resize',resize);resize();
+const trackerCanvas=document.getElementById('trackerCanvas'),tctx=trackerCanvas.getContext('2d');
+const ui={hpBar,hpText,nestText,pressureBar,toolName,chargeText,heatBar,objective,message,xText,objSmall,condText,condTag,trackerPanel,trackerState,trackerFill,trackerRange,trackerBearing};
+const ov={boot,pause,map:mapOverlay,gameOver,win};
+const input={left:false,right:false,up:false,down:false,fire:false,power:false,use:false,swap:false,map:false,pause:false};
+const once={fire:false,power:false,use:false,swap:false,map:false,pause:false}; const held={},touch={fire:false,power:false,use:false,swap:false,map:false,pause:false},dpad={left:false,right:false,up:false,down:false};
+const keys={KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',KeyW:'up',ArrowUp:'up',KeyS:'down',ArrowDown:'down',Space:'fire',KeyZ:'fire',KeyB:'fire',KeyX:'power',KeyE:'use',KeyY:'use',KeyQ:'swap',KeyR:'swap',Tab:'swap',KeyM:'map',KeyP:'pause',Escape:'pause'};
+addEventListener('keydown',e=>{const a=keys[e.code];if(!a)return;e.preventDefault();setInputMode('key');if(!held[e.code])once[a]=true;held[e.code]=true;if(!started&&(a==='fire'||a==='pause'))startGame();},{capture:true});
+addEventListener('keyup',e=>{if(keys[e.code]){e.preventDefault();held[e.code]=false;}},{capture:true}); addEventListener('blur',()=>{for(const k in held)held[k]=false;for(const k in dpad)dpad[k]=false;for(const k in touch)touch[k]=false;});
+function keyHeld(a){return Object.entries(keys).some(([k,v])=>v===a&&held[k])} function clearOnce(){for(const k in once)once[k]=false} function clamp(v,a,b){return Math.max(a,Math.min(b,v))} function d(a,b,c,d){return Math.hypot(a-c,b-d)} function rnd(a,b){return Math.random()*(b-a)+a}
+function focusGame(){setTimeout(()=>wrap.focus({preventScroll:true}),0)}
+let inputMode='auto';function setInputMode(m){if(m===inputMode)return;inputMode=m;wrap.classList.toggle('keyMode',m==='key');wrap.classList.toggle('touchMode',m==='touch');}
+addEventListener('touchstart',()=>setInputMode('touch'),{capture:true,passive:true});
+addEventListener('pointerdown',e=>{if(e.pointerType==='touch')setInputMode('touch');},{capture:true,passive:true});
+function show(el){Object.values(ov).forEach(o=>o.classList.remove('show'));el.classList.add('show');paused=true;controls.style.opacity=.35;controls.style.pointerEvents='none';focusGame()} function hide(){Object.values(ov).forEach(o=>o.classList.remove('show'));paused=false;controls.style.opacity=1;controls.style.pointerEvents='auto';focusGame()}
+function msg(s,t=2){ui.message.textContent=s;ui.message.classList.add('show');msgT=t} let msgT=0,started=false,paused=true,won=false,over=false,last=performance.now(),time=0,shake=0,trackerSweep=0,trackerPulseT=0,trackerLastPing=-99,trackerContact=null,lastAcidMsg=-99;
+const TILE_W=64,TILE_H=32;function iso(x,y){return{x:(x-y)*TILE_W/2,y:(x+y)*TILE_H/2}} function screen(x,y){const p=iso(x,y);return{x:p.x-cam.x+W/2,y:p.y-cam.y+H/2}}
+const gridW=90,gridH=62;let grid,rooms,player,cam={x:0,y:0},bugs,shots,eshots,acidPools,parts,nests,pickups,doors,objectives,brood,pressure=0,quietUntil=0,broodPending=false,broodDue=0;
+const tools=[
+ {id:'rivet',name:'Coil Carbine',heat:.08,cool:.48,damage:14,range:8.5,speed:13,spread:.02,role:'ship-safe contact fire'},
+ {id:'arc',name:'Arc Scatter',heat:.18,cool:.72,damage:9,range:4.0,speed:9,spread:.24,pellets:5,role:'close boarding control'},
+ {id:'foam',name:'Containment Foam Launcher',heat:.20,cool:.62,damage:2,range:4.8,speed:7,spread:.19,pellets:4,slow:3.2,role:'lane denial / nest seal'},
+ {id:'thermal',name:'Thermal Lance',heat:.34,cool:1.02,damage:45,range:9.4,speed:14,spread:.005,pierce:2,role:'anti-nest heavy tool'}
+];
+function reset(){grid=Array.from({length:gridH},()=>Array(gridW).fill('#'));rooms=[];bugs=[];shots=[];eshots=[];acidPools=[];parts=[];nests=[];pickups=[];doors=[];objectives=[];brood=null;pressure=0;quietUntil=0;broodPending=false;broodDue=0;won=false;over=false;shipCond='green';shipCondPrev='green';condFlash=0;lastCue=null;trackerPulseT=0;trackerLastPing=-99;trackerContact=null;lastAcidMsg=-99;
+ function room(name,x,y,w,h){rooms.push({name,x,y,w,h,seen:false,cond:'green',secured:false,objectiveDone:false});for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)grid[yy][xx]='.'}
+ function hall(x,y,w,h){for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)grid[yy][xx]='.'}
+ function block(x,y,w,h){for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)grid[yy][xx]='#'}
+ room('Wake Bay',5,22,12,10); room('Emergency Locker',20,20,13,12); room('Cargo Service Hall',36,18,16,16); room('Vent Junction',55,16,14,16); room('Galley / Worker Bar',50,36,18,12); room('Cargo Bay Nest',70,25,15,18); room('Records Locker',66,8,14,9); room('Extraction Lift',74,49,10,8);
+ hall(16,25,6,4); hall(32,24,6,6); hall(51,23,6,6); hall(60,31,4,8); hall(63,38,9,4); hall(75,42,4,8); hall(68,17,4,10); // wide service lanes
+ block(41,22,2,2); block(46,29,2,2); block(58,20,2,3); block(62,27,2,2); block(54,40,2,2); block(77,30,2,3); block(72,36,3,2);
+ doors.push({x:72,y:14,w:3,h:3,open:false,need:'nests',label:'Records seal'}); for(let yy=14;yy<17;yy++)for(let xx=72;xx<75;xx++)grid[yy][xx]='L';
+ doors.push({x:75,y:48,w:4,h:2,open:false,need:'brood',label:'Extraction lockdown'}); for(let yy=48;yy<50;yy++)for(let xx=75;xx<79;xx++)grid[yy][xx]='L';
+ player={x:10,y:27,r:.31,hp:170,maxHp:170,speed:4.35,dirX:1,dirY:0,toolIndex:0,tools:['rivet'],heat:0,shock:100,inv:0};
+ pickups.push({x:24,y:25,type:'tool',tool:'arc',label:'ARC SCATTER'}); pickups.push({x:39,y:22,type:'tool',tool:'foam',label:'CONTAINMENT FOAM'}); pickups.push({x:57,y:41,type:'tool',tool:'thermal',label:'THERMAL LANCE'}); pickups.push({x:29,y:28,type:'med',label:'MED KIT'}); pickups.push({x:65,y:20,type:'med',label:'BIOGEL'}); pickups.push({x:80,y:46,type:'med',label:'BOARDING TRAUMA KIT'});
+ nests.push(makeNest(60,23,'Vent Junction'),makeNest(55,42,'Galley Service Crawl'),makeNest(77,34,'Cargo Bay Nest'));
+ objectives.push(makeObjectivePanel('pressure-seal','Vent Junction',66,27,'PRESSURE SEAL',3.0));
+ spawnBug('runner',38,27); spawnBug('runner',52,39); spawnBug('guard',74,31);
+ msg('Tully: Grab the kit. If the vents start clicking, do not wait for permission or legal.',3); syncDoors(); updateHud();}
+function makeNest(x,y,name){return{x,y,name,hp:82,alive:true,sealed:false,pulse:rnd(3.8,6.2),spawned:0}}
+function makeObjectivePanel(id,room,x,y,label,required){return{id,room,x,y,label,required,progress:0,done:false,active:false,lastWork:-99}}
+
+/* ===== CONTACT STATES (MIL-P2) =====
+   Per-room shipboard condition: green -> amber -> red -> black.
+   Layered ON TOP of the MIL-P1 pressure model (pressure still drives spawn tuning).
+   Drives atmosphere, HUD, callouts, and hunt-pacing entry behavior.
+   Integration seams for later work are grouped in ContactHooks. */
+const CONDS={green:0,amber:1,red:2,black:3};
+const CONDMETA={
+ green:{label:'CONDITION GREEN',tag:'routine sweep',hud:'#79ff9b',vig:'rgba(0,0,0,0)',vigStr:.0},
+ amber:{label:'CONDITION AMBER',tag:'intermittent contact',hud:'#ffc766',vig:'rgba(247,186,85,.10)',vigStr:.10},
+ red:{label:'CONDITION RED',tag:'active contact',hud:'#ff4e62',vig:'rgba(255,78,98,.13)',vigStr:.14},
+ black:{label:'CONDITION BLACK',tag:'brood / lockdown',hud:'#ff2e48',vig:'rgba(255,46,72,.20)',vigStr:.22}
+};
+let shipCond='green',shipCondPrev='green',condFlash=0;
+// hooks Gemini can attach encounter logic to without touching state code
+const ContactHooks={
+ onEnterRoom:[],        // (room) => {}   first time a room is entered
+ onTransition:[],       // (room,from,to) => {}   condition change
+ spitterChance:(room,cond)=>cond==='black'?0.45:cond==='red'?0.34:cond==='amber'?0.14:0.06, // Spitter area-denial hook
+ audioCue:(name)=>{ lastCue={name,t:time}; if(name==='tracker_ping'){trackerPulseT=1.2;trackerLastPing=time;} }  // STUB: named cue points for a later audio pass
+};
+let lastCue=null;
+const RoomAuthority={
+ getRoom(name){return rooms.find(r=>r.name===name)||null},
+ getActiveRoom(){return roomOf(player.x,player.y)},
+ getCondition(room){const r=typeof room==='string'?this.getRoom(room):room;return r?(r.cond||computeRoomCondition(r)||'green'):'green'},
+ setCondition(room,cond,reason='manual'){const r=typeof room==='string'?this.getRoom(room):room;if(!r)return false;r.overrideCond=cond;r.cond=cond;r.lastConditionReason=reason;return true},
+ clearOverride(room){const r=typeof room==='string'?this.getRoom(room):room;if(!r)return false;delete r.overrideCond;return true},
+ isSecured(room){const r=typeof room==='string'?this.getRoom(room):room;if(!r)return false;return isRoomSecured(r)}
+};
+function roomObjective(r){return r?objectives.find(o=>o.room===r.name&&!o.done):null}
+function isRoomSecured(r){return !!r && !nestInRoom(r) && bugsInRoom(r)===0 && !broodInRoom(r) && !roomObjective(r)}
+function roomOf(x,y){return rooms.find(r=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h)||null}
+function bugsInRoom(r){if(!r)return 0;let n=0;for(const b of bugs){if(b.dead)continue;if(b.x>=r.x&&b.x<r.x+r.w&&b.y>=r.y&&b.y<r.y+r.h)n++;}return n}
+function nestInRoom(r){if(!r)return null;return nests.find(n=>n.alive&&!n.sealed&&n.x>=r.x&&n.x<r.x+r.w&&n.y>=r.y&&n.y<r.y+r.h)||null}
+function broodInRoom(r){return brood&&!brood.dead&&r&&brood.x>=r.x&&brood.x<r.x+r.w&&brood.y>=r.y&&brood.y<r.y+r.h}
+function computeRoomCondition(r){
+ if(!r)return 'green';
+ if(r.overrideCond)return r.overrideCond;
+ if(broodInRoom(r))return 'black';
+ const inRoom=bugsInRoom(r);
+ if(inRoom>=1)return 'red';
+ const obj=roomObjective(r);
+ // amber: suspected infestation, incomplete compartment job, or rising pressure once provoked
+ const nb=nestInRoom(r);
+ const nearActive=nests.some(n=>n.alive&&!n.sealed&&d(player.x,player.y,n.x,n.y)<10);
+ if(obj&&r.entered)return 'amber';
+ if((nb&&r.provoked)||(nearActive&&pressure>22))return 'amber';
+ if(nb&&!r.provoked)return 'green'; // quiet until you trip it — the hunt
+ return 'green';
+}
+// crew/VESTRA callouts per transition (efficient, blue-collar; no Marvel banter)
+function condCallout(from,to,r){
+ const room=r?r.name:'compartment';
+ if(to==='amber')return Math.random()<.5?'Sera: Motion. Intermittent. Something\u2019s awake in '+room+'.':'VESTRA: Minor biological flicker logged. No mission impact.';
+ if(to==='red')return Math.random()<.5?'Boone: Contact. Eyes up. '+room+' is hot.':'Tully: They\u2019re out. Work the room, don\u2019t chase.';
+ if(to==='black')return 'Sera: Brood-level mass. Compartment lockdown. Hold the line.';
+ if(to==='green'&&CONDS[from]>CONDS.green)return 'Tully: '+room+' secure. Breathe. Then move.';
+ return '';
+}
+
+function nearestMotionContact(){
+ const candidates=[];
+ for(const b of bugs){if(!b.dead)candidates.push({x:b.x,y:b.y,type:b.type,kind:'contact'});}
+ for(const n of nests){if(n.alive&&!n.sealed)candidates.push({x:n.x,y:n.y,type:'nest',kind:'nest'});}
+ let best=null,bd=999;
+ for(const c of candidates){const di=d(player.x,player.y,c.x,c.y); if(di<bd){bd=di;best=c;}}
+ if(!best)return null;
+ const dx=best.x-player.x,dy=best.y-player.y;
+ const ang=Math.atan2(dy,dx);
+ let bearing='E';
+ const deg=(ang*180/Math.PI+360)%360;
+ if(deg>=337.5||deg<22.5)bearing='E'; else if(deg<67.5)bearing='SE'; else if(deg<112.5)bearing='S'; else if(deg<157.5)bearing='SW'; else if(deg<202.5)bearing='W'; else if(deg<247.5)bearing='NW'; else if(deg<292.5)bearing='N'; else bearing='NE';
+ return {target:best,range:bd,bearing,angle:ang};
+}
+function updateMotionTracker(dt){
+ trackerSweep=(trackerSweep+dt*.72)%(Math.PI*2);
+ trackerContact=nearestMotionContact();
+ if(trackerContact && trackerContact.range<10 && time-trackerLastPing>4.2 && shipCond!=='red' && shipCond!=='black'){
+   trackerLastPing=time;trackerPulseT=1.0;ContactHooks.audioCue('tracker_ping');
+ }
+ if(trackerPulseT>0)trackerPulseT=Math.max(0,trackerPulseT-dt);
+}
+function drawMotionTracker(){
+ if(!tctx||!trackerCanvas)return;
+ const w=trackerCanvas.width,h=trackerCanvas.height,cx=w/2,cy=h/2,r=72;
+ tctx.clearRect(0,0,w,h);
+ tctx.save();
+ tctx.strokeStyle='rgba(116,241,230,.22)';tctx.lineWidth=2;tctx.beginPath();tctx.arc(cx,cy,r,0,Math.PI*2);tctx.stroke();
+ tctx.strokeStyle='rgba(116,241,230,.12)';tctx.lineWidth=1;for(const rr of [24,48]){tctx.beginPath();tctx.arc(cx,cy,rr,0,Math.PI*2);tctx.stroke();}
+ tctx.beginPath();tctx.moveTo(cx-r,cy);tctx.lineTo(cx+r,cy);tctx.moveTo(cx,cy-r);tctx.lineTo(cx,cy+r);tctx.stroke();
+ const sx=Math.cos(trackerSweep),sy=Math.sin(trackerSweep);tctx.strokeStyle='rgba(121,255,155,.42)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(cx,cy);tctx.lineTo(cx+sx*r,cy+sy*r);tctx.stroke();
+ if(trackerContact&&trackerContact.range<18){const distNorm=clamp(trackerContact.range/18,0,1);const px=cx+Math.cos(trackerContact.angle)*r*distNorm;const py=cy+Math.sin(trackerContact.angle)*r*distNorm;const close=trackerContact.range<7;const alpha=close?.95:.56; tctx.fillStyle=trackerContact.target.type==='nest'?'rgba(255,199,102,'+alpha+')':'rgba(255,78,98,'+alpha+')'; tctx.shadowColor=tctx.fillStyle;tctx.shadowBlur=trackerPulseT>0?16:6;tctx.beginPath();tctx.arc(px,py,trackerPulseT>0?6:4,0,Math.PI*2);tctx.fill();}
+ tctx.fillStyle='rgba(236,251,255,.8)';tctx.font='900 16px system-ui';tctx.textAlign='center';tctx.fillText('33',cx,cy+5);
+ tctx.restore();
+}
+
+function updateContactStates(dt){
+ if(condFlash>0)condFlash-=dt;
+ const r=roomOf(player.x,player.y);
+ if(r&&!r.seen){ r.seen=true; r.entered=true;
+   // hunt-pacing: entering an unseen room gives one motion-tracker ping, stays quiet until provoked
+   const nb=nestInRoom(r);
+   ContactHooks.onEnterRoom.forEach(fn=>{try{fn(r)}catch(e){}});
+   if(nb){ ContactHooks.audioCue('tracker_ping'); msg('Motion tracker: one ping in '+r.name+'. Source unknown. Sweep it.',2.4); }
+   else { ContactHooks.audioCue('room_clear_soft'); }
+ }
+ // mark a room provoked once the player is close to its nest or fires inside it (set in applyTool/use too)
+ if(r){ const nb=nestInRoom(r); if(nb&&d(player.x,player.y,nb.x,nb.y)<5)r.provoked=true; }
+ // current ship condition = condition of the player's room
+ const cond=computeRoomCondition(r);
+ if(r){r.cond=cond;r.secured=isRoomSecured(r);}
+ if(cond!==shipCond){
+   shipCondPrev=shipCond; shipCond=cond; condFlash=1.2;
+   ContactHooks.audioCue('cond_'+cond);
+   ContactHooks.onTransition.forEach(fn=>{try{fn(r,shipCondPrev,cond)}catch(e){}});
+   const line=condCallout(shipCondPrev,cond,r);
+   if(line)msg(line, cond==='black'?3:2);
+ }
+}
+function startGame(){started=true;reset();hide()} function bind(id,fn){const el=document.getElementById(id);['pointerdown','click'].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();fn();focusGame()},{passive:false}))}
+bind('startBtn',startGame); bind('resumeBtn',()=>hide()); bind('closeMapBtn',()=>hide()); bind('restartBtn',startGame); bind('restartWinBtn',startGame); bind('pauseBtn',()=>{if(started&&!paused)show(ov.pause)}); bind('mapBtn',()=>{if(started&&!paused){mapStatus.textContent=`Nests sealed: ${nests.filter(n=>n.sealed).length}/3. Brood guard: ${brood&&brood.dead?'down':'pending'}.`;show(ov.map)}});
+function bindMobile(){document.querySelectorAll('[data-act]').forEach(b=>{const a=b.dataset.act;function on(e){e.preventDefault();e.stopPropagation();if(paused)return;touch[a]=true;once[a]=true;b.classList.add('active');focusGame()}function off(e){e.preventDefault();e.stopPropagation();touch[a]=false;b.classList.remove('active')}b.addEventListener('pointerdown',on,{passive:false});b.addEventListener('pointerup',off,{passive:false});b.addEventListener('pointercancel',off,{passive:false})});document.querySelectorAll('[data-dir]').forEach(b=>{const a=b.dataset.dir;function on(e){e.preventDefault();e.stopPropagation();if(paused)return;dpad[a]=true;b.classList.add('active');focusGame()}function off(e){e.preventDefault();e.stopPropagation();dpad[a]=false;b.classList.remove('active')}b.addEventListener('pointerdown',on,{passive:false});b.addEventListener('pointerup',off,{passive:false});b.addEventListener('pointercancel',off,{passive:false})})}bindMobile();
+function tile(x,y){if(x<0||y<0||x>=gridW||y>=gridH)return '#';return grid[y][x]} function solid(x,y){const c=tile(x,y);return c==='#'||c==='L'}
+function canMove(x,y,r){for(let yy=Math.floor(y-r);yy<=Math.floor(y+r);yy++)for(let xx=Math.floor(x-r);xx<=Math.floor(x+r);xx++)if(solid(xx,yy)){const cx=clamp(x,xx,xx+1),cy=clamp(y,yy,yy+1);if(d(x,y,cx,cy)<r)return false}return true} function move(o,dx,dy){if(canMove(o.x+dx,o.y,o.r))o.x+=dx;if(canMove(o.x,o.y+dy,o.r))o.y+=dy}
+function compose(){for(const k of ['left','right','up','down'])input[k]=dpad[k]||keyHeld(k); for(const a of ['fire','power','use','swap','map','pause'])input[a]=touch[a]||keyHeld(a)}
+function nearestObjectivePanel(){let best=null,bd=999;for(const o of objectives){if(o.done)continue;const di=d(player.x,player.y,o.x,o.y);if(di<bd){best=o;bd=di}}return best&&bd<1.45?best:null}
+function updateObjectiveWork(dt){for(const o of objectives)o.active=false;const o=nearestObjectivePanel();if(!o)return;if(!input.use){if(o.progress>0&&!o.done)o.progress=Math.max(0,o.progress-dt*.12);return}const r=RoomAuthority.getRoom(o.room);if(r)r.provoked=true;o.active=true;o.lastWork=time;const cond=r?computeRoomCondition(r):shipCond;const nearbyThreat=bugs.some(b=>!b.dead&&d(b.x,b.y,o.x,o.y)<2.6);const pooled=acidPools.some(p=>p.life>0&&d(p.x,p.y,o.x,o.y)<p.r+.7);if(nearbyThreat||pooled){msg(pooled?'Sera: Bio-corrosion on the seal. Move or foam it.':'Boone: Panel is hot. Clear the contact off the seal.',.55);return}const rate=cond==='red'?0.55:cond==='black'?0:1;o.progress=clamp(o.progress+dt*rate,0,o.required);if(o.progress>=o.required&&!o.done){o.done=true;if(r){r.objectiveDone=true;RoomAuthority.clearOverride(r);r.cond=computeRoomCondition(r);r.secured=isRoomSecured(r);}ContactHooks.audioCue('objective_complete');burst(o.x,o.y,34,'#74f1e6');msg('Pressure seal restored. Vent Junction can now be secured.',2.4)}}
+
+function update(dt){compose(); if(!started){clearOnce();return} if(once.pause){paused?hide():show(ov.pause)} if(once.map&&!paused){mapStatus.textContent=`Nests sealed: ${nests.filter(n=>n.sealed).length}/3. Brood guard: ${brood&&brood.dead?'down':'pending'}.`;show(ov.map)} if(paused){clearOnce();return} time+=dt; player.heat=Math.max(0,player.heat-dt*.22); player.shock=Math.min(100,player.shock+dt*8); if(player.inv>0)player.inv-=dt; const quiet=time<quietUntil; pressure=quiet?Math.max(0,pressure-dt*8):Math.min(100,pressure+dt*(nests.filter(n=>n.alive&&!n.sealed).length*.34+.10));
+ let mx=(input.right?1:0)-(input.left?1:0),my=(input.down?1:0)-(input.up?1:0),m=Math.hypot(mx,my)||1; if(mx||my){mx/=m;my/=m;player.dirX=mx;player.dirY=my} move(player,mx*player.speed*dt,my*player.speed*dt);
+ if(once.swap)swapTool(); if(input.fire||once.fire)applyTool(); if(once.power)roomShock(); updateObjectiveWork(dt); if(once.use)use(); pickups.forEach(p=>{if(!p.taken&&d(player.x,player.y,p.x,p.y)<.8)take(p)}); updateNests(dt); updateBugs(dt); updateShots(dt); updateAcidPools(dt); updateParts(dt); syncDoors(); updateContactStates(dt); updateMotionTracker(dt); checkWin(); updateCam(dt); updateHud(); if(msgT>0){msgT-=dt;if(msgT<=0)ui.message.classList.remove('show')} if(player.hp<=0&&!over){over=true;show(ov.gameOver)} clearOnce();}
+function syncDoors(){const all=nests.length&&nests.every(n=>n.sealed); for(const door of doors){door.open=door.need==='nests'?all:(door.need==='brood'&&brood&&brood.dead); for(let yy=door.y;yy<door.y+door.h;yy++)for(let xx=door.x;xx<door.x+door.w;xx++)grid[yy][xx]=door.open?'.':'L';} if(all&&!brood&&!broodPending){broodPending=true; broodDue=time+7.5; quietUntil=Math.max(quietUntil,time+6.5); msg('Sera: All nests sealed. Listen. That quiet means something heavier is moving.',3)} if(broodPending&&!brood&&time>=broodDue){brood=spawnBug('brood',77,34); msg('Boone: Big one just dropped from the cargo rack. Contact, contact, contact.',3)}}
+function currentTool(){return tools.find(t=>t.id===player.tools[player.toolIndex])||tools[0]} function swapTool(){player.toolIndex=(player.toolIndex+1)%player.tools.length;msg('Tool: '+currentTool().name,1)}
+function take(p){p.taken=true; if(p.type==='tool'){if(!player.tools.includes(p.tool)){player.tools.push(p.tool);msg(p.label+' acquired. R rotates tools.',1.6)}} else {player.hp=Math.min(player.maxHp,player.hp+70);msg(p.label+' used. Crew integrity restored.',1)}}
+function nearestTarget(range){let best=null,bd=999;const all=[...bugs.filter(b=>!b.dead),...nests.filter(n=>n.alive&&!n.sealed)]; for(const e of all){const di=d(player.x,player.y,e.x,e.y); if(di<range&&di<bd){const dot=(e.x-player.x)*player.dirX+(e.y-player.y)*player.dirY; if(dot>-0.35||di<2.2){best=e;bd=di}}} return best}
+function applyTool(){const t=currentTool(); if(t.cd>0)return; if(player.heat+t.heat>1){msg('Tool overheated. Move. Breathe. Try again.',.8);return} {const pr=roomOf(player.x,player.y);if(pr)pr.provoked=true;} player.heat+=t.heat; t.cd=t.cool; const target=nearestTarget(t.range); let ax=player.dirX,ay=player.dirY;if(target){ax=target.x-player.x;ay=target.y-player.y;const l=Math.hypot(ax,ay)||1;ax/=l;ay/=l} const count=t.pellets||1; for(let i=0;i<count;i++){const off=(count===1?0:(i-(count-1)/2)*t.spread)+rnd(-t.spread,t.spread);const a=Math.atan2(ay,ax)+off;shots.push({x:player.x+ax*.4,y:player.y+ay*.4,vx:Math.cos(a)*t.speed,vy:Math.sin(a)*t.speed,life:t.range/t.speed,damage:t.damage,pierce:t.pierce||0,slow:t.slow||0,type:t.id})} burst(player.x+ax*.5,player.y+ay*.5,t.id==='thermal'?16:t.id==='foam'?10:6,t.id==='foam'?'#d7f7ff':t.id==='thermal'?'#ffc766':t.id==='arc'?'#74f1e6':'#79ff9b');}
+function roomShock(){if(player.shock<70){msg('Shipboard Suppression Pulse charging.',.8);return} player.shock=0; player.heat=Math.min(1,player.heat+.2); for(const b of bugs)if(!b.dead&&d(player.x,player.y,b.x,b.y)<4.5){hurt(b,30,1.8)} burst(player.x,player.y,50,'#74f1e6'); msg('Shipboard Suppression Pulse discharged. VESTRA will call that unauthorized escalation.',1.7)}
+function use(){const panel=nearestObjectivePanel();if(panel){const pct=Math.floor(panel.progress/panel.required*100);msg(panel.label+': hold Y/E to work seal ('+pct+'%).',1.0);return}for(const n of nests){if(n.alive&&!n.sealed&&d(player.x,player.y,n.x,n.y)<1.5){n.sealed=true;n.alive=false;pressure=Math.max(0,pressure-30);quietUntil=Math.max(quietUntil,time+5.5);burst(n.x,n.y,42,'#79ff9b');msg('Nest sealed: '+n.name+'. Quiet window. Reload, reposition, then move.',2.6);return}} for(const door of doors){if(d(player.x,player.y,door.x+door.w/2,door.y+door.h/2)<2&&!door.open){msg(door.label+' locked. '+(door.need==='nests'?'Seal all nests first.':'Drop the brood guard first.'),1.4);return}} msg('Nothing to seal here.',.8)}
+function spawnBug(type,x,y){const stats={runner:{hp:18,r:.22,s:2.15,dmg:6},spitter:{hp:26,r:.25,s:1.25,dmg:5,shoot:1.7},guard:{hp:60,r:.36,s:.98,dmg:10},brood:{hp:195,r:.62,s:.82,dmg:12,shoot:1.25}}[type];const b={type,x,y,r:stats.r,hp:stats.hp,maxHp:stats.hp,speed:stats.s,dmg:stats.dmg,cd:rnd(.4,1.4),shoot:stats.shoot||0,slow:0,dead:false};bugs.push(b);return b}
+function updateNests(dt){if(time<quietUntil)return;for(const n of nests){if(!n.alive||n.sealed)continue;n.pulse-=dt;if(n.pulse<=0){const nr=roomOf(n.x,n.y);const cond=nr?RoomAuthority.getCondition(nr):'green';let cap=0;if(cond==='amber')cap=3;else if(cond==='red')cap=8+Math.floor(pressure/20);else if(cond==='black')cap=15;if(cap>0&&bugs.filter(b=>!b.dead&&b.type!=='brood').length<cap){const sc=ContactHooks.spitterChance(nr,cond);const panelHot=objectives.some(o=>!o.done&&nr&&o.room===nr.name&&(o.active||d(player.x,player.y,o.x,o.y)<3.4));spawnBug((panelHot||Math.random()<sc)?'spitter':'runner',n.x+rnd(-1.2,1.2),n.y+rnd(-1.2,1.2));n.spawned++;if(n.spawned%5===0)msg('Vents are active near '+n.name+'. Seal the nest.',1.2)}n.pulse=rnd(2.4,4.1);if(cond==='black')n.pulse*=.6}}}
+function updateBugs(dt){for(const b of bugs){if(b.dead)continue; if(b.slow>0)b.slow-=dt; b.cd-=dt; const di=d(b.x,b.y,player.x,player.y); let tx=player.x,ty=player.y; const br=roomOf(b.x,b.y); const seal=objectives.find(o=>!o.done&&br&&o.room===br.name); if(b.type==='spitter'&&seal&&(seal.active||d(player.x,player.y,seal.x,seal.y)<3.6)&&Math.random()<.72){tx=seal.x;ty=seal.y;} const tdi=d(b.x,b.y,tx,ty); const dx=(tx-b.x)/(tdi||1),dy=(ty-b.y)/(tdi||1); const pdx=(player.x-b.x)/(di||1),pdy=(player.y-b.y)/(di||1); const sp=b.speed*(b.slow>0?.45:1); if(b.type==='spitter'||b.type==='brood'){ if(di>4.8)move(b,pdx*sp*dt,pdy*sp*dt); else if(di<3.2)move(b,-pdx*sp*.55*dt,-pdy*sp*.55*dt); if(b.cd<=0&&di<9){const spd=b.type==='spitter'?4.8:5.8;eshots.push({x:b.x,y:b.y,vx:dx*spd,vy:dy*spd,life:b.type==='spitter'?1.15:1.45,damage:b.dmg,type:b.type,pool:b.type==='spitter'});b.cd=b.shoot||1.2}} else {if(di>.45)move(b,pdx*sp*dt,pdy*sp*dt); if(di<b.r+player.r+.15&&player.inv<=0){player.hp-=b.dmg;player.inv=.58;shake=7;burst(player.x,player.y,12,'#ff4e62')}} }}
+function createAcidPool(x,y){if(solid(Math.floor(x),Math.floor(y)))return;let near=acidPools.find(p=>d(p.x,p.y,x,y)<.75);if(near){near.life=Math.min(near.max,near.life+2.2);near.r=Math.min(1.15,near.r+.08);return}acidPools.push({x,y,r:.82,life:5.8,max:5.8,dps:13,hot:.5});burst(x,y,12,'#b6ff79')}
+function updateShots(dt){for(const t of tools)if(t.cd>0)t.cd-=dt; for(const s of shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(solid(Math.floor(s.x),Math.floor(s.y)))s.life=-1;if(s.type==='foam'){for(const p of acidPools){if(p.life>0&&d(s.x,s.y,p.x,p.y)<p.r+.45){p.life-=dt*10+1.15;p.hot=.12;burst(s.x,s.y,5,'#d7f7ff');s.life=-1;break}}} for(const b of bugs){if(!b.dead&&d(s.x,s.y,b.x,b.y)<b.r+.14){hurt(b,s.damage,s.slow);burst(s.x,s.y,8,s.type==='thermal'?'#ffc766':s.type==='foam'?'#d7f7ff':'#74f1e6'); if(s.pierce>0)s.pierce--;else s.life=-1;break}} for(const n of nests){if(n.alive&&!n.sealed&&d(s.x,s.y,n.x,n.y)<.65){n.hp-=s.damage*(s.type==='thermal'?1.4:.65);burst(s.x,s.y,8,'#ffc766'); if(n.hp<=0){n.alive=false;n.sealed=true;pressure=Math.max(0,pressure-30);quietUntil=Math.max(quietUntil,time+5.5);msg('Nest burned out: '+n.name+'. Quiet window. Move with purpose.',2.2)} s.life=-1;break}}} for(const e of eshots){e.x+=e.vx*dt;e.y+=e.vy*dt;e.life-=dt;let impact=false;if(solid(Math.floor(e.x),Math.floor(e.y))){e.life=-1;impact=true}if(d(e.x,e.y,player.x,player.y)<player.r+.18&&player.inv<=0){player.hp-=e.damage;player.inv=.58;e.life=-1;impact=true;shake=6;burst(player.x,player.y,10,'#ff4e62')}if(e.pool&&(impact||e.life<=0))createAcidPool(e.x,e.y)} shots=shots.filter(s=>s.life>0);eshots=eshots.filter(e=>e.life>0)}
+function updateAcidPools(dt){for(const p of acidPools){p.life-=dt;if(p.hot>0)p.hot-=dt;if(d(player.x,player.y,p.x,p.y)<p.r+player.r){player.hp-=p.dps*dt;shake=Math.max(shake,1.8);if(time-lastAcidMsg>2.2){lastAcidMsg=time;msg('Bio-corrosion pool. Move or foam the lane.',1.1)}}}acidPools=acidPools.filter(p=>p.life>0)}
+function hurt(b,amt,slow=0){b.hp-=amt; if(slow)b.slow=Math.max(b.slow,slow); if(b.hp<=0&&!b.dead){b.dead=true;burst(b.x,b.y,b.type==='brood'?70:20,b.type==='brood'?'#ff4e62':'#79ff9b'); if(b.type==='brood')msg('Brood guard down. Extraction lockdown released.',2)}}
+function burst(x,y,n,c){for(let i=0;i<n;i++){const a=rnd(0,Math.PI*2),s=rnd(.5,3.8);parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rnd(.2,.8),max:.8,c,r:rnd(1,3)})}} function updateParts(dt){for(const p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}parts=parts.filter(p=>p.life>0)}
+function checkWin(){if(player.x>75&&player.x<84&&player.y>49&&player.y<57&&doors.every(d=>d.open)&&!won){won=true;show(ov.win)}} function updateCam(dt){const p=iso(player.x,player.y);cam.x+=(p.x-cam.x)*Math.min(1,dt*7);cam.y+=(p.y-cam.y)*Math.min(1,dt*7)}
+function updateHud(){ui.hpBar.style.width=clamp(player.hp/player.maxHp*100,0,100)+'%';ui.hpText.textContent='CREW '+Math.max(0,Math.ceil(player.hp))+'%';ui.nestText.textContent='NESTS '+nests.filter(n=>n.sealed).length+'/3';ui.pressureBar.style.width=clamp(pressure,0,100)+'%';ui.heatBar.style.width=clamp(player.heat*100,0,100)+'%';const t=currentTool();ui.toolName.textContent=t.name;ui.chargeText.textContent=Math.round(player.shock)+'%';ui.xText.textContent=time<quietUntil?'QUIET '+Math.ceil(quietUntil-time)+'s':'X: SUPPRESS';const nearPanel=nearestObjectivePanel();ui.objSmall.textContent=nearPanel?('hold Y/E '+Math.floor(nearPanel.progress/nearPanel.required*100)+'%'):(time<quietUntil?'quiet window / reposition':t.role); const room=rooms.find(r=>player.x>=r.x&&player.x<r.x+r.w&&player.y>=r.y&&player.y<r.y+r.h); if(room){ui.objective.textContent=objective(room.name)} const cm=CONDMETA[shipCond]; if(ui.condText){ui.condText.textContent=cm.label; ui.condText.style.color=cm.hud;} if(ui.condTag)ui.condTag.textContent=cm.tag;
+ if(ui.trackerPanel){ui.trackerPanel.className='tracker '+shipCond; const c=trackerContact; const close=c&&c.range<10; ui.trackerState.textContent=trackerPulseT>0?'PING':(close?'CONTACT':'QUIET'); ui.trackerFill.style.width=c?clamp(100-c.range*5.2,0,100)+'%':'0%'; ui.trackerRange.textContent=c?(c.target.type==='nest'?'Nest signature ':'Motion ')+Math.ceil(c.range)+'m':'No contact'; ui.trackerBearing.textContent=c?c.bearing:'--';}
+}
+function objective(name){if(name==='Wake Bay')return 'Wake 33. Move right into Emergency Locker. Grab the boarding-response kit.'; if(name==='Emergency Locker')return 'Emergency Locker: collect Arc Scatter. Space/B applies the active tool.'; if(name==='Cargo Service Hall')return 'Cargo Service Hall: first contact. Keep moving. Rotate tools with R/Q/Tab.'; if(name==='Vent Junction'){const panel=objectives&&objectives.find(o=>o.room==='Vent Junction');if(panel&&!panel.done)return 'Vent Junction: restore the pressure seal at the blue panel. Hold Y/E near it. Then seal or burn the nest.';return 'Vent Junction: pressure seal restored. Secure the nest and clear contacts.';} if(name==='Galley / Worker Bar')return 'Worker Bar: the walls are moving. Foam buys time. Thermal Lance is nearby.'; if(name==='Cargo Bay Nest')return 'Cargo Bay Nest: clear the last nest. Use the quiet before the brood guard drops.'; if(name==='Records Locker')return 'Records Locker: recover the altered Wake 23 manifest and transmit contact report.'; if(name==='Extraction Lift')return 'Extraction Lift: leave with proof. It is not our ship. It is our shift.'; return 'Search the ship for stowaways.'}
+function draw(){ctx.clearRect(0,0,W,H);const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#0c1c22');bg.addColorStop(1,'#020304');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);ctx.save();if(shake>0){ctx.translate(rnd(-shake,shake),rnd(-shake,shake));shake=Math.max(0,shake-.6)}drawWorld();ctx.restore();const v=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.2,W/2,H/2,Math.max(W,H)*.72);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.55)');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
+ // Contact-state lighting: edge tint by condition + brief flash on transition
+ const cm=(typeof CONDMETA!=='undefined')?CONDMETA[shipCond]:null;
+ if(cm&&cm.vigStr>0){const cv=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.30,W/2,H/2,Math.max(W,H)*.80);cv.addColorStop(0,'rgba(0,0,0,0)');cv.addColorStop(1,cm.vig);ctx.fillStyle=cv;ctx.fillRect(0,0,W,H);}
+ if(typeof condFlash!=='undefined'&&condFlash>0){const a=Math.min(.22,condFlash*.18);ctx.fillStyle=(CONDMETA[shipCond]||{hud:'#fff'}).hud;ctx.globalAlpha=a;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;}
+}
+function drawWorld(){const objs=[];for(let y=0;y<gridH;y++)for(let x=0;x<gridW;x++){const c=tile(x,y); if(c!== '#')objs.push({k:'floor',x,y,s:x+y,c}); if(c==='#')objs.push({k:'wall',x,y,s:x+y+.5}); else if(c==='L')objs.push({k:'door',x,y,s:x+y+.6})} nests.forEach(n=>{if(!n.sealed)objs.push({k:'nest',...n,s:n.x+n.y+.3})}); acidPools.forEach(p=>{objs.push({k:'acidPool',...p,s:p.x+p.y+.09})}); objectives.forEach(o=>{objs.push({k:'objectivePanel',...o,s:o.x+o.y+.34})}); pickups.forEach(p=>{if(!p.taken)objs.push({k:'pickup',...p,s:p.x+p.y+.25})}); shots.forEach(p=>objs.push({k:'shot',...p,s:p.x+p.y+.3})); eshots.forEach(p=>objs.push({k:'eshot',...p,s:p.x+p.y+.3})); bugs.forEach(b=>{if(!b.dead)objs.push({k:'bug',ref:b,x:b.x,y:b.y,s:b.x+b.y+.4})}); objs.push({k:'player',s:player.x+player.y+.45}); parts.forEach(p=>objs.push({k:'part',...p,s:p.x+p.y+.5})); objs.sort((a,b)=>a.s-b.s); objs.forEach(drawObj)}
+function diamond(x,y,fill,stroke){const s=screen(x+.5,y+.5);ctx.beginPath();ctx.moveTo(s.x,s.y-TILE_H/2);ctx.lineTo(s.x+TILE_W/2,s.y);ctx.lineTo(s.x,s.y+TILE_H/2);ctx.lineTo(s.x-TILE_W/2,s.y);ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}}
+function drawObj(o){if(o.k==='floor'){const alt=(o.x+o.y)%2; diamond(o.x,o.y,alt?'rgba(23,43,44,.76)':'rgba(18,35,38,.82)','rgba(116,241,230,.075)')} else if(o.k==='wall'){const s=screen(o.x+.5,o.y+.5);diamond(o.x,o.y,'rgba(28,34,36,.96)','rgba(116,241,230,.11)');ctx.fillStyle='rgba(8,12,14,.98)';ctx.fillRect(s.x-TILE_W/2,s.y-TILE_H/2-30,TILE_W,30);ctx.strokeStyle='rgba(116,241,230,.12)';ctx.strokeRect(s.x-TILE_W/2,s.y-TILE_H/2-30,TILE_W,30)} else if(o.k==='door'){const s=screen(o.x+.5,o.y+.5);diamond(o.x,o.y,'rgba(255,78,98,.28)','rgba(255,78,98,.22)');ctx.fillStyle='rgba(255,78,98,.72)';ctx.fillRect(s.x-24,s.y-37,48,34)} else if(o.k==='nest'){const s=screen(o.x,o.y);ctx.save();ctx.shadowColor='#ff4e62';ctx.shadowBlur=16;ctx.fillStyle='rgba(255,78,98,.55)';ctx.beginPath();ctx.ellipse(s.x,s.y-18,20+Math.sin(time*4)*2,13,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(255,199,102,.75)';ctx.beginPath();ctx.arc(s.x,s.y-19,7,0,Math.PI*2);ctx.fill();ctx.restore()} else if(o.k==='acidPool'){const s=screen(o.x,o.y);ctx.save();const a=clamp(o.life/o.max,.08,.72);ctx.globalAlpha=a;ctx.shadowColor='#b6ff79';ctx.shadowBlur=o.hot>0?18:8;ctx.fillStyle='rgba(182,255,121,.52)';ctx.beginPath();ctx.ellipse(s.x,s.y-5,28*o.r,13*o.r,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(255,199,102,.42)';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(s.x,s.y-5,31*o.r,15*o.r,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;ctx.restore()} else if(o.k==='objectivePanel'){const s=screen(o.x,o.y);ctx.save();const pct=o.done?1:o.progress/o.required;ctx.shadowColor=o.done?'#79ff9b':'#74f1e6';ctx.shadowBlur=o.active?18:10;ctx.fillStyle=o.done?'rgba(121,255,155,.32)':'rgba(116,241,230,.24)';ctx.fillRect(s.x-18,s.y-42,36,30);ctx.strokeStyle=o.done?'rgba(121,255,155,.86)':'rgba(116,241,230,.66)';ctx.lineWidth=2;ctx.strokeRect(s.x-18,s.y-42,36,30);ctx.fillStyle=o.done?'#79ff9b':'#74f1e6';ctx.fillRect(s.x-15,s.y-16,30*pct,4);ctx.fillStyle='rgba(236,251,255,.86)';ctx.font='800 7px system-ui';ctx.textAlign='center';ctx.fillText(o.done?'SEAL RESTORED':'PRESSURE SEAL',s.x,s.y-47);ctx.restore()} else if(o.k==='pickup'){const s=screen(o.x,o.y);ctx.save();ctx.shadowColor=o.type==='tool'?'#74f1e6':'#79ff9b';ctx.shadowBlur=13;ctx.fillStyle=o.type==='tool'?'#74f1e6':'#79ff9b';ctx.beginPath();ctx.arc(s.x,s.y-14+Math.sin(time*4+o.x)*3,8,0,Math.PI*2);ctx.fill();ctx.restore()} else if(o.k==='shot'||o.k==='eshot'){const s=screen(o.x,o.y);ctx.fillStyle=o.k==='eshot'?(o.type==='spitter'?'#b86cff':'#ff4e62'):o.type==='foam'?'#d7f7ff':o.type==='thermal'?'#ffc766':'#74f1e6';ctx.beginPath();ctx.arc(s.x,s.y-12,o.type==='thermal'?5:o.type==='spitter'?5:4,0,Math.PI*2);ctx.fill()} else if(o.k==='bug')drawBug(o.ref); else if(o.k==='player')drawPlayer(); else if(o.k==='part'){const s=screen(o.x,o.y);ctx.globalAlpha=clamp(o.life/o.max,0,1);ctx.fillStyle=o.c;ctx.beginPath();ctx.arc(s.x,s.y-12,o.r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1}}
+function drawPlayer(){const s=screen(player.x,player.y);ctx.save();ctx.globalAlpha=player.inv>0&&Math.floor(time*22)%2?0.5:1;ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(s.x,s.y+6,18,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#d9c2aa';ctx.beginPath();ctx.arc(s.x,s.y-36,9,0,Math.PI*2);ctx.fill();round(s.x-12,s.y-29,24,31,8,'#172226');ctx.strokeStyle='#8ea5a9';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(s.x-8,s.y-17);ctx.lineTo(s.x-16,s.y-6);ctx.moveTo(s.x+7,s.y-17);ctx.lineTo(s.x+17,s.y-10);ctx.stroke();const a=Math.atan2(player.dirY,player.dirX),ux=Math.cos(a),uy=Math.sin(a);ctx.strokeStyle=currentTool().id==='thermal'?'#ffc766':currentTool().id==='foam'?'#d7f7ff':'#74f1e6';ctx.lineWidth=currentTool().id==='arc'?7:5;ctx.beginPath();ctx.moveTo(s.x+12,s.y-15);ctx.lineTo(s.x+12+ux*24,s.y-15+uy*24);ctx.stroke();ctx.restore()}
+function round(x,y,w,h,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.fill()}
+function drawBug(b){const s=screen(b.x,b.y);ctx.save();const col=b.type==='brood'?'#ff4e62':b.type==='guard'?'#ffc766':b.type==='spitter'?'#b86cff':'#79ff9b';const accent=b.type==='spitter'?'#e1c6ff':col;ctx.fillStyle='rgba(0,0,0,.34)';ctx.beginPath();ctx.ellipse(s.x,s.y+5,b.r*46,7,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle=col;ctx.lineWidth=b.type==='brood'?4:3;for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(s.x+i*5,s.y-22);ctx.lineTo(s.x+i*8,s.y-4);ctx.stroke()}ctx.shadowColor=col;ctx.shadowBlur=b.type==='spitter'?16:10;ctx.fillStyle=col;ctx.beginPath();ctx.ellipse(s.x,s.y-25,b.r*42,b.r*28,0,0,Math.PI*2);ctx.fill();if(b.type==='spitter'){ctx.fillStyle=accent;ctx.beginPath();ctx.ellipse(s.x+5,s.y-29,b.r*18,b.r*10,-.25,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(182,255,121,.75)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(s.x+7,s.y-29,b.r*9,0,Math.PI*2);ctx.stroke()}ctx.shadowBlur=0;if(b.hp<b.maxHp){ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(s.x-24,s.y-52,48,5);ctx.fillStyle=col;ctx.fillRect(s.x-24,s.y-52,48*(b.hp/b.maxHp),5)}ctx.restore()}
+function frame(now){const dt=Math.min(.033,(now-last)/1000);last=now;update(dt);draw();drawMotionTracker();requestAnimationFrame(frame)}
+reset();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
