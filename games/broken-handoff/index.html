@@ -1,48 +1,577 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Broken Handoff // Browser Deck</title>
-<style>
-:root{--bg:#050814;--panel:#101c31;--panel2:#14233d;--line:rgba(151,210,255,.2);--text:#eef7ff;--muted:#a9b8c9;--cyan:#69e3ff;--gold:#ffd166;--green:#8effb0;--red:#ff667d;--shadow:rgba(0,0,0,.42);--radius:22px}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 20% -10%,#193b61 0,#081225 45%,#03050d 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.shell{width:min(1180px,94vw);margin:0 auto;padding:28px 0 56px}.hero,.slide,.note{background:linear-gradient(180deg,rgba(16,28,49,.96),rgba(7,13,26,.97));border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 18px 46px var(--shadow);padding:24px;margin:14px 0}.eyebrow{color:var(--cyan);font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:850;margin:0 0 8px}h1{font-size:clamp(42px,8vw,92px);line-height:.88;letter-spacing:-.06em;margin:0}h2{font-size:clamp(25px,4vw,44px);line-height:.98;letter-spacing:-.04em;margin:0 0 12px}.promise{font-size:clamp(20px,3vw,31px);font-weight:850;line-height:1.1;margin:18px 0 0;color:#fff}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.three{grid-template-columns:repeat(3,1fr)}.card{border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.04);padding:15px}.card h3{font-size:17px;margin:0 0 8px;color:var(--cyan)}p,li{color:#dcecff;line-height:1.55}.muted{color:var(--muted)}.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.badge{border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.06);border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:999px;padding:12px 15px;border:1px solid rgba(105,227,255,.32);background:rgba(105,227,255,.1);color:var(--text);font-weight:850}.btn.primary{background:linear-gradient(90deg,rgba(105,227,255,.95),rgba(142,255,176,.92));color:#06101e;border:0}.sequence{display:grid;gap:10px}.step{border-left:3px solid var(--gold);padding:10px 12px;background:rgba(255,209,102,.06);border-radius:10px}.risk{border-left:3px solid var(--red);padding:10px 12px;background:rgba(255,102,125,.06);border-radius:10px}.good{border-left:3px solid var(--green);padding:10px 12px;background:rgba(142,255,176,.06);border-radius:10px}.topnav{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.topnav a{font-size:12px;text-decoration:none;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:8px 10px;color:#dcecff;background:rgba(255,255,255,.05)}table{width:100%;border-collapse:collapse;overflow:hidden;border-radius:12px}th,td{text-align:left;border-bottom:1px solid rgba(255,255,255,.09);padding:10px;color:#dcecff;vertical-align:top}th{color:#fff;background:rgba(255,255,255,.06)}@media(max-width:820px){.grid,.three{grid-template-columns:1fr}.hero,.slide,.note{padding:18px}h1{font-size:44px}}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Broken Handoff — Support Wargaming Lab</title>
+  <meta name="description" content="A support-wargaming decision simulation for false closure, evidence discipline, validation gaps, broken handoffs, and future data-informed pattern analysis." />
+  <style>
+    :root{
+      --bg:#090b0d;
+      --panel:#12171c;
+      --panel-2:#181e24;
+      --paper:#efe2c7;
+      --paper-ink:#1a1510;
+      --line:#3f4851;
+      --line-soft:#2a323a;
+      --text:#f4efe6;
+      --muted:#c8bfb3;
+      --dim:#938a7f;
+      --accent:#d6b15f;
+      --accent-soft:rgba(214,177,95,.16);
+      --shadow:rgba(0,0,0,.42);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(214,177,95,.14), transparent 34%),
+        radial-gradient(circle at 90% 12%, rgba(255,255,255,.06), transparent 28%),
+        linear-gradient(180deg,#0d1115 0%, var(--bg) 58%, #050607 100%);
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height:1.45;
+    }
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .wrap{width:min(1120px,92vw);margin:0 auto}
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:10;
+      background:rgba(9,11,13,.88);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line-soft);
+    }
+    .topbar-inner{
+      min-height:62px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .brandmark{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:950;
+      letter-spacing:.5px;
+      text-transform:uppercase;
+      font-size:13px;
+    }
+    .mark{
+      width:34px;height:34px;
+      border:1px solid var(--accent);
+      border-radius:9px;
+      display:grid;
+      place-items:center;
+      color:var(--accent);
+      background:var(--accent-soft);
+      font-weight:950;
+    }
+    nav{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}
+    nav a{
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 12px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.3px;
+    }
+    nav a.primary{border-color:var(--accent);color:var(--text);background:var(--accent-soft)}
+    .hero{padding:68px 0 34px}
+    .eyebrow{
+      display:inline-flex;
+      gap:8px;
+      flex-wrap:wrap;
+      color:var(--accent);
+      text-transform:uppercase;
+      letter-spacing:1.2px;
+      font-weight:950;
+      font-size:12px;
+      margin-bottom:18px;
+    }
+    h1{
+      margin:0;
+      font-size:clamp(44px,8vw,86px);
+      line-height:.9;
+      letter-spacing:-2px;
+      text-transform:uppercase;
+    }
+    .subtitle{
+      max-width:850px;
+      margin:24px 0 0;
+      color:var(--muted);
+      font-size:clamp(18px,2.2vw,24px);
+      line-height:1.35;
+    }
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+    .button{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:48px;
+      padding:0 18px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background:var(--panel-2);
+      color:var(--text);
+      font-weight:950;
+      text-transform:uppercase;
+      letter-spacing:.35px;
+      box-shadow:0 10px 20px var(--shadow);
+    }
+    .button:hover{text-decoration:none;filter:brightness(1.08)}
+    .button.primary{background:linear-gradient(180deg,#d9bd74,#9c7626);color:#17110a;border-color:#d6b15f}
+    .button.secondary{color:var(--muted)}
+    .status-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:7px 10px;
+      color:var(--muted);
+      background:rgba(255,255,255,.03);
+      font-size:12px;
+      font-weight:850;
+      text-transform:uppercase;
+      letter-spacing:.3px;
+    }
+    .grid{display:grid;gap:16px}
+    .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+    section{padding:34px 0}
+    .section-title{
+      display:flex;
+      align-items:end;
+      justify-content:space-between;
+      gap:18px;
+      border-bottom:1px solid var(--line-soft);
+      padding-bottom:14px;
+      margin-bottom:18px;
+    }
+    h2{margin:0;font-size:28px;letter-spacing:-.6px;text-transform:uppercase}
+    .section-note{max-width:600px;color:var(--dim);font-size:14px;margin:0}
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018));
+      border:1px solid var(--line-soft);
+      border-radius:14px;
+      padding:18px;
+      box-shadow:0 12px 24px var(--shadow);
+    }
+    .card h3{margin:0 0 8px;font-size:18px;line-height:1.2}
+    .card p{margin:0;color:var(--muted)}
+    .card ul{margin:10px 0 0;padding-left:18px;color:var(--muted)}
+    .card li{margin:6px 0}
+    .paper{
+      background:linear-gradient(180deg,#f5ead4,var(--paper));
+      color:var(--paper-ink);
+      border-radius:14px;
+      padding:22px;
+      box-shadow:0 16px 28px var(--shadow);
+      border:1px solid rgba(0,0,0,.25);
+    }
+    .paper h2,.paper h3{color:var(--paper-ink)}
+    .paper p,.paper li{color:#3a2c20}
+    .loop{
+      display:grid;
+      grid-template-columns:repeat(6,minmax(0,1fr));
+      gap:10px;
+    }
+    .step{
+      border:1px solid var(--line-soft);
+      background:rgba(255,255,255,.035);
+      border-radius:12px;
+      padding:14px;
+      min-height:118px;
+    }
+    .step b{display:block;color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+    .step span{display:block;color:var(--muted);font-size:13px;line-height:1.3}
+    .scenario-card{
+      min-height:205px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+    .scenario-card .meta{margin-top:12px;color:var(--dim);font-size:12px;text-transform:uppercase;letter-spacing:.3px;font-weight:850}
+    .callout{
+      border-left:4px solid var(--accent);
+      padding:14px 16px;
+      background:var(--accent-soft);
+      border-radius:0 12px 12px 0;
+      color:var(--text);
+    }
+    .run-panel{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:18px;
+      align-items:stretch;
+    }
+    .run-box{
+      background:linear-gradient(180deg,#191f25,#101419);
+      border:1px solid var(--accent);
+      border-radius:18px;
+      padding:24px;
+      box-shadow:0 18px 34px var(--shadow);
+    }
+
+    .maturity{
+      display:grid;
+      grid-template-columns:repeat(6,minmax(0,1fr));
+      gap:10px;
+    }
+    .maturity .level{
+      border:1px solid var(--line-soft);
+      border-radius:12px;
+      padding:14px;
+      background:rgba(255,255,255,.032);
+      min-height:168px;
+    }
+    .level .num{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:28px;height:28px;
+      border-radius:50%;
+      border:1px solid var(--accent);
+      color:var(--accent);
+      font-size:12px;
+      font-weight:950;
+      margin-bottom:10px;
+    }
+    .level h3{font-size:15px;margin:0 0 8px;line-height:1.15}
+    .level p{font-size:12.5px;line-height:1.32;color:var(--muted);margin:0}
+    .data-list{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:16px;
+    }
+    .data-list .item{
+      border:1px solid var(--line-soft);
+      border-radius:12px;
+      padding:14px;
+      background:rgba(255,255,255,.026);
+    }
+    .item b{display:block;color:var(--accent);text-transform:uppercase;font-size:11px;letter-spacing:.45px;margin-bottom:6px}
+    .small{font-size:13px;color:var(--dim)}
+    footer{
+      border-top:1px solid var(--line-soft);
+      margin-top:34px;
+      padding:24px 0 38px;
+      color:var(--dim);
+      font-size:13px;
+    }
+    code.path{
+      display:inline-block;
+      border:1px solid var(--line-soft);
+      background:#060708;
+      color:var(--muted);
+      border-radius:8px;
+      padding:3px 7px;
+      font-size:12px;
+    }
+    @media(max-width:900px){
+      .topbar-inner{align-items:flex-start;flex-direction:column;padding:12px 0}
+      nav{justify-content:flex-start}
+      .grid.two,.grid.three,.grid.four,.run-panel,.loop,.maturity,.data-list{grid-template-columns:1fr}
+      .hero{padding:42px 0 18px}
+      .section-title{align-items:flex-start;flex-direction:column}
+    }
+  </style>
 </head>
 <body>
-<main class="shell">
-<section class="hero">
-<p class="eyebrow">Tabletop Trial · Handoff Validation · Browser Deck</p>
-<h1>Broken Handoff</h1>
-<p class="promise">A visible validation packet for false-green status, meaning loss, unclear ownership, evidence debt, and repair that is not real until validated.</p>
-<div class="badges"><span class="badge">Format: Browser Deck</span><span class="badge">Status: Displayable Trial Packet</span><span class="badge">Evidence: Handoff</span></div>
-<div class="actions"><a class="btn primary" href="../../">Back to Arcade</a><a class="btn" href="#run">Run Structure</a><a class="btn" href="#aar">AAR</a></div>
-</section>
-<nav class="topnav"><a href="#intent">Intent</a><a href="#loop">Core Loop</a><a href="#run">Run</a><a href="#undo">Undo Rule</a><a href="#guardrails">Guardrails</a><a href="#aar">AAR</a></nav>
-<section class="slide" id="intent">
-<p class="eyebrow">Slide 1</p><h2>What this is</h2>
-<div class="grid"><div class="card"><h3>Plain language</h3><p>Broken Handoff is a tabletop/mobile-lite validation trial about a system that looks repaired but may still be broken underneath.</p></div><div class="card"><h3>Why it exists</h3><p>It tests whether players preserve judgment when the visible status is green but the evidence, owner, or receiving side is not aligned.</p></div></div>
-</section>
-<section class="slide" id="loop">
-<p class="eyebrow">Slide 2</p><h2>Core loop</h2>
-<div class="sequence"><div class="step"><strong>Observe:</strong> Read the reported status and compare it to actual evidence.</div><div class="step"><strong>Diagnose:</strong> Identify where meaning was lost: owner, evidence, timing, validation, or assumption.</div><div class="step"><strong>Stabilize:</strong> Choose the least-damaging action that preserves human judgment.</div><div class="step"><strong>Route / repair:</strong> Move the handoff to the correct owner or rebuild the missing evidence path.</div><div class="step"><strong>Validate:</strong> The handoff is not fixed until the receiving side can act correctly.</div></div>
-</section>
-<section class="slide" id="run">
-<p class="eyebrow">Slide 3</p><h2>Suggested one-run flow</h2>
-<table><tr><th>Scene</th><th>Player question</th><th>Failure mode tested</th></tr><tr><td>1. Green report</td><td>What does the system claim?</td><td>Trusting status without evidence.</td></tr><tr><td>2. Evidence pull</td><td>What proves the claim?</td><td>Missing or stale evidence.</td></tr><tr><td>3. Ownership check</td><td>Who can actually act?</td><td>Unclear owner / duplicate routing.</td></tr><tr><td>4. Repair choice</td><td>What is the safest correction?</td><td>Escalation without diagnosis.</td></tr><tr><td>5. Validation gate</td><td>Can the receiver execute correctly?</td><td>Closing on a workaround instead of truth.</td></tr><tr><td>6. AAR</td><td>What was learned?</td><td>No learning capture.</td></tr></table>
-</section>
-<section class="slide" id="undo">
-<p class="eyebrow">Slide 4</p><h2>Controlled undo model</h2>
-<div class="grid"><div class="card"><h3>Before lock</h3><p>The player may review and reconsider before locking a decision. This supports one-thumb/mobile-lite play without punishing careful reading.</p></div><div class="card"><h3>After lock</h3><p>Allow one emergency <strong>Reopen Last Decision</strong> per run. It costs Strain +1 and must be recorded in the AAR as “Decision reopened.”</p></div></div>
-</section>
-<section class="slide" id="guardrails">
-<p class="eyebrow">Slide 5</p><h2>Guardrails</h2>
-<div class="sequence"><div class="risk"><strong>Do not overbuild before first real AAR.</strong> The first proof is whether the procedure produces useful learning.</div><div class="risk"><strong>Do not turn it into a full platform yet.</strong> No scenario builder, campaign layer, or bloated system before validation.</div><div class="risk"><strong>Do not make the right answer obvious.</strong> Options must be similar in length and plausibility to avoid answer-key leakage.</div><div class="good"><strong>Preserve the core lesson.</strong> Repair is not real until validated.</div></div>
-</section>
-<section class="slide" id="aar">
-<p class="eyebrow">Slide 6</p><h2>After-action review prompts</h2>
-<div class="grid"><div class="card"><h3>Player report</h3><ul><li>What did the green status hide?</li><li>Where was the handoff actually broken?</li><li>What evidence changed the decision?</li><li>Did the receiving side validate the repair?</li><li>Was the emergency reopen used?</li></ul></div><div class="card"><h3>Proof question</h3><p>Can one player complete the validation shell and produce a useful AAR in one clean run?</p></div></div>
-</section>
-<footer class="note"><p><strong>Display note:</strong> No separate .pptx file is currently present in this repo for Broken Handoff. This page displays the available trial content directly as a browser deck so the Arcade link opens usable material instead of an empty placeholder.</p></footer>
-</main>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brandmark" href="../">
+        <span class="mark">BH</span>
+        <span>Broken Handoff</span>
+      </a>
+      <nav aria-label="Page navigation">
+        <a href="../../">Back to Arcade</a>
+        <a href="#doctrine">Doctrine</a>
+        <a href="#scenarios">Scenarios</a>
+        <a href="#aar">AAR</a>
+        <a href="#future">Future Path</a>
+        <a class="primary" href="#run">Start</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <div class="eyebrow">Support Wargaming Lab · FM / Log / IT / Audit</div>
+      <h1>Broken Handoff</h1>
+      <p class="subtitle">
+        A lightweight decision simulation about false closure, evidence discipline, validation gaps, and the handoffs that look complete before they are actually safe.
+      </p>
+      <div class="hero-actions">
+        <a class="button primary" href="#run">Brief Me Before I Play</a>
+        <a class="button secondary" href="./run.html">Skip to Simulation</a>
+      </div>
+      <div class="status-row" aria-label="Prototype status">
+        <span class="chip">v0.3.1 Doctrine Layer</span>
+        <span class="chip">Single-browser prototype</span>
+        <span class="chip">No accounts</span>
+        <span class="chip">No backend</span>
+      </div>
+    </section>
+
+    <section class="wrap grid two" id="intent">
+      <div class="paper">
+        <h2>What this is</h2>
+        <p>
+          Broken Handoff is a support-wargaming scenario built to help teams practice the moment before a bad handoff becomes official.
+        </p>
+        <p>
+          The player reviews evidence, makes decisions under pressure, locks choices, and receives an after-action review showing what was preserved, ignored, transferred, or broken.
+        </p>
+      </div>
+      <div class="card">
+        <h2>What this is not</h2>
+        <ul>
+          <li>Not an arcade pitch.</li>
+          <li>Not entertainment-first gamification.</li>
+          <li>Not AI deciding truth.</li>
+          <li>Not a predictive analytics product.</li>
+          <li>Not a replacement for SME judgment.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="wrap" id="how">
+      <div class="section-title">
+        <h2>How the run works</h2>
+        <p class="section-note">Each run follows the same decision rhythm. The subject changes; the evidence discipline does not.</p>
+      </div>
+      <div class="loop">
+        <div class="step"><b>Observe</b><span>Read the reported status, friction, and initial handoff claim.</span></div>
+        <div class="step"><b>Review</b><span>Compare evidence, gaps, pressure, AI output, and validation records.</span></div>
+        <div class="step"><b>Choose</b><span>Select the response a real team might make under pressure.</span></div>
+        <div class="step"><b>Lock</b><span>Commit the decision, or reconsider before locking it.</span></div>
+        <div class="step"><b>Validate</b><span>Test whether the apparent fix survives the actual failure condition.</span></div>
+        <div class="step"><b>AAR</b><span>Review what the run preserved, ignored, transferred, or poisoned.</span></div>
+      </div>
+    </section>
+
+    <section class="wrap" id="doctrine">
+      <div class="section-title">
+        <h2>Doctrine layer</h2>
+        <p class="section-note">The simulation is not asking players to guess a color-coded right answer. It is testing whether the handoff survives evidence, pressure, and validation.</p>
+      </div>
+      <div class="grid four">
+        <div class="card">
+          <h3>Status is not proof</h3>
+          <p>A clean dashboard, closed ticket, completed CAP, matching count, or successful log does not prove the underlying condition is fixed.</p>
+        </div>
+        <div class="card">
+          <h3>AI is not the judge</h3>
+          <p>AI output can summarize, compare, or flag inconsistencies. It does not replace source evidence or SME judgment.</p>
+        </div>
+        <div class="card">
+          <h3>Risk transfer must be explicit</h3>
+          <p>Escalating or handing off risk is not automatically wrong. Silently passing unresolved risk without facts, gap, owner, and recommendation can poison the handoff.</p>
+        </div>
+        <div class="card">
+          <h3>Validation controls closure</h3>
+          <p>Repair, reconciliation, closeout, or migration is not real until it works against the actual failure condition.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap" id="scenarios">
+      <div class="section-title">
+        <h2>Scenario library</h2>
+        <p class="section-note">Four short runs use the same decision engine across system repair, audit, logistics, and IT modernization.</p>
+      </div>
+      <div class="grid four">
+        <div class="card scenario-card">
+          <div>
+            <h3>The Green Check That Lied</h3>
+            <p>A repair appears complete, but user conditions and validation evidence do not agree.</p>
+          </div>
+          <div class="meta">System repair / validation</div>
+        </div>
+        <div class="card scenario-card">
+          <div>
+            <h3>Audit Closeout</h3>
+            <p>A CAP looks complete, but operating effectiveness may not be proven.</p>
+          </div>
+          <div class="meta">Audit readiness / controls</div>
+        </div>
+        <div class="card scenario-card">
+          <div>
+            <h3>Inventory Reconciliation</h3>
+            <p>Two systems agree, but physical count and transaction history still raise doubt.</p>
+          </div>
+          <div class="meta">Logistics / supply chain</div>
+        </div>
+        <div class="card scenario-card">
+          <div>
+            <h3>Data Migration</h3>
+            <p>The data moved, the counts match, but field meaning and business use may not have survived.</p>
+          </div>
+          <div class="meta">IT modernization / ERP</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap" id="aar">
+      <div class="section-title">
+        <h2>What the AAR shows</h2>
+        <p class="section-note">The output is not just a score. It is the receipt for the judgment path.</p>
+      </div>
+      <div class="grid three">
+        <div class="card">
+          <h3>Evidence discipline</h3>
+          <p>What evidence was used, what was ignored, and what appeared true before validation.</p>
+        </div>
+        <div class="card">
+          <h3>Risk posture</h3>
+          <p>Where the player preserved risk, transferred risk, or accepted an unresolved gap.</p>
+        </div>
+        <div class="card">
+          <h3>Handoff quality</h3>
+          <p>Whether the next team inherited facts, owner, recommendation, and validation requirement — or a poisoned handoff.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="wrap" id="future">
+      <div class="section-title">
+        <h2>Where this could go</h2>
+        <p class="section-note">The near-term claim is decision rehearsal. The future-state question is whether repeated scenario runs create enough context to support useful pattern analysis.</p>
+      </div>
+      <div class="grid two">
+        <div class="paper">
+          <h2>The working hypothesis</h2>
+          <p>
+            We suspect support wargaming could help teams prepare for predictive analysis by creating better context around how decisions actually fail.
+          </p>
+          <p>
+            The simulation does not predict audit failure, supply failure, ticket failure, or migration failure today. It captures structured decision data: what looked complete, what evidence was trusted, where pressure entered, what validation was skipped, and what risk was accepted.
+          </p>
+          <p>
+            If repeated runs produce consistent patterns, those patterns may later inform risk indicators, advisory support, training priorities, workflow redesign, and eventually predictive analysis. That future state has to be earned by evidence, not assumed from the prototype.
+          </p>
+        </div>
+        <div class="card">
+          <h2>What better context means</h2>
+          <p>
+            Most dashboards show status. Broken Handoff is designed to capture the judgment path behind the status.
+          </p>
+          <ul>
+            <li>What evidence was available?</li>
+            <li>What did the team trust too early?</li>
+            <li>What warning flag was recognized but not preserved?</li>
+            <li>Where did ownership become unclear?</li>
+            <li>What risk was fixed, deferred, transferred, or accepted?</li>
+            <li>What would the next team need to know?</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:28px">
+        <h2>Data maturity path</h2>
+        <p class="section-note">This is intentionally conservative. The method should not claim prediction before the data proves it can support analysis.</p>
+      </div>
+      <div class="maturity">
+        <div class="level">
+          <span class="num">1</span>
+          <h3>Playable scenario</h3>
+          <p>Run one support problem through the evidence, pressure, decision, validation, and AAR loop.</p>
+        </div>
+        <div class="level">
+          <span class="num">2</span>
+          <h3>Structured AAR</h3>
+          <p>Capture the decision path, evidence used, evidence ignored, ownership gap, and validation failure.</p>
+        </div>
+        <div class="level">
+          <span class="num">3</span>
+          <h3>Repeated runs</h3>
+          <p>Run similar scenarios across teams, roles, or functions to see whether the same failure patterns repeat.</p>
+        </div>
+        <div class="level">
+          <span class="num">4</span>
+          <h3>Pattern analysis</h3>
+          <p>Compare runs for recurring risk-transfer behaviors, false closure points, evidence gaps, and rework loops.</p>
+        </div>
+        <div class="level">
+          <span class="num">5</span>
+          <h3>Risk indicators</h3>
+          <p>Use repeated patterns to identify warning flags that may deserve earlier review, training, or control attention.</p>
+        </div>
+        <div class="level">
+          <span class="num">6</span>
+          <h3>Future analytics</h3>
+          <p>Explore predictive support only after the scenario data is reliable, repeatable, and tied to real outcomes.</p>
+        </div>
+      </div>
+
+      <div class="data-list">
+        <div class="item">
+          <b>Near-term output</b>
+          <p>Better conversations, clearer handoffs, sharper AARs, and stronger evidence discipline.</p>
+        </div>
+        <div class="item">
+          <b>Future-state output</b>
+          <p>Possible pattern libraries, risk indicators, control-gap themes, and data-informed advisory support.</p>
+        </div>
+        <div class="item">
+          <b>What we will not claim yet</b>
+          <p>That the prototype predicts failures, replaces SMEs, or proves a statistical model.</p>
+        </div>
+        <div class="item">
+          <b>What would make it credible</b>
+          <p>Repeated runs, consistent structured capture, SME review, and comparison against real-world outcomes.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap" id="run">
+      <div class="run-panel">
+        <div class="run-box">
+          <h2>Before you play</h2>
+          <p>
+            Do not play to guess the interface. Make the call you think a real support team would make under pressure.
+          </p>
+          <p>
+            Some decisions are doctrine-aligned. Some are incomplete but recoverable. Some transfer risk. Some poison the handoff by accepting status, AI confidence, or paperwork as proof when validation is still missing.
+          </p>
+          <div class="callout">
+            Play like the next team, auditor, user, or commander has to live with your handoff.
+          </div>
+          <div class="hero-actions">
+            <a class="button primary" href="./run.html">Start Simulation</a>
+            <a class="button secondary" href="../../">Return to Arcade</a>
+          </div>
+          <p class="small">
+            Proposed deployment path: <code class="path">/games/broken-handoff/index.html</code> launches <code class="path">/games/broken-handoff/run.html</code>.
+          </p>
+        </div>
+        <div class="card">
+          <h2>Loading plan</h2>
+          <ul>
+            <li>Keep this page as the field briefing.</li>
+            <li>Place the v0.3.1 simulation in <code class="path">run.html</code>.</li>
+            <li>Keep <code class="path">#run</code> as the direct launch anchor.</li>
+            <li>Do not bury the doctrine layer inside the simulation only.</li>
+            <li>Do not call it an arcade game on the landing page.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    Broken Handoff is a lightweight support-wargaming prototype. The method tests evidence discipline, validation, handoff quality, and accepted risk before a larger implementation commitment. Future analytics remain a hypothesis until repeated scenario data proves reliable.
+  </footer>
 </body>
 </html>
