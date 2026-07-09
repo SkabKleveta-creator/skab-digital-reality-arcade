@@ -3,110 +3,140 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Warehouse-in-the-Loop // v0.2.2 Deck</title>
+<title>Warehouse-in-the-Loop // Support Wargaming Proof</title>
 <style>
-  :root{--bg:#05101e;--panel:#0d1b2f;--panel2:#13263f;--text:#edf7ff;--muted:#a9bacb;--line:rgba(116,207,255,.22);--cyan:#74d8ff;--orange:#ff8a3d;--green:#77e69a;--red:#ff6b7a;--shadow:rgba(0,0,0,.35);--radius:22px}
-  *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 20% -10%,#173b5c 0,#081525 45%,#030812 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}.shell{width:min(1180px,94vw);margin:0 auto;padding:28px 0 56px}a{color:inherit}.hero,.section,.note{background:linear-gradient(180deg,rgba(13,27,47,.96),rgba(7,15,29,.96));border:1px solid var(--line);box-shadow:0 18px 46px var(--shadow);border-radius:var(--radius)}.hero{padding:28px;margin-bottom:18px}.eyebrow{margin:0 0 8px;color:var(--cyan);font-size:12px;text-transform:uppercase;letter-spacing:.16em;font-weight:850}h1{margin:0;font-size:clamp(38px,7vw,76px);line-height:.9;letter-spacing:-.06em}.promise{font-size:clamp(19px,2.8vw,30px);font-weight:850;margin:14px 0;color:#fff;line-height:1.08}.hero p{max-width:900px;color:#dcecff}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.btn{display:inline-flex;text-decoration:none;border-radius:999px;padding:10px 14px;border:1px solid rgba(116,216,255,.32);background:rgba(116,216,255,.10);font-weight:850;font-size:13px}.btn.primary{background:linear-gradient(90deg,rgba(116,216,255,.95),rgba(119,230,154,.92));color:#06101e;border:0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.section{padding:20px;margin-top:18px}.section h2{font-size:clamp(24px,3.5vw,42px);line-height:.95;margin:0 0 10px}.card{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);border-radius:18px;padding:15px}.card h3{margin:0 0 8px;color:#fff}.card p,.card li{color:var(--muted);font-size:14px}.tag{display:inline-flex;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);border-radius:999px;padding:5px 8px;font-size:11px;font-weight:800;color:#e6f5ff;margin:0 6px 6px 0}.tag.orange{border-color:rgba(255,138,61,.35);color:#ffe0ca;background:rgba(255,138,61,.10)}.tag.green{border-color:rgba(119,230,154,.35);color:#dcffe7;background:rgba(119,230,154,.10)}.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.flow .step{border:1px solid rgba(116,216,255,.18);background:rgba(116,216,255,.06);border-radius:16px;padding:12px}.step strong{display:block;color:var(--cyan);font-size:13px;margin-bottom:5px}.note{padding:16px;margin-top:18px;color:#dcecff}.warn{border-left:4px solid var(--orange);padding-left:14px}.footer{color:var(--muted);font-size:13px;margin-top:20px;text-align:center}@media(max-width:900px){.grid,.flow{grid-template-columns:1fr}.hero{padding:22px}}
+  :root{
+    --bg:#05101e;--panel:#0d1b2f;--panel2:#13263f;--text:#edf7ff;--muted:#a9bacb;--line:rgba(116,207,255,.22);
+    --cyan:#74d8ff;--orange:#ff8a3d;--green:#77e69a;--red:#ff6b7a;--gold:#ffd166;--shadow:rgba(0,0,0,.35);--radius:22px
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:radial-gradient(circle at 20% -10%,#173b5c 0,#081525 45%,#030812 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}
+  a{color:inherit}.shell{width:min(1200px,94vw);margin:0 auto;padding:28px 0 56px}
+  .hero,.section,.note,.strip{background:linear-gradient(180deg,rgba(13,27,47,.96),rgba(7,15,29,.96));border:1px solid var(--line);box-shadow:0 18px 46px var(--shadow);border-radius:var(--radius)}
+  .hero{display:grid;grid-template-columns:1.18fr .82fr;gap:20px;padding:28px;margin-bottom:18px;align-items:stretch}.hero-side{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);border-radius:18px;padding:16px}
+  .eyebrow{margin:0 0 8px;color:var(--cyan);font-size:12px;text-transform:uppercase;letter-spacing:.16em;font-weight:850}h1{margin:0;font-size:clamp(40px,7vw,78px);line-height:.9;letter-spacing:-.06em}.promise{font-size:clamp(20px,2.8vw,32px);font-weight:850;margin:14px 0;color:#fff;line-height:1.08}.hero p{max-width:900px;color:#dcecff}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.btn{display:inline-flex;text-decoration:none;border-radius:999px;padding:10px 14px;border:1px solid rgba(116,216,255,.32);background:rgba(116,216,255,.10);font-weight:850;font-size:13px}.btn.primary{background:linear-gradient(90deg,rgba(116,216,255,.95),rgba(119,230,154,.92));color:#06101e;border:0}.btn.warn{border-color:rgba(255,138,61,.4);background:rgba(255,138,61,.12)}
+  nav.chips{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 18px}nav.chips a{font-size:13px;text-decoration:none;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.055);border-radius:999px;padding:9px 12px;color:#dcedff}.section{padding:20px;margin-top:18px}.section h2{font-size:clamp(25px,3.5vw,44px);line-height:.95;margin:0 0 10px}.section-intro{margin:0 0 14px;color:#dcecff;max-width:980px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.grid.two{grid-template-columns:repeat(2,1fr)}.card{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);border-radius:18px;padding:15px}.card h3{margin:0 0 8px;color:#fff}.card p,.card li{color:var(--muted);font-size:14px}.tag{display:inline-flex;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);border-radius:999px;padding:5px 8px;font-size:11px;font-weight:800;color:#e6f5ff;margin:0 6px 6px 0}.tag.orange{border-color:rgba(255,138,61,.35);color:#ffe0ca;background:rgba(255,138,61,.10)}.tag.green{border-color:rgba(119,230,154,.35);color:#dcffe7;background:rgba(119,230,154,.10)}.tag.gold{border-color:rgba(255,209,102,.35);color:#fff1c6;background:rgba(255,209,102,.10)}
+  .flow{display:grid;grid-template-columns:repeat(8,1fr);gap:9px}.flow .step{border:1px solid rgba(116,216,255,.18);background:rgba(116,216,255,.06);border-radius:16px;padding:11px}.step strong{display:block;color:var(--cyan);font-size:13px;margin-bottom:5px}.step span{display:block;color:var(--muted);font-size:12.5px;line-height:1.35}.note{padding:16px;margin-top:18px;color:#dcecff}.warnline{border-left:4px solid var(--orange);padding-left:14px}.greenline{border-left:4px solid var(--green);padding-left:14px}.warehouse-board{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:18px;padding:14px;margin-top:12px}.zones{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.zone{min-height:110px;border:1px solid rgba(116,216,255,.18);border-radius:15px;padding:12px;background:linear-gradient(180deg,rgba(116,216,255,.08),rgba(255,255,255,.035))}.zone strong{display:block;color:#fff}.zone span{display:block;color:var(--muted);font-size:12.5px}.proof-ladder{display:grid;gap:10px}.ladder-row{display:grid;grid-template-columns:190px 1fr;gap:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:15px;padding:12px}.ladder-row strong{color:var(--cyan)}.ladder-row span{color:var(--muted);font-size:14px}.footer{color:var(--muted);font-size:13px;margin-top:20px;text-align:center}@media(max-width:980px){.hero{grid-template-columns:1fr}.grid,.grid.two,.zones,.flow{grid-template-columns:1fr 1fr}.ladder-row{grid-template-columns:1fr}}@media(max-width:640px){.grid,.grid.two,.zones,.flow{grid-template-columns:1fr}.hero{padding:22px}h1{font-size:44px}}
 </style>
 </head>
 <body id="top">
 <main class="shell">
   <section class="hero">
-    <p class="eyebrow">Inside the System · Proof Board</p>
-    <h1>Warehouse-in-the-Loop</h1>
-    <p class="promise">A tabletop diagnostic for validated warehouse flow under human processing limits.</p>
-    <p>This v0.2.2 deck explains the Dock-to-Stock Collapse module: a safe-to-fail exercise for the warehouse failure mode dashboards miss. It tests whether a team can preserve flow without sacrificing accuracy, safety, evidence, or human comprehension.</p>
-    <div><span class="tag">Tabletop Diagnostic</span><span class="tag green">2-4 Players + Facilitator / AI Steward</span><span class="tag orange">30 Min Play + 10 Min AAR</span></div>
-    <div class="actions"><a class="btn primary" href="../../">Back to Arcade</a><a class="btn" href="#run">How to Run</a><a class="btn" href="#proof">Proof Question</a></div>
+    <div>
+      <p class="eyebrow">Inside the System · Support Wargaming Proof</p>
+      <h1>Warehouse-in-the-Loop</h1>
+      <p class="promise">A facilitated warehouse decision game about proof, pressure, and human processing.</p>
+      <p>Warehouse-in-the-Loop is not here to embarrass the floor, blame Supply Marines, or pretend a browser page is a warehouse management system. It is a safe-to-fail support wargame that helps a team see where records, handoffs, priorities, and human comprehension can drift apart before the real mission pays for it.</p>
+      <div><span class="tag green">Facilitated Diagnostic</span><span class="tag gold">Tabletop + Digital Console</span><span class="tag orange">30 Min Play + 10 Min AAR</span></div>
+      <div class="actions"><a class="btn primary" href="../../">Back to Arcade</a><a class="btn" href="#doctrine">Doctrine</a><a class="btn" href="#digital">Digital Console</a><a class="btn warn" href="#not">What It Is Not</a></div>
+    </div>
+    <aside class="hero-side">
+      <p class="eyebrow">Plain-English BLUF</p>
+      <h3>Good Marines should not have to guess what the system means.</h3>
+      <p>This module makes the invisible work visible: where the team looked, what it assumed, what it validated, and what remained risky.</p>
+      <p class="greenline"><strong>Intent:</strong> improve the process, not target the person.</p>
+    </aside>
   </section>
 
-  <section class="section" id="proof">
+  <nav class="chips" aria-label="Page sections">
+    <a href="#why">Why It Exists</a><a href="#doctrine">Doctrine</a><a href="#scenario">Scenario</a><a href="#run">Run Loop</a><a href="#digital">Digital Console</a><a href="#activity">Activity Visualization</a><a href="#not">Guardrails</a><a href="#top">Top</a>
+  </nav>
+
+  <section class="section" id="why">
     <p class="eyebrow">So What</p>
-    <h2>Not a cute warehouse game.</h2>
+    <h2>The point is not warehouse trivia. The point is decision friction.</h2>
+    <p class="section-intro">Warehouses usually do not fail because one person forgot how to work. They fail when the floor, the record, the priority, and the handoff stop telling the same story. WITL turns that failure mode into a short, playable diagnostic.</p>
     <div class="grid">
-      <article class="card"><h3>What it reveals</h3><p>Where process, data, people, and priority disagree before the real warehouse pays for it.</p></article>
-      <article class="card"><h3>What it trains</h3><p>A team slows just enough to make the next action executable, not merely fast.</p></article>
+      <article class="card"><h3>What it reveals</h3><p>Where process, data, people, and priority disagree before the team commits to the wrong action.</p></article>
+      <article class="card"><h3>What it trains</h3><p>A team slows just enough to understand the next action, then acts with evidence instead of noise.</p></article>
       <article class="card"><h3>What it proves</h3><p>Validated flow beats false throughput. A documented hold can be better than a dirty ship.</p></article>
     </div>
   </section>
 
-  <section class="section">
-    <p class="eyebrow">What It Is / Is Not</p>
-    <h2>Tabletop diagnostic, not digital simulator.</h2>
-    <div class="grid">
-      <article class="card"><h3>This is</h3><ul><li>A tabletop diagnostic module</li><li>A facilitator-supported hidden-state exercise</li><li>A way to test validation behavior</li><li>A structured AAR on warehouse execution</li></ul></article>
-      <article class="card"><h3>This is not</h3><ul><li>A digital warehouse simulator</li><li>A throughput race</li><li>A campaign or lore expansion</li><li>A replacement for human judgment</li></ul></article>
-      <article class="card"><h3>Doctrine</h3><p>Humans need time and context before they can execute the next right action.</p></article>
+  <section class="section" id="doctrine">
+    <p class="eyebrow">Doctrine</p>
+    <h2>Humans need time and context before the next right action.</h2>
+    <div class="grid two">
+      <article class="card"><h3>The core lesson</h3><p>The Processing Pause is not delay for delay's sake. It is the moment where the team names what it knows, what it is assuming, what could hurt people or evidence, and what would prove the action worked.</p></article>
+      <article class="card"><h3>The respect rule</h3><p>This is not a blame tool. If the team is overloaded, confused, or working from bad records, the game treats that as a system condition to diagnose, not a character flaw.</p></article>
     </div>
+    <p class="note warnline"><strong>Language guardrail:</strong> do not frame the run as “catching mistakes.” Frame it as finding where the work became harder, less clear, or less provable than it needed to be.</p>
   </section>
 
-  <section class="section">
+  <section class="section" id="scenario">
     <p class="eyebrow">Scenario</p>
     <h2>Dock-to-Stock Collapse</h2>
-    <div class="grid">
-      <article class="card"><h3>Opening condition</h3><p>A mission-critical inbound surge hits. The system says the queue is fine. The floor disagrees.</p></article>
-      <article class="card"><h3>Visible symptoms</h3><p>Receiving backlog, Pick Face shortage, and Pack / Ship cutoff pressure.</p></article>
-      <article class="card"><h3>Hidden truth</h3><p>Ghost inventory, unofficial staging storage, and an old process still being followed.</p></article>
-    </div>
-  </section>
-
-  <section class="section">
-    <p class="eyebrow">Mechanic</p>
-    <h2>Processing becomes useful.</h2>
-    <div class="flow">
-      <div class="step"><strong>1. Floor Readback</strong><span>What changed? What is unknown? What is at risk?</span></div>
-      <div class="step"><strong>2. Processing Pause</strong><span>Name an assumption, risk, or proof requirement.</span></div>
-      <div class="step"><strong>3. Insight</strong><span>Earn foresight, not a stat bonus.</span></div>
-      <div class="step"><strong>4. Commit</strong><span>We are doing X because Y. We will know it worked when Z.</span></div>
-      <div class="step"><strong>5. Validate</strong><span>Prove the gain or expose the false green.</span></div>
-    </div>
-    <p class="note warn">The Pause is not a delay. It is how the team earns enough foresight to avoid rushing into the wrong fix.</p>
-  </section>
-
-  <section class="section">
-    <p class="eyebrow">Decision Economy</p>
-    <h2>Five actions, hard boundaries.</h2>
-    <div class="flow">
-      <div class="step"><strong>Observe</strong><span>Unknown -> evidence</span></div>
-      <div class="step"><strong>Stabilize</strong><span>Threat -> controlled</span></div>
-      <div class="step"><strong>Route</strong><span>Constraint -> flow</span></div>
-      <div class="step"><strong>Exception</strong><span>Protect or Push, declared aloud</span></div>
-      <div class="step"><strong>Validate</strong><span>Claim -> proof</span></div>
-    </div>
-  </section>
-
-  <section class="section">
-    <p class="eyebrow">AI Steward</p>
-    <h2>Memory, not decision replacement.</h2>
-    <p>The AI / facilitator preserves hidden state and pressure. Humans still choose, commit, validate, and own the judgment.</p>
-    <div class="grid">
-      <article class="card"><h3>Ghost Inventory</h3><p>WMS says 40 units. Physical count says 6. The missing units never posted after a failed batch upload.</p></article>
-      <article class="card"><h3>Staging as Storage</h3><p>Receiving backlog includes old overflow, not just inbound freight.</p></article>
-      <article class="card"><h3>Old Process</h3><p>A new rule went by email. Day shift half-adopted it. Night shift never saw it.</p></article>
+    <p class="section-intro">A mission-critical inbound surge hits. The system says the queue is fine. The floor disagrees. The team has five rounds to recover validated flow before the final ship / hold decision.</p>
+    <div class="warehouse-board">
+      <div class="zones">
+        <div class="zone"><strong>Receiving Dock</strong><span>Backlog, staged freight, handoff pressure.</span></div>
+        <div class="zone"><strong>QA / Hold</strong><span>Unknown status, proof before release.</span></div>
+        <div class="zone"><strong>Bulk Storage</strong><span>Put-away rules, overflow, aisle pressure.</span></div>
+        <div class="zone"><strong>Pick Face</strong><span>Priority shortage, record-vs-floor truth.</span></div>
+        <div class="zone"><strong>Pack / Ship</strong><span>Cutoff pressure and final decision.</span></div>
+        <div class="zone"><strong>Rework</strong><span>Exception cleanup and recovery path.</span></div>
+      </div>
     </div>
   </section>
 
   <section class="section" id="run">
-    <p class="eyebrow">Run Format</p>
-    <h2>How to run it without turning it into a meeting.</h2>
-    <div class="grid">
-      <article class="card"><h3>0-5: Setup</h3><p>Board, roles, tracks, tokens, and Round 1 readback.</p></article>
-      <article class="card"><h3>5-30: Five rounds</h3><p>Readback -> Pause -> Action -> Reaction -> Record / Validate.</p></article>
-      <article class="card"><h3>30-40: Decision + AAR</h3><p>Ship with evidence, hold with documented risk, or ship without proof. Then name the real constraint.</p></article>
+    <p class="eyebrow">Run Loop</p>
+    <h2>One decision moment at a time.</h2>
+    <div class="flow">
+      <div class="step"><strong>1. Readback</strong><span>What changed?</span></div>
+      <div class="step"><strong>2. Pause</strong><span>What do we need to understand?</span></div>
+      <div class="step"><strong>3. Commit</strong><span>X because Y; worked when Z.</span></div>
+      <div class="step"><strong>4. Action</strong><span>Observe, Stabilize, Route, Exception, Validate.</span></div>
+      <div class="step"><strong>5. Resolve</strong><span>Provisional, validated, or risk.</span></div>
+      <div class="step"><strong>6. Record</strong><span>What changed and what remains unknown?</span></div>
+      <div class="step"><strong>7. Decision</strong><span>Ship, hold, or accept false-win risk.</span></div>
+      <div class="step"><strong>8. AAR</strong><span>What did the run teach?</span></div>
     </div>
+  </section>
+
+  <section class="section" id="digital">
+    <p class="eyebrow">Digital Console</p>
+    <h2>The digital layer supports the table. It does not replace judgment.</h2>
+    <div class="grid">
+      <article class="card"><h3>Timing and rhythm</h3><p>The console guides the readback, pause, commit, action, resolution, final decision, and AAR so the facilitator does not have to hold everything in memory.</p></article>
+      <article class="card"><h3>Controlled reveals</h3><p>Ground truth stays facilitator-controlled. The console does not invent facts or tell players the best move.</p></article>
+      <article class="card"><h3>Evidence capture</h3><p>The console separates provisional gains from validated gains and records what the team believed, proved, or left open.</p></article>
+    </div>
+  </section>
+
+  <section class="section" id="activity">
+    <p class="eyebrow">Activity Visualization</p>
+    <h2>The warehouse board becomes a decision surface.</h2>
+    <p class="section-intro">The next digital direction is not a full simulator. It is an event-history layer: every focus, action, reveal, validation, and risk marker becomes a structured event that can drive the board and the AAR.</p>
+    <div class="grid two">
+      <article class="card"><h3>What the board can show</h3><ul><li>Where the team spent attention</li><li>Which zones accumulated risk</li><li>What was provisional vs. validated</li><li>Where hidden faults were revealed or proven</li></ul></article>
+      <article class="card"><h3>Why that matters</h3><p>Across repeated runs, the structured event history can show decision patterns, validation gaps, handoff failures, and recovery behavior. That is a data foundation for pattern analysis later, not a predictive claim today.</p></article>
+    </div>
+  </section>
+
+  <section class="section" id="not">
+    <p class="eyebrow">Guardrails</p>
+    <h2>What this should not become yet.</h2>
+    <div class="grid">
+      <article class="card"><h3>Not a WMS</h3><p>No live inventory, no official records, no unit data, no operational authority.</p></article>
+      <article class="card"><h3>Not a load planner</h3><p>No cube, weight, tie-down, embark, or transportation calculations in this lane.</p></article>
+      <article class="card"><h3>Not AI command advice</h3><p>AI may help structure memory, logs, and AARs. It should not recommend moves, generate facts, or replace the facilitator.</p></article>
+    </div>
+    <p class="note greenline"><strong>Current proof question:</strong> Can a short facilitated run help a team see where warehouse work became unclear, unproven, or overloaded — without making the people doing the work feel blamed?</p>
   </section>
 
   <section class="section">
-    <p class="eyebrow">Next Move</p>
-    <h2>Prove the floor first.</h2>
-    <div class="grid">
-      <article class="card"><h3>Do not add content before first run</h3><p>No digital version yet. No campaign layer yet. No new tracks, zones, cards, or mechanics yet.</p></article>
-      <article class="card"><h3>Fix only what the table proves</h3><p>Confusing timing, unclear action resolution, Insight abuse/uselessness, facilitator burden, Ground Truth Brief gaps, or a Pause that feels fake.</p></article>
-      <article class="card"><h3>Final BLUF</h3><p>Print it. Run it. Let the AAR tell us what is real.</p></article>
+    <p class="eyebrow">Proof Path</p>
+    <h2>How this matures without drifting.</h2>
+    <div class="proof-ladder">
+      <div class="ladder-row"><strong>1. Tabletop doctrine</strong><span>The v0.2.2 packet owns the method: processing pause, commit statement, validation, final decision, AAR.</span></div>
+      <div class="ladder-row"><strong>2. Facilitator console</strong><span>Offline HTML supports timing, reveal control, notes, provisional/validated tracking, and AAR export.</span></div>
+      <div class="ladder-row"><strong>3. Activity visualization</strong><span>The warehouse board shows event history: where the table looked, acted, validated, or carried risk.</span></div>
+      <div class="ladder-row"><strong>4. Pattern analysis later</strong><span>Only after repeated real runs should we discuss patterns or risk indicators.</span></div>
     </div>
   </section>
 
-  <footer class="footer">Warehouse-in-the-Loop v0.2.2 · Dock-to-Stock Collapse · Inside the System TTRPG Engine</footer>
+  <footer class="footer">Warehouse-in-the-Loop · Facilitated Support Wargaming · Inside the System TTRPG Engine</footer>
 </main>
 </body>
 </html>
