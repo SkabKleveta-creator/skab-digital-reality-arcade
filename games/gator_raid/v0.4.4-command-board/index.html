@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>GATOR RAID v0.4.4 — Command Board</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050706}
+iframe{border:0;width:100%;height:100%;display:block}
+#loading{position:fixed;inset:0;display:grid;place-items:center;background:#050706;color:#ffe19a;font:900 14px system-ui;letter-spacing:.12em;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div id="loading">Loading Command Board…</div>
+<iframe id="game" src="../v0.4.3-aar/index.html" title="GATOR RAID v0.4.4"></iframe>
+<script>
+(()=>{
+const frame=document.getElementById('game');
+frame.addEventListener('load',()=>{
+ const d=frame.contentDocument,w=frame.contentWindow;
+ if(!d||!w)return;
+ document.getElementById('loading').remove();
+
+ const css=d.createElement('style');
+ css.textContent=`
+ .sideBody{padding:8px!important;display:grid!important;gap:8px!important}
+ .card{display:none!important}
+ .cmdSection{border:1px solid rgba(244,236,212,.14);background:rgba(255,255,255,.028);border-radius:13px;overflow:hidden}
+ .cmdSectionHead{width:100%;border:0;background:rgba(0,0,0,.18);color:#f2d887;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 11px;cursor:pointer;text-align:left;font-weight:900;letter-spacing:.11em;text-transform:uppercase;font-size:10px}
+ .cmdSectionHead strong{font-size:8px;color:#bfb69f;border:1px solid rgba(244,236,212,.14);border-radius:999px;padding:3px 6px}
+ .cmdSection.open .cmdSectionHead{background:rgba(214,184,95,.09)}
+ .cmdSectionBody{display:none;padding:9px}.cmdSection.open .cmdSectionBody{display:grid;gap:8px}
+ .cmdLead{margin:0;color:#d8d0b8;font-size:11px;line-height:1.35}
+ .guideDetails{border:1px solid rgba(104,169,204,.23);background:rgba(104,169,204,.06);border-radius:11px;padding:7px 8px}
+ .guideDetails summary{cursor:pointer;color:#c9efff;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+ .guideDetails p{margin:7px 0 0;color:#d8d0b8;font-size:11px;line-height:1.35}
+ .toolGroup,.tacticsBlock{display:grid;gap:6px}.toolGroup>b,.tacticsBlock>b{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#ffe19a}
+ .tacticsBlock{border-top:1px solid rgba(255,255,255,.08);padding-top:8px}
+ .miniStatus{display:flex;justify-content:space-between;gap:8px;border:1px solid rgba(244,236,212,.11);border-radius:10px;padding:7px 8px;font-size:10px}
+ .miniStatus span{color:#aaa38d;text-transform:uppercase;letter-spacing:.08em}.miniStatus b{color:#fff1ce}
+ .boardCursorLabel{position:absolute;z-index:9;pointer-events:none;display:none;background:rgba(4,6,5,.93);border:1px solid #68a9cc;border-radius:9px;padding:5px 7px;color:#c9efff;font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+ .boardCursorLabel.show,.planGhost.show{display:block}
+ .planGhost{position:absolute;z-index:8;pointer-events:none;display:none;width:34px;height:26px;border:2px solid #68a9cc;border-radius:7px;background:rgba(104,169,204,.12);transform:translate(-50%,-50%)}
+ .boardFrame.toolActive canvas{cursor:crosshair}
+ `;
+ d.head.appendChild(css);
+
+ const body=d.querySelector('.sideBody');
+ d.querySelector('.sideHead').textContent='Command Board';
+ body.innerHTML=`
+ <section class="cmdSection open" id="missionSection"><button class="cmdSectionHead"><span>Mission</span><strong id="missionState">Required</strong></button><div class="cmdSectionBody"><p class="cmdLead">Review the mission, commander's intent, disruption assumption, and success criteria before planning.</p><button class="btn" id="missionSide">Open Mission Brief</button></div></section>
+ <section class="cmdSection open" id="planningSection"><button class="cmdSectionHead"><span>Planning</span><strong id="planningState">Waiting</strong></button><div class="cmdSectionBody">
+ <details class="guideDetails" open><summary>Planning Guidance</summary><p>Select a control point, support element, or friction marker. The cursor and board preview show the active tool. Click the board to place it. Lock the plan when complete.</p></details>
+ <div class="toolGroup"><b>Control Points</b><div class="planTools" id="controlTools"></div></div>
+ <div class="toolGroup"><b>Support</b><div class="planTools" id="supportTools"></div></div>
+ <div class="toolGroup"><b>Friction</b><div class="planTools" id="frictionTools"></div></div>
+ <div id="planStatusMirror" class="planStatus"></div>
+ <div class="tacticsBlock"><b>Posture and Tempo</b><div id="tacticsMirror"></div></div>
+ </div></section>
+ <section class="cmdSection" id="executionSection"><button class="cmdSectionHead"><span>Execution</span><strong id="executionState">Locked</strong></button><div class="cmdSectionBody"><p class="cmdLead" id="executionSummary">Lock and launch the plan.</p><div class="miniStatus"><span>Phase</span><b id="sidePhase">PLAN</b></div><div class="miniStatus"><span>C2 Net</span><b id="sideNet">100%</b></div><div class="miniStatus"><span>Cohesion</span><b id="sideCohesion">100%</b></div></div></section>
+ <section class="cmdSection" id="recoverySection"><button class="cmdSectionHead"><span>Recovery</span><strong id="recoveryState">Standby</strong></button><div class="cmdSectionBody"><p class="cmdLead" id="recoverySummary">Recovery remains available if capability is degraded.</p></div></section>
+ <section class="cmdSection" id="aarSection"><button class="cmdSectionHead"><span>After-Action Review</span><strong id="aarState">Not Ready</strong></button><div class="cmdSectionBody"><p class="cmdLead">Compare the locked plan with execution, disruption, recovery, and outcome.</p></div></section>
+ <section class="cmdSection" id="aboutSection"><button class="cmdSectionHead"><span>About This Prototype</span><strong>Info</strong></button><div class="cmdSectionBody"><details class="guideDetails"><summary>Prototype Notes</summary><p>This version validates the expanded board, mission framing, planning, disruption, recovery, and evidence-based AAR. It does not replace the production v0.3.8a engine.</p></details></div></section>`;
+
+ d.querySelectorAll('.cmdSectionHead').forEach(b=>b.onclick=()=>b.parentElement.classList.toggle('open'));
+ d.getElementById('missionSide').onclick=()=>d.getElementById('showMission').click();
+
+ const groups={control:['c2','arrival','recovery','dismount','rally','remount','objective'],support:['mortar1','mortar2'],friction:['pressure','bog','comms']};
+ const labels={c2:'Beach C2',arrival:'Arrival',recovery:'Recovery',dismount:'Dismount',rally:'Rally',remount:'Remount',objective:'Objective',mortar1:'Mortar A',mortar2:'Mortar B',pressure:'Pressure',bog:'Bog Risk',comms:'Comms Noise'};
+ Object.entries(groups).forEach(([g,ids])=>ids.forEach(id=>{
+   const original=d.querySelector(`[data-plan="${id}"]`);
+   if(!original)return;
+   const b=original.cloneNode(true);b.textContent=labels[id];b.onclick=()=>original.click();
+   d.getElementById(g+'Tools').appendChild(b);
+ }));
+ const tactics=d.createElement('div');
+ tactics.className='tacticsGrid';
+ ['balanced','protected','dispersed','concentrated'].forEach(id=>{const o=d.querySelector(`[data-posture="${id}"]`);if(o){const b=o.cloneNode(true);b.onclick=()=>o.click();tactics.appendChild(b)}});
+ ['steady','deliberate','surge','pause'].forEach(id=>{const o=d.querySelector(`[data-tempo="${id}"]`);if(o){const b=o.cloneNode(true);b.onclick=()=>o.click();tactics.appendChild(b)}});
+ d.getElementById('tacticsMirror').appendChild(tactics);
+
+ const frameBox=d.querySelector('.boardFrame');
+ const ghost=d.createElement('div');ghost.className='planGhost';frameBox.appendChild(ghost);
+ const label=d.createElement('div');label.className='boardCursorLabel';frameBox.appendChild(label);
+ const canvas=d.getElementById('game');
+
+ canvas.addEventListener('mousemove',e=>{
+   const canPlace=!d.getElementById('lockPlan').disabled&&!d.getElementById('launch').disabled;
+   if(canPlace){ghost.classList.remove('show');label.classList.remove('show');return}
+   const r=frameBox.getBoundingClientRect();
+   ghost.style.left=(e.clientX-r.left)+'px';ghost.style.top=(e.clientY-r.top)+'px';
+   label.style.left=(e.clientX-r.left+18)+'px';label.style.top=(e.clientY-r.top+18)+'px';
+   const active=d.querySelector('[data-plan].active');
+   label.textContent=active?active.textContent:'PLACE';
+   ghost.classList.add('show');label.classList.add('show');frameBox.classList.add('toolActive');
+ });
+ canvas.addEventListener('mouseleave',()=>{ghost.classList.remove('show');label.classList.remove('show')});
+
+ setInterval(()=>{
+   const missionAccepted=d.getElementById('missionOverlay').classList.contains('hidden');
+   const planLocked=!d.getElementById('launch').disabled;
+   const running=d.getElementById('launch').disabled&&d.getElementById('hold').disabled===false;
+   const degraded=!d.getElementById('recover').disabled;
+   const aarReady=!d.getElementById('aar').disabled;
+   d.getElementById('missionState').textContent=missionAccepted?'Accepted':'Required';
+   d.getElementById('planningState').textContent=!missionAccepted?'Waiting':planLocked?'Locked':'Active';
+   d.getElementById('executionState').textContent=running?'Active':planLocked?'Ready':'Locked';
+   d.getElementById('recoveryState').textContent=degraded?'Action':'Standby';
+   d.getElementById('aarState').textContent=aarReady?'Ready':'Not Ready';
+   d.getElementById('sidePhase').textContent=d.getElementById('phase').textContent;
+   d.getElementById('sideNet').textContent=d.getElementById('net').textContent;
+   d.getElementById('sideCohesion').textContent=d.getElementById('cohesion').textContent;
+   d.getElementById('planStatusMirror').textContent=d.getElementById('planStatus').textContent;
+   if(running){d.getElementById('planningSection').classList.remove('open');d.getElementById('executionSection').classList.add('open')}
+   if(degraded)d.getElementById('recoverySection').classList.add('open');
+   if(aarReady)d.getElementById('aarSection').classList.add('open');
+ },250);
+});
+})();
+</script>
+</body>
+</html>
