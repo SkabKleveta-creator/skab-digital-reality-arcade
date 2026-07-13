@@ -1,1442 +1,946 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>GATOR RAID v0.3.8a — Dismount/Rally Flow Fix</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>GATOR RAID v0.4.3-AAR — Expanded AAR + Print/Save Offline Test</title>
 <style>
 :root{
-  --bg:#090c0b;--panel:#151a16;--panel2:#20261f;--panel3:#101411;
-  --ink:#f4ecd4;--muted:#aaa38d;--line:rgba(244,236,212,.17);
-  --gold:#d6b85f;--green:#7caf6d;--blue:#68a9cc;--red:#c95f55;--sand:#c8ad7a;
-  --shadow:rgba(0,0,0,.5);--black:#050606;
+  --bg:#090c0b;--panel:#151a16;--panel2:#20261f;--ink:#f4ecd4;--muted:#aaa38d;
+  --line:rgba(244,236,212,.18);--gold:#d6b85f;--green:#7caf6d;--blue:#68a9cc;
+  --red:#c95f55;--sand:#c8ad7a;--shadow:rgba(0,0,0,.52);
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{margin:0;width:100%;height:100%;background:radial-gradient(circle at top,#273128 0%,#101412 40%,#050606 100%);color:var(--ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;}
-button,input,textarea{font-family:inherit;}
-.app{height:100vh;width:100vw;display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px;padding:8px;}
-.topbar{display:grid;grid-template-columns:minmax(240px,390px) 1fr auto;gap:8px;align-items:stretch;}
-.brand,.statusBar,.phaseBar{background:linear-gradient(180deg,rgba(32,38,31,.97),rgba(13,16,14,.97));border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 44px var(--shadow);overflow:hidden;}
-.brand{padding:12px 16px;background:linear-gradient(90deg,rgba(214,184,95,.15),rgba(19,23,20,.96));}
-h1{font-size:30px;line-height:.92;margin:0;letter-spacing:.09em;text-transform:uppercase;font-weight:950;}
-.subtitle{margin-top:6px;color:var(--muted);font-size:11px;letter-spacing:.16em;text-transform:uppercase;}
-.statusBar{display:flex;gap:8px;align-items:center;justify-content:flex-start;padding:8px;overflow:auto;}
-.chip{min-width:92px;border:1px solid rgba(244,236,212,.15);background:rgba(0,0,0,.18);border-radius:13px;padding:8px 10px;}
-.chip b{display:block;font-size:17px;line-height:1;color:#fff7df;white-space:nowrap;}
-.chip span{display:block;margin-top:5px;color:var(--muted);font-size:9px;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;}
-.chip.wide{min-width:138px;}
-.bar{height:7px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.12);border-radius:999px;overflow:hidden;margin-top:7px;}
-.fill{height:100%;width:100%;background:linear-gradient(90deg,var(--green),var(--gold));}
-.phaseBar{padding:8px;display:flex;gap:8px;align-items:center;}
-.phasePill{border:1px solid rgba(214,184,95,.34);background:rgba(214,184,95,.12);border-radius:999px;color:#f3d98d;font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;padding:7px 10px;white-space:nowrap;}
-.btn{border:1px solid rgba(244,236,212,.18);background:linear-gradient(180deg,#32382f,#171b17);color:var(--ink);border-radius:12px;min-height:40px;padding:9px 12px;font-weight:850;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
-.btn:hover{border-color:rgba(214,184,95,.55);filter:brightness(1.08);}
-.btn:active{transform:translateY(1px);}
-.btn:disabled{opacity:.4;cursor:not-allowed;filter:saturate(.4);}
-.btn.primary{background:linear-gradient(180deg,#dec777,#8d7431);color:#11150f;border-color:#ffe3a0;text-shadow:0 1px rgba(255,255,255,.25);}
-.btn.good{background:linear-gradient(180deg,#3c5d37,#182617);border-color:rgba(124,175,109,.55);}
-.btn.blue{background:linear-gradient(180deg,#31556a,#14222d);border-color:rgba(104,169,204,.55);}
-.btn.danger{background:linear-gradient(180deg,#5b2b28,#251211);border-color:rgba(201,95,85,.55);}
-.btn.ghost{background:rgba(255,255,255,.035);}
-.mainGrid{min-height:0;display:grid;grid-template-columns:390px minmax(0,1fr) 390px;gap:8px;align-items:stretch;}
-.sidePanel,.commandPanel{background:linear-gradient(180deg,rgba(31,37,31,.96),rgba(10,13,11,.96));border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 52px rgba(0,0,0,.48);overflow:hidden;min-height:0;}
-.sidePanel{display:grid;grid-template-rows:auto minmax(0,1fr) auto;}
-.sideHeader{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding:10px 12px;background:rgba(0,0,0,.18);}
-.sideHeader h2{margin:0;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#f2d887;}
-.sideBody{overflow:auto;padding:9px;}
-.sideBody .cardGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}
-.sideBody .unitCard{min-height:78px;padding:8px;}
-.sideBody .unitCard .cardTop b{font-size:11px;}
-.sideBody .unitCard .tag{font-size:8px;padding:2px 5px;}
-.sideBody .unitCard .meta{font-size:10px;line-height:1.22;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;}
-.mainGrid .quickPanel{position:relative;right:auto;top:auto;width:auto;padding:10px;align-self:stretch;overflow:auto;}
-.commandPanel .selectedBox{font-size:11px;}
-.rosterActions{border-top:1px solid var(--line);background:rgba(0,0,0,.18);padding:9px;display:grid;gap:8px;}
-.rosterActions h2,.guidePanel h2{margin:0 0 6px;font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:#f2d887;}
-.actionHint{font-size:11px;color:var(--muted);line-height:1.35;margin:0;}
-.actionGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
-.actionGrid .btn{font-size:10px;min-height:36px;padding:7px 8px;}
-.selectionTools{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-.selectionTools .btn{font-size:9px;min-height:30px;padding:5px 6px;}
-.guidePanel{background:linear-gradient(180deg,rgba(31,37,31,.96),rgba(10,13,11,.96));border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 52px rgba(0,0,0,.48);overflow:hidden;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);}
-.guideBody{min-height:0;overflow:auto;padding:10px;display:grid;gap:8px;align-content:start;}
-.guidePanel .sideHeader{border-radius:18px 18px 0 0;}
-.rightDrawer{min-height:420px;}
-.guidePanel .drawer{max-height:none;height:auto;box-shadow:none;border-radius:15px;background:linear-gradient(180deg,rgba(22,27,22,.94),rgba(8,10,9,.94));}
-.guidePanel .drawer.collapsed{max-height:none;}
-.guidePanel .drawer.collapsed .drawerBody{display:none;}
-.guidePanel .drawerBody{max-height:430px;}
-.guidePanel .tabs{position:sticky;top:0;background:rgba(15,19,16,.96);z-index:3;}
-.guidePanel .panelGrid{grid-template-columns:1fr;gap:10px;}
-.guidePanel .markerGrid{grid-template-columns:1fr 1fr;}
-.guidePanel .terrainGrid{grid-template-columns:1fr 1fr;}
-.guidePanel .aarGrid{grid-template-columns:1fr;}
-.guideBox{border:1px solid rgba(244,236,212,.14);background:rgba(255,255,255,.035);border-radius:14px;padding:10px;margin-bottom:8px;}
-.guideBox b{display:block;color:#ffe19a;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;}
-.guideBox p{margin:0;color:#d8d0b8;font-size:12px;line-height:1.38;}
-.guideSteps{display:grid;gap:6px;margin-top:8px;}
-.guideStep{border:1px solid rgba(244,236,212,.12);background:rgba(0,0,0,.16);border-radius:12px;padding:7px 8px;font-size:11px;color:#bfb69f;line-height:1.25;}
-.guideStep.active{border-color:rgba(214,184,95,.58);background:rgba(214,184,95,.10);color:#fff1ce;}
-
-.guideStep.done{border-color:rgba(124,175,109,.42);background:rgba(124,175,109,.08);color:#cfe7c6;}
-.guideStep.future{opacity:.72;}
-.coachBox{border:1px solid rgba(104,169,204,.34);background:linear-gradient(180deg,rgba(31,55,68,.18),rgba(255,255,255,.035));border-radius:14px;padding:10px;margin-bottom:8px;}
-.coachBox b{display:block;color:#bfe9ff;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;}
-.coachNow{font-size:13px;line-height:1.35;color:#fff6dc;margin:0 0 7px;}
-.coachRow{border-top:1px solid rgba(255,255,255,.10);padding-top:7px;margin-top:7px;color:#d8d0b8;font-size:11px;line-height:1.35;}
-.coachRow strong{color:#ffe19a;}
-
-.nextClickBox{border:1px solid rgba(255,225,154,.45);background:linear-gradient(180deg,rgba(214,184,95,.16),rgba(0,0,0,.18));border-radius:14px;padding:9px 10px;margin-top:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
-.nextClickBox b{display:block;color:#ffe19a;font-size:10px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px;}
-.nextClickBox span{display:block;color:#fff6dc;font-size:13px;line-height:1.3;font-weight:760;}
-.nextClickBox small{display:block;color:#bfb69f;font-size:11px;line-height:1.32;margin-top:5px;}
-.actionStatus{border:1px solid rgba(244,236,212,.13);background:rgba(0,0,0,.18);border-radius:12px;padding:7px 8px;font-size:10px;line-height:1.28;color:#d8d0b8;}
-.actionStatus b{color:#ffe19a;}
-.playbookBox{border:1px solid rgba(124,175,109,.32);background:linear-gradient(180deg,rgba(124,175,109,.10),rgba(255,255,255,.03));border-radius:14px;padding:10px;margin-bottom:8px;}
-.playbookBox b{display:block;color:#c9f5bd;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;}
-.playbookBox p{margin:0;color:#d8d0b8;font-size:12px;line-height:1.38;}
-.btn.blocked{opacity:.45;filter:saturate(.5);}
-.coachActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;}
-.coachActions .btn{font-size:10px;min-height:34px;padding:7px 8px;}
-.btn.recommended{outline:2px solid rgba(255,225,154,.86);box-shadow:0 0 0 4px rgba(214,184,95,.12), inset 0 1px 0 rgba(255,255,255,.07);filter:brightness(1.12);}
-.unitCard.recommended{border-color:rgba(255,225,154,.82);box-shadow:0 0 0 2px rgba(214,184,95,.16);}
-
-.coachResultBox{border:1px solid rgba(124,175,109,.42);background:linear-gradient(180deg,rgba(124,175,109,.12),rgba(0,0,0,.22));border-radius:14px;padding:9px 10px;margin-top:8px;}
-.coachResultBox b{display:block;color:#c9f5bd;font-size:10px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px;}
-.coachResultBox span{display:block;color:#fff6dc;font-size:12px;line-height:1.35;}
-.guideBody>.guideBox,.guideBody>.playbookBox{display:none;}
-.rosterTree{display:grid;gap:8px;}
-.rosterSection{border:1px solid rgba(244,236,212,.14);background:rgba(255,255,255,.035);border-radius:14px;overflow:hidden;}
-.rosterSectionHead{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.18);color:#ffe19a;padding:8px 9px;text-align:left;font-weight:900;letter-spacing:.12em;text-transform:uppercase;font-size:10px;cursor:pointer;}
-.rosterSectionHead small{font-weight:800;letter-spacing:.08em;color:#d8d0b8;text-transform:none;}
-.treeUnits{display:grid;gap:6px;padding:7px;}
-.treeRow{border:1px solid rgba(244,236,212,.12);background:rgba(0,0,0,.12);border-radius:12px;padding:7px 8px;cursor:pointer;color:var(--ink);text-align:left;}
-.treeRow.selected{border-color:rgba(214,184,95,.68);background:rgba(214,184,95,.11);}
-.treeRow.recommended{border-color:rgba(255,225,154,.82);box-shadow:0 0 0 2px rgba(214,184,95,.16);}
-.treeRow.down{border-color:rgba(201,95,85,.65);background:rgba(201,95,85,.12);}
-.treeTop{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;}
-.treeMeta{font-size:10px;color:var(--muted);line-height:1.25;margin-top:4px;}
-.degradedStrip{border:1px solid rgba(201,95,85,.65);background:rgba(201,95,85,.12);border-radius:14px;padding:8px;margin-bottom:8px;}
-.degradedStrip b{display:block;color:#ffb8b1;font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;}
-.degradedStrip button{width:100%;margin-top:6px;}
-.aarOverlay{position:absolute;inset:10px;background:linear-gradient(180deg,rgba(18,22,19,.97),rgba(4,6,5,.98));border:1px solid rgba(244,236,212,.2);border-radius:18px;box-shadow:0 22px 70px rgba(0,0,0,.70);z-index:10;display:none;overflow:auto;padding:16px;}
-.aarOverlay.active{display:block;}
-.aarHero{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:12px;margin-bottom:12px;}
-.aarGrade{font-size:64px;font-weight:1000;line-height:.9;color:#ffe19a;text-shadow:0 2px 18px rgba(214,184,95,.18);}
-.aarHero h2{margin:0;font-size:18px;letter-spacing:.12em;text-transform:uppercase;color:#fff6dc;}
-.aarHero p{margin:5px 0 0;color:#d8d0b8;font-size:13px;line-height:1.35;}
-.aarTakeGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.aarTakeCard{border:1px solid rgba(244,236,212,.14);background:rgba(255,255,255,.035);border-radius:15px;padding:12px;}
-.aarTakeCard h3{margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#f2d887;}
-.aarTimeline{display:grid;gap:6px;}
-.aarEvent{border-left:3px solid rgba(214,184,95,.65);padding:5px 0 5px 9px;font-size:12px;color:#e6ddc5;line-height:1.3;}
-.aarAdjust{border-color:rgba(124,175,109,.5);background:rgba(124,175,109,.08);}
-.aarControls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
-@media(max-width:920px){.aarTakeGrid{grid-template-columns:1fr}.aarGrade{font-size:48px}}
-
-
-.boardShell{position:relative;background:#080b0a;border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.55);overflow:hidden;min-height:0;}
-canvas{width:100%;height:100%;display:block;touch-action:none;}
-.boardHud{position:absolute;left:12px;top:12px;display:flex;gap:8px;align-items:flex-start;pointer-events:none;}
-.boardBadge{background:rgba(6,8,7,.78);border:1px solid rgba(244,236,212,.18);border-left:4px solid var(--gold);border-radius:13px;padding:9px 11px;box-shadow:0 12px 32px rgba(0,0,0,.45);max-width:370px;transition:opacity .25s ease,transform .25s ease;}
-.boardBadge.autoHidden{opacity:0;transform:translateY(-8px);pointer-events:none;}
-.boardBadge b{display:block;font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:#ffe19a;}
-.boardBadge span{display:block;margin-top:4px;font-size:11px;color:#d7ceb5;line-height:1.25;}
-.quickPanel{position:absolute;right:12px;top:12px;width:236px;background:rgba(15,19,16,.90);border:1px solid rgba(244,236,212,.18);border-radius:16px;box-shadow:0 18px 44px rgba(0,0,0,.48);padding:10px;}
-.quickPanel h2{margin:0 0 8px;font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:#f2d887;}
-.quickGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
-.quickGrid .btn{font-size:10px;min-height:38px;padding:7px 8px;}
-.selectedBox{margin-top:9px;border:1px solid rgba(214,184,95,.35);background:rgba(214,184,95,.08);border-radius:12px;padding:8px;font-size:11px;color:#e5dcc2;line-height:1.3;}
-.toast{position:absolute;left:12px;right:260px;bottom:12px;pointer-events:none;display:flex;flex-direction:column;gap:6px;align-items:flex-start;}
-.msg{background:rgba(8,10,9,.86);border:1px solid rgba(244,236,212,.18);border-left:4px solid var(--gold);border-radius:12px;padding:8px 10px;font-size:12px;line-height:1.25;color:#fff6dc;box-shadow:0 14px 28px rgba(0,0,0,.35);animation:fadeIn .16s ease-out;max-width:760px;}
-.msg.warn{border-left-color:var(--red);}.msg.good{border-left-color:var(--green);}.msg.info{border-left-color:var(--blue);}
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-.drawer{background:linear-gradient(180deg,rgba(31,37,31,.98),rgba(12,15,13,.98));border:1px solid var(--line);border-radius:18px;box-shadow:0 -10px 50px rgba(0,0,0,.4);overflow:hidden;max-height:292px;display:grid;grid-template-rows:auto minmax(0,1fr);transition:max-height .18s ease;}
-.drawer.collapsed{max-height:48px;}
-.tabs{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line);padding:7px;overflow:auto;}
-.tabBtn{border:1px solid rgba(244,236,212,.14);background:rgba(255,255,255,.035);border-radius:999px;color:#d9d0b8;padding:7px 12px;font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap;}
-.tabBtn.active{background:rgba(214,184,95,.15);border-color:rgba(214,184,95,.55);color:#ffe19a;}
-.drawerToggle{margin-left:auto;}
-.drawerBody{overflow:auto;padding:10px 12px;}
-.tabPane{display:none;}.tabPane.active{display:block;}
-.panelGrid{display:grid;grid-template-columns:1.1fr .9fr;gap:12px;}
-.panelTitle{margin:0 0 8px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#f2d887;}
-.small{font-size:12px;color:var(--muted);line-height:1.36;}
-.cardGrid{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:8px;}
-.unitCard,.planCard,.terrainCard{border:1px solid rgba(244,236,212,.14);border-radius:14px;background:rgba(255,255,255,.035);padding:9px;cursor:pointer;min-height:78px;}
-.unitCard.selected,.planCard.selected,.terrainCard.selected{border-color:rgba(214,184,95,.65);background:rgba(214,184,95,.11);}
-.unitCard.down{border-color:rgba(201,95,85,.6);background:rgba(201,95,85,.1);}
-.cardTop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-.cardTop b{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#fff2ce;}
-.tag{display:inline-flex;border:1px solid rgba(244,236,212,.15);border-radius:999px;padding:3px 7px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#d8d0b8;background:rgba(0,0,0,.2);white-space:nowrap;}
-.tag.gold{border-color:rgba(214,184,95,.5);color:#ffe19a}.tag.green{border-color:rgba(124,175,109,.5);color:#baf2a7}.tag.blue{border-color:rgba(104,169,204,.5);color:#aee0ff}.tag.red{border-color:rgba(201,95,85,.6);color:#ffb8b1}
-.meta{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.25;}
-.markerGrid,.terrainGrid{display:grid;grid-template-columns:repeat(6,minmax(130px,1fr));gap:8px;}
-.swatch{display:inline-block;width:24px;height:24px;border-radius:7px;border:1px solid rgba(255,255,255,.34);vertical-align:middle;flex:0 0 auto;}
-.terrainCard{display:flex;align-items:center;gap:8px;min-height:54px;}
-.terrainText b{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#fff1ce;}.terrainText span{font-size:10px;color:var(--muted);}
-.collapseHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid rgba(244,236,212,.14);border-radius:14px;background:rgba(0,0,0,.18);cursor:pointer;}
-.collapseHead b{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#f2d887;}
-.collapseBody{margin-top:8px;display:none;}.collapse.open .collapseBody{display:block;}
-.notes{width:100%;min-height:96px;background:rgba(0,0,0,.22);border:1px solid rgba(244,236,212,.15);border-radius:14px;color:#eee4c9;padding:10px;resize:vertical;font-size:13px;line-height:1.35;}
-.aarGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.aarBox{border:1px solid rgba(244,236,212,.14);background:rgba(255,255,255,.035);border-radius:14px;padding:10px;}
-.aarBox h3{margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#f2d887;}
-.statLine{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(255,255,255,.08);padding:5px 0;font-size:12px;}.statLine:last-child{border-bottom:0;}
-ul{margin:0;padding-left:18px;color:#ddd4bb;font-size:12px;line-height:1.4;}
-@media(max-width:1180px){
-  .topbar{grid-template-columns:1fr;}.phaseBar{justify-content:space-between;}.mainGrid{grid-template-columns:300px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;}.guidePanel{grid-column:1 / -1;}.toast{right:12px}.boardHud{top:10px;left:10px}.drawer{max-height:340px}.cardGrid{grid-template-columns:repeat(2,minmax(160px,1fr));}.sideBody .cardGrid{grid-template-columns:1fr;}.markerGrid,.terrainGrid{grid-template-columns:repeat(2,minmax(130px,1fr));}.panelGrid,.aarGrid{grid-template-columns:1fr;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:radial-gradient(circle at top,#273128 0%,#101412 40%,#050606 100%);color:var(--ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button{font:inherit}
+.app{height:100vh;display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px;padding:8px}
+.topbar{display:grid;grid-template-columns:minmax(290px,420px) 1fr auto;gap:8px}
+.panel{background:linear-gradient(180deg,rgba(32,38,31,.97),rgba(13,16,14,.97));border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 44px var(--shadow)}
+.brand{padding:12px 16px;background:linear-gradient(90deg,rgba(214,184,95,.15),rgba(19,23,20,.96))}
+h1{font-size:29px;line-height:.95;margin:0;letter-spacing:.09em;text-transform:uppercase}
+.subtitle{margin-top:6px;color:var(--muted);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.status{display:flex;gap:8px;align-items:center;padding:8px;overflow:auto}
+.chip{min-width:96px;border:1px solid rgba(244,236,212,.15);background:rgba(0,0,0,.18);border-radius:13px;padding:8px 10px}
+.chip b{display:block;font-size:16px;white-space:nowrap}.chip span{display:block;margin-top:4px;color:var(--muted);font-size:9px;letter-spacing:.13em;text-transform:uppercase;white-space:nowrap}
+.actions{display:flex;align-items:center;gap:7px;padding:8px}
+.btn{border:1px solid rgba(244,236,212,.18);background:linear-gradient(180deg,#32382f,#171b17);color:var(--ink);border-radius:12px;min-height:40px;padding:9px 12px;font-weight:850;letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
+.btn:hover{border-color:rgba(214,184,95,.55);filter:brightness(1.08)}.btn:active{transform:translateY(1px)}
+.btn.primary{background:linear-gradient(180deg,#dec777,#8d7431);color:#11150f;border-color:#ffe3a0}
+.btn.good{background:linear-gradient(180deg,#3c5d37,#182617);border-color:rgba(124,175,109,.55)}
+.btn.blue{background:linear-gradient(180deg,#31556a,#14222d);border-color:rgba(104,169,204,.55)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.main{min-height:0;display:grid;grid-template-columns:300px minmax(0,1fr);gap:8px}
+.sidebar{min-height:0;display:grid;grid-template-rows:auto 1fr auto;overflow:hidden}
+.sideHead{padding:10px 12px;border-bottom:1px solid var(--line);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#f2d887;font-weight:900}
+.sideBody{overflow:auto;padding:10px;display:grid;gap:9px;align-content:start}
+.card{border:1px solid rgba(244,236,212,.14);background:rgba(255,255,255,.035);border-radius:14px;padding:10px}
+.card b{display:block;color:#ffe19a;font-size:11px;letter-spacing:.11em;text-transform:uppercase;margin-bottom:5px}
+.card p{margin:0;color:#d8d0b8;font-size:12px;line-height:1.35}
+.legend{display:grid;gap:6px}.legendRow{display:flex;align-items:center;gap:8px;font-size:11px;color:#d8d0b8}
+.swatch{width:18px;height:18px;border-radius:5px;border:1px solid rgba(255,255,255,.25)}
+.sideFoot{border-top:1px solid var(--line);padding:9px;display:grid;gap:7px}
+.tacticsGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tacticBtn{border:1px solid rgba(244,236,212,.14);background:rgba(255,255,255,.035);color:#d8d0b8;border-radius:10px;padding:8px 7px;font-size:9px;font-weight:850;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.tacticBtn.active{border-color:rgba(214,184,95,.72);background:rgba(214,184,95,.14);color:#ffe19a}
+.tacticReadout{border:1px solid rgba(104,169,204,.3);background:rgba(104,169,204,.08);border-radius:12px;padding:8px;font-size:10px;line-height:1.3;color:#dcefff}
+.planTools{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.planTool{border:1px solid rgba(244,236,212,.14);background:rgba(255,255,255,.035);color:#d8d0b8;border-radius:10px;padding:8px 6px;font-size:9px;font-weight:850;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.planTool.active{border-color:rgba(104,169,204,.75);background:rgba(104,169,204,.14);color:#c9efff}
+.planStatus{border:1px solid rgba(214,184,95,.32);background:rgba(214,184,95,.08);border-radius:12px;padding:8px;font-size:10px;line-height:1.35;color:#fff0c2}
+.planLocked{border-color:rgba(124,175,109,.55);background:rgba(124,175,109,.10);color:#d8ffd0}
+.boardFrame.planningActive{outline:2px solid rgba(104,169,204,.45);outline-offset:-3px}
+.boardFrame{position:relative;min-width:0;min-height:0;overflow:hidden;border-radius:18px;background:#080b0a;border:1px solid var(--line);box-shadow:0 18px 60px rgba(0,0,0,.55)}
+.scroll{position:absolute;inset:0;overflow-x:auto;overflow-y:auto;scroll-behavior:smooth;overscroll-behavior:contain;background:#050706}
+.canvasWrap{position:relative;width:3072px;height:576px}
+canvas{display:block;width:3072px;height:576px;touch-action:pan-x pan-y}
+.stickyGuide{position:absolute;left:12px;top:12px;right:12px;z-index:5;display:grid;grid-template-columns:minmax(220px,1fr) auto minmax(220px,1fr);gap:8px;pointer-events:none}
+.guideCell{background:rgba(6,8,7,.88);border:1px solid rgba(244,236,212,.18);border-left:4px solid var(--gold);border-radius:13px;padding:8px 10px;box-shadow:0 12px 32px rgba(0,0,0,.45)}
+.guideCell b{display:block;color:#ffe19a;font-size:9px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:3px}.guideCell span{font-size:12px;line-height:1.25}
+.guideBtn{pointer-events:auto}
+.sectorNav{position:absolute;right:12px;bottom:12px;z-index:6;display:flex;gap:6px}
+.sectorNav .btn{min-height:34px;padding:7px 9px;font-size:9px;background:rgba(12,16,13,.92)}
+.toast{position:absolute;left:12px;bottom:12px;z-index:7;background:rgba(8,10,9,.92);border:1px solid rgba(244,236,212,.18);border-left:4px solid var(--blue);border-radius:12px;padding:8px 10px;font-size:12px;max-width:620px;opacity:0;transform:translateY(5px);transition:.18s}
+.toast.show{opacity:1;transform:none}
+.testBanner{color:#ffefb5}
+.missionOverlay{position:fixed;inset:0;z-index:50;background:rgba(3,5,4,.88);backdrop-filter:blur(8px);display:grid;place-items:center;padding:22px}
+.missionOverlay.hidden{display:none}
+.missionCard{width:min(980px,96vw);max-height:92vh;overflow:auto;background:linear-gradient(180deg,rgba(30,36,30,.99),rgba(8,11,9,.99));border:1px solid rgba(244,236,212,.22);border-radius:20px;box-shadow:0 28px 90px rgba(0,0,0,.72);padding:20px}
+.missionTop{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:14px;margin-bottom:14px}
+.missionTop h2{margin:0;font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:#fff3d2}
+.missionTop p{margin:6px 0 0;color:#bfb69f;font-size:12px;line-height:1.35}
+.missionGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.missionBlock{border:1px solid rgba(244,236,212,.14);background:rgba(255,255,255,.035);border-radius:15px;padding:12px}
+.missionBlock.full{grid-column:1/-1}
+.missionBlock b{display:block;color:#ffe19a;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+.missionBlock p{margin:0;color:#e0d7bf;font-size:13px;line-height:1.45}
+.disruptionBlock{border-color:rgba(201,95,85,.55);background:linear-gradient(180deg,rgba(201,95,85,.13),rgba(255,255,255,.03))}
+.disruptionBlock b{color:#ffb8b1}
+.missionChecklist{display:grid;gap:6px;margin-top:8px}
+.missionCheck{font-size:12px;color:#d8d0b8;padding-left:18px;position:relative}
+.missionCheck:before{content:"◆";position:absolute;left:0;color:#d6b85f}
+.missionActions{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:16px}
+.missionAck{display:flex;align-items:center;gap:8px;font-size:12px;color:#d8d0b8}
+.missionAck input{width:18px;height:18px}
+.briefBtn{min-width:150px}
+.aarWorkspace{position:fixed;inset:0;z-index:60;background:rgba(3,5,4,.9);backdrop-filter:blur(8px);display:none;padding:20px}
+.aarWorkspace.open{display:grid;place-items:center}
+.aarSheet{width:min(1120px,97vw);max-height:94vh;overflow:auto;background:#f7f3e8;color:#171a17;border-radius:18px;box-shadow:0 28px 90px rgba(0,0,0,.72);padding:22px}
+.aarSheet h2,.aarSheet h3,.aarSheet h4{margin:0}
+.aarHeader{display:flex;justify-content:space-between;gap:18px;border-bottom:3px solid #343b35;padding-bottom:12px;margin-bottom:14px}
+.aarHeader h2{font-size:26px;letter-spacing:.06em;text-transform:uppercase}
+.aarHeader p{margin:5px 0 0;color:#515851;font-size:12px;line-height:1.35}
+.aarGradeBox{min-width:126px;text-align:center;border:2px solid #343b35;border-radius:12px;padding:10px;background:#fffdf6}
+.aarGradeBox b{display:block;font-size:36px;line-height:1}.aarGradeBox span{font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.aarSection{border:1px solid #b9b5aa;border-radius:12px;background:#fffdf6;padding:13px;margin-top:12px}
+.aarSection h3{font-size:13px;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid #d0ccc0;padding-bottom:7px;margin-bottom:9px}
+.aarGrid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.aarGrid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.aarMetric{border:1px solid #d0ccc0;border-radius:10px;padding:9px;background:#faf8f1}
+.aarMetric b{display:block;font-size:18px}.aarMetric span{display:block;margin-top:3px;font-size:10px;color:#626960;text-transform:uppercase;letter-spacing:.08em}
+.aarTable{width:100%;border-collapse:collapse;font-size:12px}
+.aarTable th,.aarTable td{border:1px solid #cbc7bb;padding:7px 8px;text-align:left;vertical-align:top}
+.aarTable th{background:#e9e5da;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.aarTimelineList{display:grid;gap:6px}
+.aarTimelineItem{display:grid;grid-template-columns:70px 1fr;gap:8px;border-left:4px solid #8f7938;background:#faf8f1;padding:7px 9px;font-size:12px}
+.aarTimelineItem b{font-variant-numeric:tabular-nums}
+.aarCallout{border-left:5px solid #6d8c63;background:#eef4eb;padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.4}
+.aarCallout.warn{border-left-color:#b15a51;background:#f7ecea}
+.aarNotes{width:100%;min-height:90px;border:1px solid #b9b5aa;border-radius:10px;padding:10px;font:inherit;background:#fff}
+.aarToolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:12px}
+.aarToolbar button{border:1px solid #545b54;background:#fffdf6;color:#171a17;border-radius:9px;padding:8px 11px;font-weight:800;cursor:pointer}
+.aarToolbar button.primary{background:#343b35;color:#fff}
+.aarFooter{margin-top:14px;border-top:1px solid #cbc7bb;padding-top:9px;font-size:10px;color:#666d66}
+@media(max-width:800px){.aarGrid2,.aarGrid3{grid-template-columns:1fr}.aarHeader{display:block}.aarGradeBox{margin-top:10px}}
+@media print{
+ body *{visibility:hidden!important}
+ #aarWorkspace,#aarWorkspace *{visibility:visible!important}
+ #aarWorkspace{position:static!important;display:block!important;background:#fff!important;padding:0!important}
+ .aarSheet{width:100%!important;max-height:none!important;overflow:visible!important;box-shadow:none!important;border-radius:0!important;padding:0!important}
+ .aarToolbar{display:none!important}
+ @page{size:landscape;margin:.45in}
 }
-@media(max-width:660px){
-  .app{padding:5px;gap:5px}.brand{padding:10px 12px}h1{font-size:24px}.statusBar{padding:6px}.chip{min-width:84px;padding:7px}.mainGrid{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto}.sidePanel{max-height:300px}.actionGrid{grid-template-columns:1fr 1fr}.guidePanel{padding:8px;max-height:180px}.drawer{max-height:330px}.drawer.collapsed{max-height:46px}.cardGrid{grid-template-columns:1fr}.boardBadge{max-width:calc(100vw - 32px)}
+@media(max-width:760px){.missionGrid{grid-template-columns:1fr}.missionBlock.full{grid-column:auto}.missionTop{display:block}}
+@media(max-width:1050px){
+ .topbar{grid-template-columns:1fr}.main{grid-template-columns:240px minmax(0,1fr)}
+ .stickyGuide{grid-template-columns:1fr}.stickyGuide .guideCell:nth-child(3){display:none}
 }
-
-@media (max-width:1180px){
-  .mainGrid{grid-template-columns:330px minmax(0,1fr) 330px;}
-  .sideBody .cardGrid{grid-template-columns:1fr;}
-  h1{font-size:24px;}
-}
-@media (max-width:920px){
-  body{overflow:auto;}
-  .app{height:auto;min-height:100vh;}
-  .topbar{grid-template-columns:1fr;}
-  .mainGrid{grid-template-columns:1fr;min-height:1200px;}
-  .boardShell{min-height:520px;}
-}
-
-
-/* v0.3.8 — Board-Docked Guide / Board Space Pass */
-.app.trialMode .mainGrid{grid-template-columns:260px minmax(0,1fr) 112px;}
-.app.trialMode .boardShell{min-height:0;}
-.app.trialMode .rosterActions{padding:7px;}
-.app.trialMode .rosterActions h2,.app.trialMode .selectionTools,.app.trialMode .actionHint,.app.trialMode .actionGrid{display:none;}
-.app.trialMode .selectedBox{font-size:10px;max-height:112px;overflow:auto;margin-top:0;}
-.app.trialMode .sideBody{padding:7px;}
-.app.trialMode .sideHeader{padding:8px 9px;}
-.app.trialMode .sideHeader h2{font-size:10px;}
-.app.trialMode .guidePanel{border-radius:14px;}
-.app.trialMode .guidePanel .sideHeader{padding:8px;justify-content:center;}
-.app.trialMode .guidePanel .sideHeader h2{font-size:9px;text-align:center;line-height:1.15;}
-.app.trialMode .guidePanel .sideHeader .tag{display:none;}
-.app.trialMode .guideBody{padding:5px;gap:5px;overflow:hidden;}
-.app.trialMode .guideBody>.coachBox,.app.trialMode .guideBody>.guideBox,.app.trialMode .guideBody>.playbookBox,.app.trialMode .guideBody>.drawer{display:none!important;}
-.app.trialMode .guideSteps{display:grid;gap:5px;margin-top:0;}
-.app.trialMode .guideStep{font-size:8.5px;line-height:1.15;padding:5px 5px;border-radius:9px;}
-.app.trialMode .guideStep br{display:none;}
-.app.trialMode .guideStep b{display:block;margin-bottom:2px;}
-.boardGuideStrip{position:absolute;left:12px;right:12px;top:12px;z-index:7;display:none;grid-template-columns:minmax(210px,1.45fr) auto minmax(210px,1.15fr);gap:8px;align-items:stretch;background:linear-gradient(180deg,rgba(10,13,11,.94),rgba(6,8,7,.88));border:1px solid rgba(255,225,154,.32);border-left:4px solid var(--gold);border-radius:15px;box-shadow:0 18px 50px rgba(0,0,0,.56);padding:8px;backdrop-filter:blur(6px);}
-.app.trialMode .boardGuideStrip{display:grid;}
-.app.trialMode .boardHud{display:none;}
-.boardGuideCell{min-width:0;border:1px solid rgba(244,236,212,.10);background:rgba(255,255,255,.035);border-radius:12px;padding:7px 9px;}
-.boardGuideCell b{display:block;color:#ffe19a;font-size:9px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:3px;}
-.boardGuideCell span{display:block;color:#fff6dc;font-size:12px;line-height:1.25;}
-.boardGuideResult span{color:#c9f5bd;}
-#boardActionBtn{min-width:148px;align-self:stretch;min-height:54px;font-size:11px;white-space:normal;line-height:1.12;padding:8px 10px;}
-.boardGuideDetails{grid-column:1 / -1;color:#bfb69f;font-size:10px;line-height:1.2;border-top:1px solid rgba(255,255,255,.10);padding:5px 2px 0;display:flex;gap:10px;flex-wrap:wrap;}
-.boardGuideDetails strong{color:#ffe19a;}
-@media(max-width:1180px){.app.trialMode .mainGrid{grid-template-columns:220px minmax(0,1fr) 92px;}.boardGuideStrip{grid-template-columns:1fr;}.boardGuideDetails{display:block;}#boardActionBtn{min-height:40px;}}
-@media(max-width:920px){.app.trialMode .mainGrid{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto;}.app.trialMode .guidePanel{max-height:160px;}.boardGuideStrip{position:absolute;left:8px;right:8px;top:8px;}.app.trialMode .boardShell{min-height:560px;}}
-
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="topbar">
-    <div class="brand">
-      <h1>GATOR RAID</h1>
-      <div class="subtitle">Board-Docked Amphib Planning Trial · v0.3.8</div>
-    </div>
-    <div class="statusBar">
-      <div class="chip"><b id="p7Readout">8/8</b><span>P7 Tracks</span></div>
-      <div class="chip"><b id="pcReadout">ONLINE</b><span>Plt Commander</span></div>
-      <div class="chip"><b id="psgReadout">READY</b><span>Plt Sergeant</span></div>
-      <div class="chip"><b id="clockReadout">PLAN</b><span>Trial Clock</span></div>
-      <div class="chip wide"><b id="cohesionReadout">100%</b><span>Cohesion</span><div class="bar"><div class="fill" id="cohesionFill"></div></div></div>
-      <div class="chip wide"><b id="netReadout">100%</b><span>C2 Net</span><div class="bar"><div class="fill" id="netFill"></div></div></div>
-      <div class="chip wide"><b id="partsReadout">100%</b><span>Parts</span><div class="bar"><div class="fill" id="partsFill"></div></div></div>
-    </div>
-    <div class="phaseBar">
-      <span class="phasePill" id="phaseBadge">Mission Planning</span>
-      <button class="btn primary" id="launchBtn">GATOR RAID</button>
-    </div>
-  </div>
 
-  <div class="mainGrid">
-    <aside class="sidePanel rosterPanel">
-      <div class="sideHeader"><h2>Force Roster / Action Screen</h2><span class="tag gold">10 Tracks</span></div>
-      <div class="sideBody">
-        <div class="cardGrid" id="unitCards"></div>
+<div class="aarWorkspace" id="aarWorkspace">
+  <section class="aarSheet" id="aarSheet">
+    <div class="aarToolbar">
+      <button id="aarPrint">Print AAR</button>
+      <button id="aarSaveJson">Save JSON</button>
+      <button id="aarSaveText">Save Text</button>
+      <button id="aarSaveHtml">Save HTML</button>
+      <button class="primary" id="aarClose">Close</button>
+    </div>
+
+    <div class="aarHeader">
+      <div>
+        <h2>Operation GATOR RAID — After-Action Review</h2>
+        <p id="aarMissionLine">Mission performance review</p>
       </div>
-      <div class="rosterActions">
-        <h2>Selected Track(s) → Orders</h2>
-        <div class="selectedBox" id="selectedBox"><b>No Selection</b><br/>Select a track, support marker, or pressure marker first. Then use valid orders below.</div>
-        <div class="selectionTools">
-          <button class="btn ghost" id="selCmdBtn">Cmd Team</button>
-          <button class="btn ghost" id="selTroopsBtn">Troop Tracks</button>
-          <button class="btn ghost" id="selRecoveryBtn">Recovery</button>
-          <button class="btn ghost" id="selClearBtn">Clear</button>
+      <div class="aarGradeBox"><b id="aarGrade">—</b><span>Mission Resilience</span></div>
+    </div>
+
+    <div class="aarGrid3">
+      <div class="aarMetric"><b id="aarObjective">No</b><span>Objective Reached</span></div>
+      <div class="aarMetric"><b id="aarMinNet">100%</b><span>Minimum C2 Net</span></div>
+      <div class="aarMetric"><b id="aarMinCohesion">100%</b><span>Minimum Cohesion</span></div>
+      <div class="aarMetric"><b id="aarRecoveryTime">—</b><span>Degraded Duration</span></div>
+      <div class="aarMetric"><b id="aarPartsUsed">0%</b><span>Parts Consumed</span></div>
+      <div class="aarMetric"><b id="aarSupportCount">0</b><span>Support Actions</span></div>
+    </div>
+
+    <div class="aarSection">
+      <h3>1. Mission and Commander's Intent</h3>
+      <div class="aarCallout" id="aarMissionAssessment">No run completed.</div>
+    </div>
+
+    <div class="aarSection">
+      <h3>2. Locked Plan</h3>
+      <table class="aarTable">
+        <thead><tr><th>Planning Element</th><th>Locked Decision</th><th>Observed Effect</th></tr></thead>
+        <tbody id="aarPlanTable"></tbody>
+      </table>
+    </div>
+
+    <div class="aarSection">
+      <h3>3. Execution Timeline</h3>
+      <div class="aarTimelineList" id="aarTimelineList"></div>
+    </div>
+
+    <div class="aarGrid2">
+      <div class="aarSection">
+        <h3>4. Disruption</h3>
+        <div id="aarDisruption"></div>
+      </div>
+      <div class="aarSection">
+        <h3>5. Recovery</h3>
+        <div id="aarRecovery"></div>
+      </div>
+    </div>
+
+    <div class="aarGrid2">
+      <div class="aarSection">
+        <h3>6. Command Continuity</h3>
+        <div id="aarContinuity"></div>
+      </div>
+      <div class="aarSection">
+        <h3>7. Tactics Layer</h3>
+        <div id="aarTactics"></div>
+      </div>
+    </div>
+
+    <div class="aarSection">
+      <h3>8. Plan Versus Actual</h3>
+      <table class="aarTable">
+        <thead><tr><th>Question</th><th>Evidence</th><th>Assessment</th></tr></thead>
+        <tbody id="aarCompareTable"></tbody>
+      </table>
+    </div>
+
+    <div class="aarGrid2">
+      <div class="aarSection">
+        <h3>9. Sustain</h3>
+        <div class="aarCallout" id="aarSustain">—</div>
+      </div>
+      <div class="aarSection">
+        <h3>10. Improve Next Run</h3>
+        <div class="aarCallout warn" id="aarImprove">—</div>
+      </div>
+    </div>
+
+    <div class="aarSection">
+      <h3>11. Facilitator / Player Notes</h3>
+      <textarea class="aarNotes" id="aarUserNotes" placeholder="Capture assumptions, observations, and the next planning change."></textarea>
+    </div>
+
+    <div class="aarFooter" id="aarFooter">Generated from the offline GATOR RAID test harness.</div>
+  </section>
+</div>
+
+<div class="missionOverlay" id="missionOverlay">
+  <section class="missionCard">
+    <div class="missionTop">
+      <div>
+        <h2>Operation GATOR RAID</h2>
+        <p>Mission brief before planning begins</p>
+      </div>
+      <span class="chip"><b>MISSION FIRST</b><span>Planning Gate</span></span>
+    </div>
+
+    <div class="missionGrid">
+      <div class="missionBlock full">
+        <b>Mission</b>
+        <p>Conduct an expeditionary movement from ship to shore, establish a functioning beachhead, preserve command continuity through disruption, recover degraded capability, and enable the force to continue to the final objective.</p>
+      </div>
+
+      <div class="missionBlock">
+        <b>Commander's Intent</b>
+        <p>Maintain the force's ability to continue the operation. Organization, communication, sustainment, recovery, and adaptation matter more than avoiding every setback.</p>
+      </div>
+
+      <div class="missionBlock">
+        <b>Operational Picture</b>
+        <p>The force begins afloat, crosses water and surf, organizes at the beachhead, establishes support and recovery functions, then advances inland under abstract pressure and friction.</p>
+      </div>
+
+      <div class="missionBlock">
+        <b>Planning Guidance</b>
+        <p>Build a plan that preserves command continuity, supports recovery, maintains cohesion, and creates enough operational flexibility to continue after the plan is disrupted.</p>
+      </div>
+
+      <div class="missionBlock disruptionBlock">
+        <b>Planning Assumption — Disruption Is Expected</b>
+        <p>You do not know exactly when, where, or how disruption will occur. The goal is not to create a perfect plan. The goal is to create a plan that can absorb disruption, recover, and continue.</p>
+      </div>
+
+      <div class="missionBlock">
+        <b>Success Criteria</b>
+        <div class="missionChecklist">
+          <div class="missionCheck">Reach the final objective</div>
+          <div class="missionCheck">Maintain meaningful C2 continuity</div>
+          <div class="missionCheck">Preserve cohesion and sustainment</div>
+          <div class="missionCheck">Execute recovery when degraded</div>
+          <div class="missionCheck">Adapt without losing mission purpose</div>
         </div>
-        <p class="actionHint" id="actionHint">Guidance: pick a card on the roster or a marker on the map. Orders will explain what they affect before resolving through the C2 Net.</p>
-        <div class="actionGrid">
-          <button class="btn ghost" id="pauseBtn" disabled>Pause</button>
-          <button class="btn ghost" id="holdBtn" disabled>Hold</button>
-          <button class="btn good" id="cmdPushBtn" disabled>Cmd Push</button>
-          <button class="btn good" id="recoverBtn" disabled>PSG / R7 Recover</button>
-          <button class="btn blue" id="dismountBtn" disabled>Dismount</button>
-          <button class="btn blue" id="remountBtn" disabled>Remount / Advance</button>
-          <button class="btn good" id="mgBtn" disabled>MG Base</button>
-          <button class="btn good" id="fireBtn" disabled>Fire Support</button>
-          <button class="btn danger" id="endBtn" disabled>AAR</button>
+      </div>
+
+      <div class="missionBlock">
+        <b>What This Exercise Evaluates</b>
+        <div class="missionChecklist">
+          <div class="missionCheck">Planning and sequencing</div>
+          <div class="missionCheck">Posture and tempo choices</div>
+          <div class="missionCheck">Support and recovery allocation</div>
+          <div class="missionCheck">Adaptation under disruption</div>
+          <div class="missionCheck">Learning through AAR</div>
         </div>
+      </div>
+
+      <div class="missionBlock full">
+        <b>Core Rule</b>
+        <p>Success is not avoiding disruption. Success is adapting to disruption while still accomplishing the mission.</p>
+      </div>
+    </div>
+
+    <div class="missionActions">
+      <label class="missionAck"><input type="checkbox" id="missionAck"> I understand that disruption is expected and planning must account for recovery.</label>
+      <button class="btn primary briefBtn" id="beginPlanning" disabled>Begin Planning</button>
+    </div>
+  </section>
+</div>
+
+<div class="app">
+  <header class="topbar">
+    <div class="panel brand">
+      <h1>GATOR RAID</h1>
+      <div class="subtitle"><span class="testBanner">Expanded AAR + Print/Save Offline Test</span> · GitHub source untouched</div>
+    </div>
+    <div class="panel status">
+      <div class="chip"><b id="phase">PLAN</b><span>Phase</span></div>
+      <div class="chip"><b id="clock">00:00</b><span>Trial Clock</span></div>
+      <div class="chip"><b id="net">100%</b><span>C2 Net</span></div>
+      <div class="chip"><b id="cohesion">100%</b><span>Cohesion</span></div>
+      <div class="chip"><b id="parts">100%</b><span>Parts</span></div>
+      <div class="chip"><b id="sector">SHIP → SHORE</b><span>Visible Sector</span></div>
+    </div>
+    <div class="panel actions">
+      <button class="btn" id="showMission">Mission Brief</button>
+      <button class="btn primary" id="launch" disabled>GATOR RAID</button>
+      <button class="btn" id="reset">Reset</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <aside class="panel sidebar">
+      <div class="sideHead">Expansion Test Controls</div>
+      <div class="sideBody">
+        <div class="card">
+          <b>What this validates</b>
+          <p>One continuous 96 × 18 board, fixed 32-pixel tiles, horizontal scrolling, sector spacing, map readability, and preserved planning-board rhythm.</p>
+        </div>
+        <div class="card">
+          <b>What this does not replace</b>
+          <p>This is not the production v0.3.8a engine. It is an isolated map-mechanics harness used before porting changes into the source game.</p>
+        </div>
+        <div class="card">
+          <b>Flow</b>
+          <p>Launch → Ship Transit → Beach C2 → Arrival → Dismount / Screen → Rally → Remount → Advance → AAR.</p>
+        </div>
+        <div class="card">
+          <b>Planning Board</b>
+          <p>Select a control point or friction tool, then click the board to place it. Launch remains blocked until the plan is locked.</p>
+          <div class="planTools">
+            <button class="planTool active" data-plan="c2">Beach C2</button>
+            <button class="planTool" data-plan="arrival">Arrival</button>
+            <button class="planTool" data-plan="recovery">Recovery</button>
+            <button class="planTool" data-plan="dismount">Dismount</button>
+            <button class="planTool" data-plan="rally">Rally</button>
+            <button class="planTool" data-plan="mortar1">Mortar A</button>
+            <button class="planTool" data-plan="mortar2">Mortar B</button>
+            <button class="planTool" data-plan="remount">Remount</button>
+            <button class="planTool" data-plan="objective">Objective</button>
+            <button class="planTool" data-plan="pressure">Pressure</button>
+            <button class="planTool" data-plan="bog">Bog Risk</button>
+            <button class="planTool" data-plan="comms">Comms Noise</button>
+          </div>
+          <div class="planStatus" id="planStatus" style="margin-top:8px">Mission accepted. Build or accept the plan, then lock it.</div>
+        </div>
+
+        <div class="card">
+          <b>Tactics Layer — Abstract Command Choices</b>
+          <p>Choose a posture and tempo. These change pressure exposure, cohesion, C2 stability, and recovery burden without simulating targeting, fires, formations, or real-world procedures.</p>
+          <div class="tacticsGrid" style="margin-top:8px">
+            <button class="tacticBtn active" data-posture="balanced">Balanced</button>
+            <button class="tacticBtn" data-posture="protected">Protected</button>
+            <button class="tacticBtn" data-posture="dispersed">Dispersed</button>
+            <button class="tacticBtn" data-posture="concentrated">Concentrated</button>
+          </div>
+          <div class="tacticsGrid" style="margin-top:6px">
+            <button class="tacticBtn active" data-tempo="steady">Steady</button>
+            <button class="tacticBtn" data-tempo="deliberate">Deliberate</button>
+            <button class="tacticBtn" data-tempo="surge">Surge</button>
+            <button class="tacticBtn" data-tempo="pause">Pause & Reassess</button>
+          </div>
+          <div class="tacticReadout" id="tacticReadout" style="margin-top:8px">Balanced posture · Steady tempo</div>
+        </div>
+        <div class="card">
+          <b>Sector Legend</b>
+          <div class="legend">
+            <div class="legendRow"><span class="swatch" style="background:#195671"></span>Ship → Shore</div>
+            <div class="legendRow"><span class="swatch" style="background:#c7a76e"></span>Beachhead</div>
+            <div class="legendRow"><span class="swatch" style="background:#4d6444"></span>Advance</div>
+            <div class="legendRow"><span class="swatch" style="background:#68a9cc"></span>C2 / Recovery</div>
+            <div class="legendRow"><span class="swatch" style="background:#c95f55"></span>Abstract Pressure</div>
+          </div>
+        </div>
+        <div class="card">
+          <b>Persistent Support Nodes</b>
+          <p>Two abstract mortar support locations remain fixed in the Beachhead. They do not model targeting, range, fires, ammunition, or procedures.</p>
+        </div>
+      </div>
+      <div class="sideFoot">
+        <button class="btn primary" id="lockPlan" disabled>Lock Plan</button>
+        <button class="btn" id="resetPlan" disabled>Reset Plan</button>
+        <button class="btn blue" id="hold" disabled>Hold</button>
+        <button class="btn good" id="recover" disabled>PSG / R7 Recover</button>
+        <button class="btn good" id="support" disabled>Mortar Support</button>
+        <button class="btn" id="aar" disabled>AAR</button>
       </div>
     </aside>
 
-    <main class="boardShell">
-      <canvas id="game"></canvas>
-      <div class="boardGuideStrip" id="boardGuideStrip">
-        <div class="boardGuideCell"><b>NOW</b><span id="boardGuideNow">Build the board, then launch.</span></div>
-        <button class="btn primary" id="boardActionBtn" disabled>Next Action</button>
-        <div class="boardGuideCell boardGuideResult"><b>LAST RESULT</b><span id="boardGuideResult">No order resolved yet.</span></div>
-        <div class="boardGuideDetails"><span><strong>Watch:</strong> <span id="boardGuideWatch">The changed board location will flash when an order resolves.</span></span></div>
+    <main class="boardFrame">
+      <div class="stickyGuide">
+        <div class="guideCell"><b>Now</b><span id="guideNow">Inspect the full board, then launch the test run.</span></div>
+        <button class="btn primary guideBtn" id="next" disabled>Watch Board</button>
+        <div class="guideCell"><b>Last Result</b><span id="lastResult">No action resolved yet.</span></div>
       </div>
-      <div class="boardHud">
-        <div class="boardBadge" id="boardBadge">
-          <b id="boardTitle">Planning & Control Layout</b>
-          <span id="boardText">Set beach C2, center beach, arrival, dismount/screen, rally, remount, advance, and recovery. Then run the trial.</span>
-        </div>
+      <div class="scroll" id="scroll">
+        <div class="canvasWrap"><canvas id="game" width="3072" height="576"></canvas></div>
+      </div>
+      <div class="sectorNav">
+        <button class="btn" data-x="0">Ship</button>
+        <button class="btn" data-x="896">Beachhead</button>
+        <button class="btn" data-x="2112">Advance</button>
       </div>
       <div class="toast" id="toast"></div>
-      <div class="aarOverlay" id="aarOverlay">
-        <div class="aarHero"><div class="aarGrade" id="aarBigGrade">–</div><div><h2 id="aarBigTitle">After-Action Review</h2><p id="aarBigSummary">Run a trial to generate the AAR.</p></div></div>
-        <div class="aarTakeGrid">
-          <div class="aarTakeCard"><h3>Trial Timeline</h3><div class="aarTimeline" id="aarTimeline"><div class="aarEvent">No events yet.</div></div></div>
-          <div class="aarTakeCard"><h3>What Broke / Why</h3><div id="aarBrokenBig" class="small">No AAR yet.</div></div>
-          <div class="aarTakeCard aarAdjust"><h3>One Next Adjustment</h3><div id="aarAdjustBig" class="small">No recommendation yet.</div></div>
-          <div class="aarTakeCard"><h3>Full Numbers</h3><div id="aarNumbersBig" class="small">No statistics yet.</div></div>
-        </div>
-        <div class="aarControls"><button class="btn primary" id="runNextBtn">Run Next Trial</button><button class="btn ghost" id="closeAarBtn">Keep Viewing Board</button></div>
-      </div>
     </main>
-    <aside class="guidePanel" id="guidePanel">
-      <div class="sideHeader"><h2>Controller / Planning Screen</h2><span class="tag gold">Guided</span></div>
-      <div class="guideBody">
-        <div class="coachBox" id="coachBox">
-          <b id="coachTitle">Mission Coach</b>
-          <p class="coachNow" id="coachNow">Use this panel for the next recommended action.</p>
-          <div class="nextClickBox"><b>Next Recommended Click</b><span id="coachNextClick">Select a roster card or marker, then pick an order.</span><small id="coachLookFor">Watch the board for phase movement, pressure change, or recovery route feedback.</small></div>
-          <div class="coachResultBox"><b>Last Confirmed Result</b><span id="coachResult">No order has resolved yet. Each resolved order will leave a visible record here.</span></div>
-          <div class="coachRow"><strong>Click path:</strong> <span id="coachClick">Select a roster card or marker, then pick an order.</span></div>
-          <div class="coachRow"><strong>Why:</strong> <span id="coachWhy">The board resolves orders through the C2 Net and records what broke for the AAR.</span></div>
-          <div class="coachActions">
-            <button class="btn ghost" id="coachFocusBtn">Coach Select</button>
-            <button class="btn primary" id="coachDoBtn">Do Next Step</button>
-            <button class="btn ghost" id="showBriefBtn">Show Board Brief</button>
-          </div>
-        </div>
-        <div class="guideBox" id="guideBox"><b>How to read this board</b><p>The coach tells you what to do next. The left panel is select-and-act. The center is the board state. This right panel is the second screen: phase guidance, terrain, and AAR.</p></div>
-        <div class="playbookBox"><b>First-Time Playbook</b><p><b>1.</b> Read Next Recommended Click. <b>2.</b> Press Coach Select when unsure. <b>3.</b> Use the highlighted valid order. <b>4.</b> Watch what changed on the board. <b>5.</b> Let the AAR tell you what to adjust.</p></div>
-        <div class="guideBox"><b>Recovery rule</b><p>Plt Sgt stays with the operating platoon and coordinates recovery. R7 and the parts track perform the recovery/repair route.</p></div>
-        <div class="guideSteps" id="guideSteps"></div>
-
-        <section class="drawer rightDrawer" id="drawer">
-          <div class="tabs">
-            <button class="tabBtn active" data-tab="plan">Plan / Phase</button>
-            <button class="tabBtn" data-tab="terrain">Terrain / Friction</button>
-            <button class="tabBtn" data-tab="aar">AAR / Notes</button>
-            <button class="tabBtn drawerToggle" id="drawerToggle">Hide Details</button>
-          </div>
-          <div class="drawerBody">
-            <div class="tabPane active" id="tab-plan">
-              <div class="panelGrid">
-                <div>
-                  <h2 class="panelTitle">Planning & Control Points · v0.3.8</h2>
-                  <div class="markerGrid" id="markerPalette"></div>
-                </div>
-                <div>
-                  <h2 class="panelTitle">Mission Flow</h2>
-                  <p class="small"><b>v0.3.8 guided fix:</b> use the Mission Coach above when unsure. Establish Beach C2, arrive, dismount/screen, rally, remount, advance, then AAR. C7 + support P7 remain at Beach C2. R7 + parts P7 hold the recovery lane between C2 and the operating platoon.</p>
-                  <button class="btn ghost" id="resetPlanBtn">Reset Control Points</button>
-                </div>
-              </div>
-            </div>
-            <div class="tabPane" id="tab-terrain">
-              <div class="collapse" id="frictionCollapse">
-                <div class="collapseHead" id="frictionHead"><b>Friction Palette</b><span class="tag gold" id="frictionState">Collapsed</span></div>
-                <div class="collapseBody">
-                  <div class="terrainGrid" id="terrainPalette"></div>
-                </div>
-              </div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-                <button class="btn ghost" id="presetBtn">Preset Trial</button>
-                <button class="btn ghost" id="clearBtn">Reset Terrain</button>
-                <button class="btn ghost" id="eraseBtn">Erase Tool</button>
-              </div>
-            </div>
-            <div class="tabPane" id="tab-aar">
-              <div class="aarGrid">
-                <div class="aarBox"><h3>Trial Stats</h3><div id="aarStats"><p class="small">Run a trial to populate the AAR.</p></div></div>
-                <div class="aarBox"><h3>What Broke</h3><ul id="aarNotes"><li>No trial completed yet.</li></ul></div>
-                <div class="aarBox"><h3>GM / Controller Notes</h3><textarea class="notes" id="gmNotes" placeholder="Use this space like a TTRPG controller / facilitator notebook. Example: what assumption are we testing this run?"></textarea><p class="small" id="aarRecommendation" style="margin:8px 0 0"></p></div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-    </aside>
   </div>
 </div>
 
-
 <script>
-(function(){
+(()=>{
 'use strict';
-const canvas=document.getElementById('game');
-const ctx=canvas.getContext('2d');
-const cols=20, rows=12;
-let dpr=Math.max(1,Math.min(2,window.devicePixelRatio||1));
-let cell=48, offsetX=0, offsetY=0;
-let mode='planning';
-let stage='plan';
-let paused=false, lastTime=0, trialTime=0, maxTrialTime=480;
-let selectedTool={kind:'marker',id:'beach'};
-let selectedId=null;
-let selectedGroup='';
-let drawerCollapsed=false;
-let lastBoardBrief='', boardBadgeTimer=null;
-let hold=false;
-let cohesion=100, net=100, parts=100, pressure=0, commandBoost=0;
-let commandPushCooldown=0;
-let recoveryActions=0, repairsCompleted=0, dismountCount=0;
-let messages=[], logNotes=[], downedHistory=[];
-let boardEvents=[], motionEvents=[];
-let mgZones=[], fireBursts=[], suppressedCells=[], screenedCells=[], supportTeams=[];
-let pendingOrders=[];
-let currentCoach=null;
-let lastCoachResult='No order has resolved yet. Each resolved order will leave a visible record here.';
-let timelineEvents=[];
-let guidedMode=true, guidedBogInjected=false;
-let board=[], units=[], troopCards=[];
-let dismountOrdered=false;
-let c2Anchored=false, c2AnchorTimer=0, c2EstablishedAt=null;
-let avgNetAccumulator=0, avgNetSamples=0, maxLatencyMs=0;
-let c2UpTime=0, arrivalTime=null, pressureSeconds=0, screenedPressureSeconds=0, maxPressure=0, timePCPSGTogetherOperational=0, degradedAwaitingRepair=0;
-
+const COLS=96, ROWS=18, TILE=32, W=COLS*TILE, H=ROWS*TILE;
+const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
+const scroll=document.getElementById('scroll');
 const $=id=>document.getElementById(id);
-const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-const clampRange=(v,a,b)=>Math.max(Math.min(a,b),Math.min(Math.max(a,b),v));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-const escapeHtml=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const cellKey=(x,y)=>`${x},${y}`;
 
-const terrainDefs={
-  water:{name:'Water',color:'#195671',friction:.72,cost:0,desc:'launch lane'},
-  surf:{name:'Surf',color:'#4aa0ad',friction:.62,cost:2,desc:'high drag'},
-  beach:{name:'Beach',color:'#c7a76e',friction:.90,cost:1,desc:'landing surface'},
-  dunes:{name:'Dunes',color:'#aa8a50',friction:.76,cost:2,desc:'route friction'},
-  soft:{name:'Soft Sand',color:'#dbc086',friction:.58,cost:3,desc:'bog stress'},
-  hard:{name:'Hard Pack',color:'#e1d1a5',friction:1.05,cost:-1,desc:'better movement'}
+const sectors=[
+  {name:'SHIP → SHORE',x0:0,x1:27,color:'rgba(25,86,113,.18)'},
+  {name:'BEACHHEAD',x0:28,x1:65,color:'rgba(199,167,110,.13)'},
+  {name:'ADVANCE',x0:66,x1:95,color:'rgba(77,100,68,.18)'}
+];
+const markers={
+ launch:{x:4.5,y:9}, surf:{x:21.5,y:9}, beach:{x:26.5,y:9},
+ c2:{x:32.5,y:12}, arrival:{x:38.5,y:9}, recovery:{x:43.5,y:13},
+ dismount:{x:48.5,y:8}, rally:{x:55.5,y:11}, mortar1:{x:53.5,y:14},
+ mortar2:{x:59.5,y:13}, remount:{x:63.5,y:8}, objective:{x:92.5,y:8}
 };
-const overlayDefs={
-  bog:{name:'Bog Risk',color:'#bd7942',cost:3,desc:'mobility stress'},
-  comms:{name:'Comms Noise',color:'#7e66c0',cost:3,desc:'C2 tether penalty'},
-  pressure:{name:'Adversary Pressure',color:'#c85f55',cost:4,desc:'abstract pressure marker'},
-  rally:{name:'Rally Point',color:'#63a96c',cost:-2,desc:'organize/cohesion'},
-  recovery:{name:'Recovery Point',color:'#68a9cc',cost:-2,desc:'repair anchor'},
-  erase:{name:'Erase Overlay',color:'#f4ecd4',cost:0,desc:'remove marker'}
-};
-const markerDefs={
-  beach:{name:'Center Beach',color:'#d6b85f',short:'BCH',desc:'shoreline touchdown/form-up'},
-  c2:{name:'Beach C2 Anchor',color:'#68a9cc',short:'C2',desc:'C7 + C7 chase support node'},
-  arrival:{name:'Arrival',color:'#68a9cc',short:'ARR',desc:'operating platoon ashore/form-up'},
-  dismount:{name:'Dismount',color:'#7caf6d',short:'DIS',desc:'troop carriers begin screening sequence'},
-  rally:{name:'Rally / Organize',color:'#63a96c',short:'RLY',desc:'troop bundles become rallied'},
-  remount:{name:'Remount',color:'#d6b85f',short:'RMT',desc:'reorganize for mounted move'},
-  objective:{name:'Forward Advance',color:'#f0dcc0',short:'ADV',desc:'inland trial objective'},
-  recovery:{name:'Recovery Control',color:'#68a9cc',short:'REC',desc:'R7 support anchor'}
-};
-let markers={
-  beach:{x:4.5,y:6.0}, c2:{x:4.6,y:7.8}, arrival:{x:6.5,y:6.0}, dismount:{x:9.2,y:5.8}, rally:{x:10.4,y:7.0}, remount:{x:12.6,y:5.8}, objective:{x:18.3,y:5.8}, recovery:{x:7.2,y:8.0}
-};
-const terrainItems=['water','surf','beach','dunes','soft','hard','bog','comms','pressure','rally','recovery'];
-const markerItems=['beach','c2','arrival','dismount','rally','remount','objective','recovery'];
+const pressure=[
+ {x:72,y:6,active:true},{x:78,y:10,active:true},{x:84,y:7,active:true},{x:88,y:11,active:true}
+];
+const friction=[{x:46,y:5,type:'bog'},{x:61,y:10,type:'comms'},{x:76,y:12,type:'bog'}];
+const DEFAULT_MARKERS=JSON.parse(JSON.stringify(markers));
+const DEFAULT_PRESSURE=JSON.parse(JSON.stringify(pressure));
+const DEFAULT_FRICTION=JSON.parse(JSON.stringify(friction));
 
-function makeBoard(){
-  board=[];
-  for(let y=0;y<rows;y++){
-    const row=[];
-    for(let x=0;x<cols;x++){
-      let terrain='beach';
-      if(x<=2) terrain='water'; else if(x===3) terrain='surf'; else if(x>=11&&x<=15) terrain='dunes'; else if(x>=16) terrain='hard';
-      row.push({terrain,overlays:[]});
-    }
-    board.push(row);
-  }
-  addOverlay(7,8,'recovery'); addOverlay(10,7,'rally'); addOverlay(11,4,'bog'); addOverlay(13,6,'bog'); addOverlay(15,4,'comms'); addOverlay(15,6,'pressure'); addOverlay(17,7,'pressure');
-}
-function addOverlay(x,y,id){ if(x>=0&&x<cols&&y>=0&&y<rows&&!board[y][x].overlays.includes(id)) board[y][x].overlays.push(id); }
-function resetMarkers(){ markers={beach:{x:4.5,y:6.0},c2:{x:4.6,y:7.8},arrival:{x:6.5,y:6.0},dismount:{x:9.2,y:5.8},rally:{x:10.4,y:7.0},remount:{x:12.6,y:5.8},objective:{x:18.3,y:5.8},recovery:{x:7.2,y:8.0}}; toast('Control points reset to v0.3 logic-lock layout.','info'); }
-function unit(id,label,role,detail,kind,x,y,speed,flags){return Object.assign({id,label,role,detail,kind,x,y,homeY:y,speed,status:'operational',hp:100,reason:'',task:null,repairTimer:0,bogTimer:0,bogStress:0,lastPressureCellKey:null,target:null,degradedEver:false,awaitingRepair:false},flags||{});}
-function resetUnits(){
-  const startY=[3.8,4.6,5.25,6.0,6.75,7.5,4.1,7.9,5.7,7.0];
-  units=[
-    unit('p7pc','P7-1','Plt Commander','Command Authority','p7',1.2,startY[0],.78,{pc:true,protected:true}),
-    unit('p7psg','P7-2','Plt Sergeant','Recovery Control','p7',1.1,startY[1],.82,{psg:true,protected:true}),
-    unit('p7t1','P7-3','Troop Carrier 1','Infantry Platoon','p7',.8,startY[2],.74,{troop:true}),
-    unit('p7t2','P7-4','Troop Carrier 2','Infantry Platoon','p7',.65,startY[3],.74,{troop:true}),
-    unit('p7t3','P7-5','Troop Carrier 3','Infantry Platoon','p7',.5,startY[4],.74,{troop:true}),
-    unit('p7t4','P7-6','Troop Carrier 4','Infantry Platoon','p7',.35,startY[5],.74,{troop:true}),
-    unit('p7c','P7-7','C7 Chase','Support Element','p7',.95,startY[6],.72,{chase:'c7'}),
-    unit('p7r','P7-8','R7 Chase','Parts Track','p7',.2,startY[7],.72,{chase:'r7'}),
-    unit('c7','C7','Command/Control Node','Beach Net Support','c7',.85,startY[8],.60,{}),
-    unit('r7','R7','Recovery Track','Repair Node','r7',.15,startY[9],.56,{})
-  ];
-  troopCards=['p7t1','p7t2','p7t3','p7t4'].map((id,i)=>({unitId:id,title:`P7-${i+3} Platoon`,state:'mounted',stateTimer:0,screenCenter:null,mg:'ready',mortar:'ready',mgCooldown:0,mortarCooldown:0,mgPos:null,mortarPos:null}));
-}
-function resetTrial(keepBoard=true){
-  mode='planning'; stage='plan'; paused=false; trialTime=0; hold=false; commandBoost=0; commandPushCooldown=0; cohesion=100; net=100; parts=100; pressure=0; recoveryActions=0; repairsCompleted=0; dismountCount=0; messages=[]; logNotes=[]; downedHistory=[]; boardEvents=[]; motionEvents=[]; mgZones=[]; fireBursts=[]; suppressedCells=[]; screenedCells=[]; supportTeams=[]; pendingOrders=[]; selectedId=null; selectedGroup=''; dismountOrdered=false; c2Anchored=false; c2AnchorTimer=0; c2EstablishedAt=null; avgNetAccumulator=0; avgNetSamples=0; maxLatencyMs=0; c2UpTime=0; arrivalTime=null; pressureSeconds=0; screenedPressureSeconds=0; maxPressure=0; timePCPSGTogetherOperational=0; degradedAwaitingRepair=0; guidedBogInjected=false; lastCoachResult='No order has resolved yet. Each resolved order will leave a visible record here.'; timelineEvents=[]; const ov=$('aarOverlay'); if(ov)ov.classList.remove('active'); if(!keepBoard) makeBoard(); resetUnits(); syncUi(); toast('v0.3.8a ready. Dismount/Rally flow fix applied; guided spine preserved.','info');
+let mode='briefing', stage='plan', running=false, paused=false, time=0, last=0, missionAccepted=false, planLocked=false, selectedPlanTool='c2';
+let timeline=[], lockedPlan=null, minNet=100, minCohesion=100, c2Below70Seconds=0;
+let disruptionAt=null, degradedUnitId=null, recoveryOrderedAt=null, recoveryCompletedAt=null;
+let supportActions=0, postureChanges=0, tempoChanges=0, lastAarData=null;
+let net=100, cohesion=100, parts=100, recovering=false, recoveryT=0, supportCooldown=0;
+let posture='balanced', tempo='steady';
+const postureMods={
+ balanced:{speed:1,net:0,cohesion:0,pressure:1,recovery:1,label:'Balanced'},
+ protected:{speed:.86,net:4,cohesion:1.5,pressure:.68,recovery:.82,label:'Protected'},
+ dispersed:{speed:.94,net:-7,cohesion:-.8,pressure:.72,recovery:1.18,label:'Dispersed'},
+ concentrated:{speed:1.06,net:2,cohesion:.5,pressure:1.28,recovery:.92,label:'Concentrated'}
+};
+const tempoMods={
+ steady:{speed:1,net:0,cohesion:0,pressure:1,label:'Steady'},
+ deliberate:{speed:.82,net:5,cohesion:1.2,pressure:.72,label:'Deliberate'},
+ surge:{speed:1.28,net:-8,cohesion:-1.6,pressure:1.38,label:'Surge'},
+ pause:{speed:.18,net:8,cohesion:2.2,pressure:.45,label:'Pause & Reassess'}
+};
+let units=[];
+
+function makeUnits(){
+ const ys=[5.2,6.1,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0];
+ units=[
+  {id:'pc',label:'P7-1',kind:'pc',x:3.8,y:ys[0],speed:3.45,target:'beach',status:'operational'},
+  {id:'psg',label:'P7-2',kind:'psg',x:3.6,y:ys[1],speed:3.55,target:'beach',status:'operational'},
+  {id:'t1',label:'P7-3',kind:'troop',x:3.4,y:ys[2],speed:3.3,target:'beach',status:'operational'},
+  {id:'t2',label:'P7-4',kind:'troop',x:3.2,y:ys[3],speed:3.3,target:'beach',status:'operational'},
+  {id:'t3',label:'P7-5',kind:'troop',x:3.0,y:ys[4],speed:3.3,target:'beach',status:'operational'},
+  {id:'t4',label:'P7-6',kind:'troop',x:2.8,y:ys[5],speed:3.3,target:'beach',status:'operational'},
+  {id:'cchase',label:'P7-7',kind:'cchase',x:2.6,y:ys[6],speed:3.15,target:'c2',status:'operational'},
+  {id:'rchase',label:'P7-8',kind:'rchase',x:2.4,y:ys[7],speed:3.1,target:'recovery',status:'operational'},
+  {id:'c7',label:'C7',kind:'c7',x:2.2,y:ys[8],speed:2.8,target:'c2',status:'operational'},
+  {id:'r7',label:'R7',kind:'r7',x:2.0,y:ys[9],speed:2.7,target:'recovery',status:'operational'}
+ ];
 }
 
-function initPalettes(){
-  const terrainPalette=$('terrainPalette'); terrainPalette.innerHTML='';
-  for(const id of terrainItems){
-    const isTerrain=!!terrainDefs[id]; const def=isTerrain?terrainDefs[id]:overlayDefs[id];
-    const btn=document.createElement('button'); btn.className='terrainCard'+(selectedTool.id===id?' selected':'');
-    btn.innerHTML=`<span class="swatch" style="background:${def.color}"></span><span class="terrainText"><b>${def.name}</b><span>${isTerrain?'terrain':'marker'} · ${def.cost>0?'+':''}${def.cost} · ${def.desc}</span></span>`;
-    btn.onclick=()=>{selectedTool={kind:isTerrain?'terrain':'overlay',id}; initPalettes(); toast(`${def.name} tool selected. Tap the board to place.`, 'info');};
-    terrainPalette.appendChild(btn);
-  }
-  const markerPalette=$('markerPalette'); markerPalette.innerHTML='';
-  for(const id of markerItems){
-    const def=markerDefs[id]; const p=markers[id];
-    const btn=document.createElement('button'); btn.className='planCard'+(selectedTool.kind==='marker'&&selectedTool.id===id?' selected':'');
-    btn.innerHTML=`<div class="cardTop"><b>${def.name}</b><span class="tag gold">${def.short}</span></div><div class="meta">${def.desc}<br/>Current: ${p.x.toFixed(1)}, ${p.y.toFixed(1)}</div>`;
-    btn.onclick=()=>{selectedTool={kind:'marker',id}; initPalettes(); toast(`${def.name} marker selected. Tap the board to set it.`, 'info');};
-    markerPalette.appendChild(btn);
-  }
+function terrainAt(x,y){
+ if(x<=18)return '#195671';
+ if(x<=22)return '#4aa0ad';
+ if(x<=29)return '#c7a76e';
+ if(x<=45)return y<4?'#aa8a50':'#c7a76e';
+ if(x<=65)return (y%5===0)?'#dbc086':'#aa8a50';
+ return (y%6===0)?'#71805e':'#4d6444';
 }
-function initTabs(){
-  document.querySelectorAll('.tabBtn[data-tab]').forEach(btn=>btn.onclick=()=>{
-    document.querySelectorAll('.tabBtn[data-tab]').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tabPane').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active'); $('tab-'+btn.dataset.tab).classList.add('active');
-  });
-  $('drawerToggle').onclick=()=>{drawerCollapsed=!drawerCollapsed; $('drawer').classList.toggle('collapsed',drawerCollapsed); $('drawerToggle').textContent=drawerCollapsed?'Show Details':'Hide Details';};
-  const showBrief=$('showBriefBtn'); if(showBrief) showBrief.onclick=()=>showBoardBrief(true); const coachFocus=$('coachFocusBtn'); if(coachFocus) coachFocus.onclick=coachFocusNext; const coachDo=$('coachDoBtn'); if(coachDo) coachDo.onclick=coachDoNext; const boardAction=$('boardActionBtn'); if(boardAction) boardAction.onclick=coachDoNext;
-  $('frictionHead').onclick=()=>{const c=$('frictionCollapse'); c.classList.toggle('open'); $('frictionState').textContent=c.classList.contains('open')?'Open':'Collapsed';};
-}
-function resizeCanvas(){
-  const r=canvas.parentElement.getBoundingClientRect(); const w=Math.floor(r.width), h=Math.floor(r.height);
-  dpr=Math.max(1,Math.min(2,window.devicePixelRatio||1));
-  canvas.width=Math.max(1,Math.floor(w*dpr)); canvas.height=Math.max(1,Math.floor(h*dpr)); canvas.style.width=w+'px'; canvas.style.height=h+'px';
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  cell=Math.floor(Math.min((w-24)/cols,(h-24)/rows)); cell=Math.max(34,Math.min(68,cell));
-  offsetX=Math.floor((w-cols*cell)/2); offsetY=Math.floor((h-rows*cell)/2);
-}
-function showBoardBrief(manual=false){
-  const badge=$('boardBadge');
-  if(!badge)return;
-  badge.classList.remove('autoHidden');
-  if(boardBadgeTimer)clearTimeout(boardBadgeTimer);
-  boardBadgeTimer=setTimeout(()=>{badge.classList.add('autoHidden');}, manual?6500:5200);
-}
-function cellAt(clientX,clientY){ const r=canvas.getBoundingClientRect(); return {x:Math.floor((clientX-r.left-offsetX)/cell),y:Math.floor((clientY-r.top-offsetY)/cell)}; }
-function unitAtCell(cx,cy){let best=null,bestD=99;for(const u of units){const d=Math.hypot(u.x-(cx+.5),u.y-(cy+.5));if(d<bestD&&d<.72){best=u;bestD=d;}}return best;}
-function supportAtCell(cx,cy){let best=null,bestD=99;for(const t of supportTeams){const d=Math.hypot(t.x-(cx+.5),t.y-(cy+.5));if(d<bestD&&d<.62){best=t;bestD=d;}}return best;}
-function boardPointer(e){
-  const p=e.touches?e.touches[0]:e; const c=cellAt(p.clientX,p.clientY); if(c.x<0||c.x>=cols||c.y<0||c.y>=rows)return;
-  const u=unitAtCell(c.x,c.y); if(u){selectedId=u.id; selectedGroup=''; syncUi(); return;}
-  const st=supportAtCell(c.x,c.y); if(st){selectedId='support:'+st.id; selectedGroup=''; syncUi(); return;}
-  const tileClicked=board[c.y][c.x]; if(mode==='trial'&&tileClicked.overlays.includes('pressure')){selectedId='pressure:'+cellKey(c.x,c.y); selectedGroup=''; syncUi(); return;}
-  if(mode==='trial'){
-    const selectedSupport=String(selectedId||'').startsWith('support:')?supportTeams.find(t=>'support:'+t.id===selectedId):null;
-    if(selectedSupport){
-      const card=troopCards.find(x=>x.unitId===selectedSupport.unitId);
-      if(card){
-        const pos={x:c.x+.5,y:c.y+.5};
-        if(selectedSupport.type==='MG')card.mgPos=pos; else card.mortarPos=pos;
-        toast(`${selectedSupport.label} marker repositioned. Support markers only affect abstract pressure; no vehicle moved.`, 'info');
-        refreshSupportTeams(); syncUi(); return;
-      }
-    }
-    selectedId=null; selectedGroup=''; syncUi(); return;
-  }
-  if(selectedTool.kind==='marker'){ markers[selectedTool.id]={x:c.x+.5,y:c.y+.5}; toast(`${markerDefs[selectedTool.id].name} set.`, 'info'); initPalettes(); syncUi(); return; }
-  const tile=board[c.y][c.x];
-  if(selectedTool.kind==='terrain') tile.terrain=selectedTool.id;
-  else if(selectedTool.id==='erase') tile.overlays=[];
-  else { const i=tile.overlays.indexOf(selectedTool.id); if(i>=0) tile.overlays.splice(i,1); else tile.overlays.push(selectedTool.id); }
-  syncUi();
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ for(const s of sectors){
+  ctx.fillStyle=s.color;ctx.fillRect(s.x0*TILE,0,(s.x1-s.x0+1)*TILE,H);
+ }
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+  ctx.fillStyle=terrainAt(x,y);ctx.fillRect(x*TILE,y*TILE,TILE,TILE);
+  ctx.strokeStyle='rgba(255,255,255,.065)';ctx.strokeRect(x*TILE+.5,y*TILE+.5,TILE-1,TILE-1);
+ }
+ sectors.forEach(s=>{
+  ctx.fillStyle='rgba(5,7,6,.74)';ctx.fillRect(s.x0*TILE,0,(s.x1-s.x0+1)*TILE,30);
+  ctx.fillStyle='#ffe19a';ctx.font='900 13px system-ui';ctx.textAlign='left';
+  ctx.fillText(s.name,s.x0*TILE+12,20);
+ });
+ friction.forEach(f=>{
+  ctx.fillStyle=f.type==='comms'?'rgba(126,102,192,.72)':'rgba(189,121,66,.72)';
+  ctx.fillRect(f.x*TILE,f.y*TILE,TILE,TILE);
+ });
+ pressure.forEach(p=>{
+  if(!p.active)return;
+  ctx.fillStyle='rgba(201,95,85,.75)';ctx.beginPath();ctx.arc((p.x+.5)*TILE,(p.y+.5)*TILE,12,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='900 8px system-ui';ctx.textAlign='center';ctx.fillText('PRESS',(p.x+.5)*TILE,(p.y+.5)*TILE+3);
+ });
+ Object.entries(markers).forEach(([id,p])=>{
+  let c='#d6b85f', label=id.toUpperCase();
+  if(['c2','recovery'].includes(id))c='#68a9cc';
+  if(id.startsWith('mortar')){c='#7caf6d';label=id==='mortar1'?'MTR A':'MTR B'}
+  ctx.fillStyle='rgba(4,6,5,.86)';ctx.strokeStyle=c;ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect((p.x-.55)*TILE,(p.y-.42)*TILE,1.1*TILE,.84*TILE,7);ctx.fill();ctx.stroke();
+  ctx.fillStyle=c;ctx.font='900 9px system-ui';ctx.textAlign='center';ctx.fillText(label,p.x*TILE,p.y*TILE+3);
+ });
+ units.forEach(u=>{
+  const color=u.status==='degraded'?'#c95f55':u.kind==='c7'||u.kind==='cchase'?'#68a9cc':u.kind==='r7'||u.kind==='rchase'?'#7caf6d':'#f4ecd4';
+  ctx.fillStyle='rgba(4,6,5,.92)';ctx.strokeStyle=color;ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect((u.x-.38)*TILE,(u.y-.28)*TILE,.76*TILE,.56*TILE,6);ctx.fill();ctx.stroke();
+  ctx.fillStyle=color;ctx.font='900 8px system-ui';ctx.textAlign='center';ctx.fillText(u.label,u.x*TILE,u.y*TILE+3);
+ });
 }
 
-function launchTrial(){
-  if(mode==='trial')return;
-  const wasGuided=guidedMode;
-  mode='trial'; stage='beach'; paused=false; trialTime=0; hold=false; commandBoost=0; commandPushCooldown=0; cohesion=100; net=100; parts=100; pressure=0; recoveryActions=0; repairsCompleted=0; dismountCount=0; selectedId=null; selectedGroup=''; logNotes=[]; downedHistory=[]; messages=[]; pendingOrders=[]; boardEvents=[]; motionEvents=[]; mgZones=[]; fireBursts=[]; suppressedCells=[]; screenedCells=[]; supportTeams=[]; c2AnchorTimer=0; c2Anchored=false; c2EstablishedAt=null; avgNetAccumulator=0; avgNetSamples=0; maxLatencyMs=0; c2UpTime=0; arrivalTime=null; pressureSeconds=0; screenedPressureSeconds=0; maxPressure=0; timePCPSGTogetherOperational=0; degradedAwaitingRepair=0; guidedBogInjected=false; dismountOrdered=false; timelineEvents=[]; lastCoachResult='No order has resolved yet. Each resolved order will leave a visible record here.'; resetUnits(); const ov=$('aarOverlay'); if(ov)ov.classList.remove('active'); buildAARReset(); guidedMode=wasGuided;
-  toast(guidedMode?'GATOR RAID. v0.3.8a guided run: follow the spine through Remount and AAR.':'GATOR RAID. v0.3.8a free run: full state reset, no scripted bog, no guided order lock.','good'); syncUi();
+function targetFor(u){
+ if(stage==='ship'||stage==='beach'){
+  if(u.kind==='c7'||u.kind==='cchase')return markers.c2;
+  if(u.kind==='r7'||u.kind==='rchase')return markers.recovery;
+  return markers.beach;
+ }
+ if(stage==='arrival')return (u.kind==='pc'||u.kind==='psg'||u.kind==='troop')?markers.arrival:targetForSupport(u);
+ if(stage==='screen')return (u.kind==='pc'||u.kind==='psg'||u.kind==='troop')?markers.dismount:targetForSupport(u);
+ if(stage==='rally')return (u.kind==='pc'||u.kind==='psg'||u.kind==='troop')?markers.rally:targetForSupport(u);
+ if(stage==='remount')return (u.kind==='pc'||u.kind==='psg'||u.kind==='troop')?markers.remount:targetForSupport(u);
+ if(stage==='advance'||stage==='complete')return (u.kind==='pc'||u.kind==='psg'||u.kind==='troop')?markers.objective:targetForSupport(u);
+ return {x:u.x,y:u.y};
 }
-function presetTrial(){
-  makeBoard();
-  addOverlay(6,6,'rally'); addOverlay(10,7,'rally'); addOverlay(11,5,'bog'); addOverlay(12,8,'bog'); addOverlay(14,5,'comms'); addOverlay(15,5,'pressure'); addOverlay(17,7,'pressure'); addOverlay(7,8,'recovery');
-  resetMarkers();
-  initPalettes(); toast('Preset v0.3 trial loaded: C2 anchor, screening lane, recovery point, and pressure markers.','info'); syncUi();
+function targetForSupport(u){
+ if(u.kind==='c7'||u.kind==='cchase')return markers.c2;
+ return markers.recovery;
 }
-function clearTerrain(){ makeBoard(); toast('Terrain reset. Control points preserved.','info'); }
-function loop(ts){ const dt=paused?0:Math.min(.05,(ts-lastTime)/1000||.016); lastTime=ts; if(mode==='trial') update(dt); draw(); requestAnimationFrame(loop); }
-function getUnit(id){return units.find(u=>u.id===id);} 
-function fullyOperational(u){return u&&u.status==='operational';} 
-function operational(u){return u&&(u.status==='operational'||u.status==='repairing'||u.status==='bogged');}
-function tileAt(u){const x=clamp(Math.floor(u.x),0,cols-1),y=clamp(Math.floor(u.y),0,rows-1);return board[y][x];}
-function tileXY(x,y){return board[clamp(y,0,rows-1)][clamp(x,0,cols-1)];}
-function point(id){return markers[id];}
-function routeTargetFor(u){
-  const pc=getUnit('p7pc'), c7=getUnit('c7'), r7=getUnit('r7');
-  if(u.kind==='c7') return point('c2');
-  if(u.chase==='c7') return c7?{x:c7.x-.55,y:c7.y+.45}:point('c2');
-  if(u.kind==='r7'){
-    const anchor=point('recovery');
-    if(pc&&c7&&stage==='advance') return {x:clampRange((pc.x+c7.x)/2, anchor.x, pc.x-1.2), y:clamp((pc.y+c7.y)/2+.7,1.2,rows-1.2)};
-    return anchor;
-  }
-  if(u.chase==='r7') return r7?{x:r7.x-.45,y:r7.y+.45}:point('recovery');
-  if(stage==='beach') return staggerTarget(point('beach'),u);
-  if(stage==='arrival') return staggerTarget(point('arrival'),u);
-  if(stage==='screen'){
-    if(u.troop) return staggerTarget(point('dismount'),u);
-    return staggerTarget(point('arrival'),u);
-  }
-  if(stage==='remount') return staggerTarget(point('remount'),u);
-  if(stage==='advance') return staggerTarget(point('objective'),u);
-  return staggerTarget(point('arrival'),u);
+function moveUnit(u,dt){
+ if(paused||u.status==='degraded'||recovering&&u.kind==='r7')return;
+ const t=targetFor(u),dx=t.x-u.x,dy=t.y-u.y,d=Math.hypot(dx,dy)||1;
+ const pace=paused?.18:1;
+ const step=u.speed*pace*postureMods[posture].speed*tempoMods[tempo].speed*dt;
+ if(d>.04){u.x+=dx/d*Math.min(step,d);u.y+=dy/d*Math.min(step,d)}
 }
-function staggerTarget(p,u){
-  const offsets={p7pc:[-.15,-.35],p7psg:[-.35,.35],p7t1:[-.8,-1.15],p7t2:[-.8,1.15],p7t3:[-1.35,-.55],p7t4:[-1.35,.55],p7c:[-.55,.55],p7r:[-.55,1.0],c7:[-.65,.2],r7:[-.8,1.0]};
-  const o=offsets[u.id]||[0,0]; return {x:p.x+o[0],y:clamp(p.y+o[1],.7,rows-.7)};
-}
-function update(dt){
-  trialTime+=dt; if(commandBoost>0)commandBoost=Math.max(0,commandBoost-dt); if(commandPushCooldown>0)commandPushCooldown=Math.max(0,commandPushCooldown-dt);
-  updateCards(dt); updateUnits(dt); updateRelationships(dt); updateScreenedCells(); updatePendingOrders(); updateSupport(dt); updateFriction(dt); updateRepairs(dt); updateVisualEvents(dt); updateMessages(dt); updateStage(); syncUi(false);
-  if(trialTime>=maxTrialTime||catastrophicFailure()||objectiveReached()) finishTrial();
-}
-function updateStage(){
-  const pc=getUnit('p7pc'), psg=getUnit('p7psg');
-  if(stage==='beach'&&pc&&dist(pc,point('beach'))<=1.2) {stage='arrival'; if(arrivalTime===null)arrivalTime=trialTime; toast('Center beach reached. Beach C2 should anchor while the operating platoon arrives.','info');}
-  if(stage==='remount'&&dismountOrdered&&!troopCards.some(c=>c.state==='remounting')){stage='advance';hold=false;toast('Remount complete. Forward Advance phase started.','good');}
-  if(stage==='advance'&&pc&&psg&&dist(pc,point('objective'))<1.1&&dist(psg,point('objective'))<1.5) stage='complete';
-}
-function carrierAtDismountStart(carrier){
-  if(!carrier)return false;
-  // v0.3.8a: troop carriers hold staggered DIS positions rather than the exact DIS marker.
-  // The previous exact-marker radius could park them visibly at the dismount line without starting dismount/rally timers.
-  const p=point('dismount');
-  const target=staggerTarget(p,carrier);
-  return dist(carrier,target)<=0.18 || dist(carrier,p)<=1.65;
-}
-function updateCards(dt){
-  for(const c of troopCards){
-    if(c.mg==='cool'){c.mgCooldown=Math.max(0,c.mgCooldown-dt);if(c.mgCooldown<=0)c.mg='ready';}
-    if(c.mortar==='cool'){c.mortarCooldown=Math.max(0,c.mortarCooldown-dt);if(c.mortarCooldown<=0)c.mortar='ready';}
-    const carrier=getUnit(c.unitId);
-    if(stage==='screen'&&dismountOrdered&&c.state==='mounted'&&carrierAtDismountStart(carrier)){c.state='dismounting';c.stateTimer=6.0;c.screenCenter=null;toast(`${carrier.label} begins dismount sequence.`, 'info');}
-    if(c.state==='dismounting'){c.stateTimer-=dt;if(c.stateTimer<=0){c.state='screening';c.stateTimer=12.0;c.screenCenter='dismount';setSupportPositions(c,'dismount');addSupportDeployAnimation(c,carrier);dismountCount=Math.max(dismountCount,troopCards.filter(x=>x.state!=='mounted').length);toast(`${carrier?carrier.label:c.title} MG and mortar markers set on the map.`, 'good');}}
-    else if(c.state==='screening'){c.stateTimer-=dt;if(c.stateTimer<=0){c.state='rallied';c.stateTimer=0;c.screenCenter='rally';setSupportPositions(c,'rally');addBoardEvent(point('rally'),`${carrier?carrier.label:c.title} RALLIED`,'good');toast(`${carrier?carrier.label:c.title} rallied; support markers shift to Rally/Organize.`, 'good');}}
-    else if(c.state==='remounting'){c.stateTimer-=dt;if(c.stateTimer<=0){c.state='mounted';c.stateTimer=0;c.screenCenter=null;c.mgPos=null;c.mortarPos=null;}}
-  }
-  refreshSupportTeams();
-}
-function setSupportPositions(card,nodeId){
-  const idx=troopCards.indexOf(card);
-  const base=point(nodeId||card.screenCenter||'dismount');
-  const mgOffsets=[[-.85,-.55],[-.65,.55],[.55,-.75],[.72,.55]];
-  const mtrOffsets=[[-1.10,.15],[-.95,.95],[.95,-.20],[1.10,.90]];
-  const mo=mgOffsets[idx]||[0,0], to=mtrOffsets[idx]||[.35,.35];
-  card.mgPos={x:clamp(base.x+mo[0],.5,cols-.5),y:clamp(base.y+mo[1],.5,rows-.5)};
-  card.mortarPos={x:clamp(base.x+to[0],.5,cols-.5),y:clamp(base.y+to[1],.5,rows-.5)};
-}
-function refreshSupportTeams(){
-  supportTeams=[];
-  for(const c of troopCards){
-    if((c.state==='screening'||c.state==='rallied')&&(!c.mgPos||!c.mortarPos))setSupportPositions(c,c.state==='rallied'?'rally':'dismount');
-    if(c.state==='screening'||c.state==='rallied'){
-      const n=c.unitId.replace('p7t','');
-      if(c.mgPos)supportTeams.push({id:`${c.unitId}:mg`,unitId:c.unitId,type:'MG',label:`MG-${Number(n)+2}`,x:c.mgPos.x,y:c.mgPos.y,state:c.mg,cooldown:c.mgCooldown});
-      if(c.mortarPos)supportTeams.push({id:`${c.unitId}:mtr`,unitId:c.unitId,type:'MTR',label:`MTR-${Number(n)+2}`,x:c.mortarPos.x,y:c.mortarPos.y,state:c.mortar,cooldown:c.mortarCooldown});
-    }
-  }
-}
-function updateUnits(dt){
-  const netMoveFactor=0.70+0.30*(net/100);
-  const base=(hold?.20:1)*clamp(.68+cohesion/155,.55,1.18)*netMoveFactor;
-  for(const u of units){
-    if(u.status==='disabled'||u.status==='repairing')continue;
-    if(u.status==='bogged') {u.bogTimer=Math.max(0,(u.bogTimer||8)-dt*(nearRecoveryHelp(u)?1.3:.55)); if(u.bogTimer<=0){u.status='operational';toast(`${u.label} worked free from bog stress.`,'info');} continue;}
-    if(u.kind==='r7'&&u.task){updateR7Task(u,dt); continue;}
-    if(u.psg&&u.task)updatePsgTask(u,dt);
-    const target=routeTargetFor(u); const dx=target.x-u.x, dy=target.y-u.y; const d=Math.hypot(dx,dy)||1;
-    let mult=base*terrainDefs[tileAt(u).terrain].friction;
-    if(tileAt(u).overlays.includes('pressure')) mult*=.76;
-    if(tileAt(u).overlays.includes('rally')) mult*=1.10;
-    if(u.kind==='r7') mult*=.86; if(u.kind==='c7') mult*=.82;
-    const step=u.speed*mult*dt;
-    if(d>0.04){u.x+=dx/d*Math.min(step,d);u.y+=dy/d*Math.min(step,d);} 
-  }
-}
-function updatePsgTask(psg,dt){
-  const task=psg.task,target=getUnit(task.targetId),r7=getUnit('r7');
-  if(!target||!r7||psg.status!=='operational'){psg.task=null;return;}
-  // v0.3.4 correction: PSG coordinates recovery while staying with the operating platoon.
-  // R7 and the parts chase perform the actual recovery / repair movement.
-  task.ttl=(task.ttl||8.0)-dt;
-  if(task.ttl<=0){psg.task=null;toast('Plt Sgt recovery coordination complete; PSG remains with the operating platoon.', 'info');}
-}
-function updateR7Task(r7,dt){
-  const task=r7.task,target=getUnit(task.targetId); if(!target||r7.status!=='operational'){r7.task=null;return;}
-  const dest=task.phase==='toTarget'?target:point('recovery');
-  const dx=dest.x-r7.x,dy=dest.y-r7.y,d=Math.hypot(dx,dy)||1;
-  const speed=.66*dt*(hold?.62:1)*(0.78+0.22*(net/100));
-  r7.x+=dx/d*Math.min(speed,d); r7.y+=dy/d*Math.min(speed,d);
-  if(task.phase==='toRecovery'){
-    target.x+=((r7.x-.30)-target.x)*clamp(dt*2.1,0,1);
-    target.y+=((r7.y+.16)-target.y)*clamp(dt*2.1,0,1);
-  }
-  if(task.phase==='toTarget'&&d<=.55){
-    task.phase='toRecovery'; target.status='disabled'; target.escorted=true;
-    addBoardEvent(target,'R7 LINKED · RETURN','good');setCoachResult(`Recovery beat: R7 linked with ${target.label}. Returning to Recovery Control.`);toast(`R7 linked with ${target.label}. Recovery route now returns to Recovery Control.`, 'good');
-  }else if(task.phase==='toRecovery'&&d<=.65){
-    const active=units.some(u=>u.status==='repairing');
-    const rec=point('recovery'); target.x=rec.x-.35; target.y=rec.y+.25; target.escorted=false;
-    if(active){target.status='disabled';target.awaitingRepair=true;degradedAwaitingRepair++;setCoachResult(`Recovery beat: ${target.label} staged in R7 queue. Another repair is active.`,'warn');}
-    else{target.status='repairing';target.repairTimer=18.0;target.awaitingRepair=false;addBoardEvent(point('recovery'),'REPAIR START','good');setCoachResult(`Recovery beat: ${target.label} at Recovery Control. Repair cycle started; PSG remains with platoon.`);toast(`${target.label} left with R7. Repair cycle started; PSG remains with platoon.`, 'good');}
-    r7.task=null;
-  }
+function operatingUnits(){return units.filter(u=>['pc','psg','troop'].includes(u.kind))}
+function reached(id,r=1.3){const p=markers[id];return operatingUnits().filter(u=>dist(u,p)<r).length>=5}
+function stageAdvance(){
+ if(stage==='ship'&&reached('beach',1.6)){stage='beach';recordEvent('phase','Center beach reached');result('Center beach reached. Beach C2 is anchoring.');centerOn(27)}
+ else if(stage==='beach'){
+  const c7=units.find(u=>u.kind==='c7'),cc=units.find(u=>u.kind==='cchase');
+  if(dist(c7,markers.c2)<1&&dist(cc,markers.c2)<1){stage='arrival';recordEvent('phase','Beach C2 established');result('Beach C2 established. Operating platoon moving to Arrival.');centerOn(36)}
+ }
+ else if(stage==='arrival'&&reached('arrival',1.5)){stage='screen';recordEvent('phase','Arrival complete');result('Arrival complete. Dismount / screening sequence started.');centerOn(47)}
+ else if(stage==='screen'&&reached('dismount',1.5)){stage='rally';recordEvent('phase','Screening established');result('Screening established. Troop bundles moving to Rally / Organize.');centerOn(54)}
+ else if(stage==='rally'&&reached('rally',1.5)){stage='remount';recordEvent('phase','Rally complete');result('Rally complete. Remount transition started.');centerOn(62)}
+ else if(stage==='remount'&&reached('remount',1.5)){stage='advance';recordEvent('phase','Remount complete');result('Remount complete. Forward Advance started.');centerOn(72)}
+ else if(stage==='advance'&&reached('objective',1.7)){stage='complete';recordEvent('mission','Final objective reached');result('Final objective reached. Generate the AAR.');centerOn(90);$('aar').disabled=false}
 }
 function updateRelationships(dt){
-  const pc=getUnit('p7pc'), psg=getUnit('p7psg'), c7=getUnit('c7'), cChase=getUnit('p7c');
-  let cohesionDelta=0;
-  if(!fullyOperational(pc))cohesionDelta-=8.0*dt; if(!fullyOperational(psg))cohesionDelta-=4.0*dt;
-  const protectors=units.filter(u=>u.kind==='p7'&&!u.pc&&!u.psg&&fullyOperational(u));
-  const pcProtectors=protectors.filter(u=>pc&&dist(u,pc)<4.0).length, psgProtectors=protectors.filter(u=>psg&&dist(u,psg)<3.5).length;
-  if(pcProtectors<2)cohesionDelta-=(2-pcProtectors)*1.2*dt; if(psgProtectors<1)cohesionDelta-=1.0*dt;
-  if(hold&&net>=70)cohesionDelta+=0.6*dt; if(commandBoost>0)cohesionDelta+=0.5*dt;
-  if(hold&&pc&&tileAt(pc).overlays.includes('rally'))cohesionDelta+=0.8*dt;
-  if(hold&&psg&&tileAt(psg).overlays.includes('rally'))cohesionDelta+=0.8*dt;
-  cohesion=clamp(cohesion+cohesionDelta,0,100);
-
-  const anchorTest=!!(c7&&cChase&&dist(c7,point('c2'))<=1.0&&dist(c7,cChase)<=1.2);
-  if(anchorTest)c2AnchorTimer+=dt; else c2AnchorTimer=0;
-  c2Anchored=c2AnchorTimer>=2.0;
-  if(c2Anchored&&c2EstablishedAt===null){c2EstablishedAt=trialTime; addBoardEvent(point('c2'),'C2 ANCHOR LOCK','good'); setCoachResult('✔ Beach C2 Anchor established. C2 marker and tether stabilized.');}
-  if(c2Anchored)c2UpTime+=dt;
-  let targetNet=100;
-  if(pc&&c7)targetNet-=Math.max(0,dist(pc,c7)-4.0)*10;
-  if(!c2Anchored)targetNet-=15;
-  if(c7&&cChase&&dist(c7,cChase)>1.2)targetNet-=10;
-  if(pc&&tileAt(pc).overlays.includes('comms'))targetNet-=15;
-  if(c7&&tileAt(c7).overlays.includes('comms'))targetNet-=15;
-  targetNet=clamp(targetNet,0,100);
-  net+=clamp(targetNet-net,-24*dt,24*dt);
-  net=clamp(net,0,100);
-  avgNetAccumulator+=net; avgNetSamples++;
-  if(pc&&psg&&fullyOperational(pc)&&fullyOperational(psg))timePCPSGTogetherOperational+=dt;
+ const pc=units.find(u=>u.kind==='pc'),c7=units.find(u=>u.kind==='c7');
+ const raw=Math.max(0,dist(pc,c7)-15);
+ const target=clamp(100-raw*2.35+postureMods[posture].net+tempoMods[tempo].net,52,100);
+ net+=clamp(target-net,-18*dt,18*dt);
+ const cohesionDelta=(postureMods[posture].cohesion+tempoMods[tempo].cohesion)*.12;
+ if(paused||tempo==='pause')cohesion=clamp(cohesion+(.4+cohesionDelta)*dt,0,100);
+ else cohesion=clamp(cohesion+(cohesionDelta-(net<70?.22:0))*dt,0,100);
+ supportCooldown=Math.max(0,supportCooldown-dt);
+ minNet=Math.min(minNet,net);
+ minCohesion=Math.min(minCohesion,cohesion);
+ if(net<70)c2Below70Seconds+=dt;
 }
-function updateSupport(dt){
-  mgZones=mgZones.filter(z=>(z.ttl-=dt)>0); fireBursts=fireBursts.filter(z=>(z.ttl-=dt)>0); suppressedCells=suppressedCells.filter(z=>(z.ttl-=dt)>0);
+function injectTestFriction(){
+ const exposure=postureMods[posture].pressure*tempoMods[tempo].pressure;
+ if(time>42/Math.max(.55,exposure)&&!units.some(u=>u.status==='degraded')){
+  const u=units.find(x=>x.kind==='troop');u.status='degraded';cohesion=clamp(cohesion-6*exposure,0,100);
+  disruptionAt=time;degradedUnitId=u.id;
+  recordEvent('disruption',`${u.label} degraded by abstract mobility friction`,{unitId:u.id,exposure});
+  result(`${u.label} degraded by abstract mobility friction. PSG/R7 recovery is available.`);
+ }
 }
-function updateScreenedCells(){
-  const stacks={};
-  const add=(x,y,n=1)=>{if(x<0||x>=cols||y<0||y>=rows)return;const k=cellKey(x,y);stacks[k]=Math.min(4,(stacks[k]||0)+n);};
-  for(const c of troopCards){
-    if(c.state!=='screening'&&c.state!=='rallied')continue;
-    const center=c.state==='screening'?point('dismount'):point('rally');
-    for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){if(Math.hypot(x+.5-center.x,y+.5-center.y)<=1.5)add(x,y,1);}
+function recoverAction(){
+ const target=units.find(u=>u.status==='degraded');if(!target)return;
+ recovering=true;recoveryT=0;parts=clamp(parts-12,0,100);recoveryOrderedAt=time;recordEvent('recovery',`Recovery ordered for ${target.label}`,{unitId:target.id});$('recover').disabled=true;
+ result(`PSG coordinates recovery. R7 is executing the route for ${target.label}.`);
+ const timer=setInterval(()=>{
+  recoveryT+=.25;
+  const r7=units.find(u=>u.kind==='r7');
+  const dest=recoveryT<4?target:markers.recovery;
+  const dx=dest.x-r7.x,dy=dest.y-r7.y,d=Math.hypot(dx,dy)||1;
+  r7.x+=dx/d*.55;r7.y+=dy/d*.55;
+  if(recoveryT>=8*postureMods[posture].recovery){
+   clearInterval(timer);target.status='operational';target.x=markers.recovery.x-.5;target.y=markers.recovery.y-.4;
+   r7.x=markers.recovery.x;r7.y=markers.recovery.y;recovering=false;recoveryCompletedAt=time;
+   recordEvent('recovery',`${target.label} restored at Recovery Control`,{unitId:target.id});
+   result(`${target.label} returned to Recovery Control and restored. PSG remained with the platoon.`);
   }
-  for(const z of mgZones){for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){if(Math.hypot(x+.5-z.x,y+.5-z.y)<=z.r)add(x,y,1);}}
-  screenedCells=Object.entries(stacks).map(([k,stacks])=>{const [x,y]=k.split(',').map(Number);return{x,y,stacks};});
+ },250);
 }
-function screeningStacksForCell(x,y){
-  let stacks=0;
-  const sc=screenedCells.find(s=>s.x===x&&s.y===y); if(sc)stacks=sc.stacks;
-  if(suppressedCells.some(z=>z.x===x&&z.y===y))stacks=Math.max(stacks,4);
-  return clamp(stacks,0,4);
-}
-function updateFriction(dt){
-  for(const u of units){
-    if(u.status!=='operational')continue;
-    const x=clamp(Math.floor(u.x),0,cols-1), y=clamp(Math.floor(u.y),0,rows-1), tile=board[y][x];
-    const inPressure=tile.overlays.includes('pressure');
-    if(inPressure){
-      const stacks=screeningStacksForCell(x,y);
-      pressureSeconds+=dt; if(stacks>0)screenedPressureSeconds+=dt;
-      if(u.lastPressureCellKey!==cellKey(x,y)){
-        const entryCohesionPenalty=Math.max(0,4-2*stacks);
-        const entryHpPenalty=Math.max(0,5-2*stacks);
-        cohesion=clamp(cohesion-entryCohesionPenalty,0,100); u.hp-=entryHpPenalty;
-        u.lastPressureCellKey=cellKey(x,y);
-      }
-      const pressureRate=Math.max(0.6,3.0-0.6*stacks);
-      const hpLossRate=Math.max(0.06,0.30-0.08*stacks);
-      pressure=clamp(pressure+pressureRate*dt,0,100); u.hp-=hpLossRate*dt;
-    }else u.lastPressureCellKey=null;
-    maxPressure=Math.max(maxPressure,pressure);
-    if(u.kind==='p7'||u.kind==='c7'||u.kind==='r7'){
-      if(tile.overlays.includes('bog'))u.bogStress+=1.0*dt;
-      else if(tile.terrain==='soft')u.bogStress+=0.35*dt;
-      else u.bogStress=Math.max(0,u.bogStress-0.8*dt);
-      if(u.bogStress>=5.0){u.status='bogged';u.bogTimer=8.0;u.bogStress=0;u.degradedEver=true;downedHistory.push(`${u.label} bogged under mobility stress.`);addTimeline(`${u.label} bogged under mobility stress.`);setCoachResult(`Event: ${u.label} bogged. PSG coordinates; R7 recovers.`,'warn');}
-    }
-    if(u.hp<=45&&u.kind==='p7'&&!u.pc&&!u.psg)disableUnit(u,'integrity degraded under pressure');
-  }
-}
-function disableUnit(u,reason){if(u.status!=='operational'&&u.status!=='bogged')return;u.status='disabled';u.reason=reason;u.degradedEver=true;downedHistory.push(`${u.label} degraded: ${reason}.`);setCoachResult(`${u.label} down. PSG coordinates; R7 recovers.`,'warn');}
-function nearRecoveryHelp(u){const psg=getUnit('p7psg'),r7=getUnit('r7');return (psg&&dist(u,psg)<1.3)||(r7&&dist(u,r7)<1.7)||tileAt(u).overlays.includes('recovery');}
-function updateRepairs(dt){
-  const r7=getUnit('r7'), partsChase=getUnit('p7r'); if(!fullyOperational(r7))return;
-  const activeRepair=units.find(u=>u.status==='repairing');
-  const partsClose=partsChase&&dist(r7,partsChase)<=1.8;
-  if(activeRepair)parts=clamp(parts-dt*(partsClose?1.5:3.0),0,100); else parts=clamp(parts+dt*(partsClose?.5:-1.0),0,100);
-  if(activeRepair&&parts>=10){
-    let tick=dist(r7,point('recovery'))<=1.2?1.0:0;
-    if(tick>0&&tileAt(r7).overlays.includes('recovery'))tick=1.25;
-    activeRepair.repairTimer-=dt*tick;
-    if(activeRepair.repairTimer<=0){activeRepair.status='operational';activeRepair.hp=80;activeRepair.awaitingRepair=false;activeRepair.x=r7.x+.35;activeRepair.y=r7.y+.35;repairsCompleted++;addTimeline(`${activeRepair.label} returned mission-capable from R7 repair cycle.`);setCoachResult(`✔ ${activeRepair.label} returned mission-capable by R7 repair cycle.`);toast(`${activeRepair.label} returned mission-capable by R7 repair cycle.`, 'good');}
-  }
-  const waiting=units.find(u=>u.awaitingRepair&&u.status==='disabled');
-  if(waiting&&!activeRepair){waiting.awaitingRepair=false;waiting.status='repairing';waiting.repairTimer=18.0;toast(`${waiting.label} entered the single active R7 repair slot.`, 'info');}
-}
-function updateMessages(dt){for(const m of messages)m.ttl-=dt;messages=messages.filter(m=>m.ttl>0);}
-function catastrophicFailure(){const pc=getUnit('p7pc'),psg=getUnit('p7psg');const opP7=units.filter(u=>u.kind==='p7'&&u.status==='operational').length;return (pc&&pc.status==='disabled')||(psg&&psg.status==='disabled')||opP7<3||cohesion<=0||net<=0;}
-function objectiveReached(){const pc=getUnit('p7pc'),psg=getUnit('p7psg');return stage==='complete'||(stage==='advance'&&pc&&psg&&dist(pc,point('objective'))<1.1&&dist(psg,point('objective'))<1.5);}
-
-function orderLatencyMs(){let ms=300+((100-net)*15); if(commandBoost>0)ms*=.80; return Math.round(ms);}
-function queueOrder(kind,args={}){
-  if(mode!=='trial')return;
-  const ms=orderLatencyMs(); maxLatencyMs=Math.max(maxLatencyMs,ms);
-  pendingOrders.push({id:Date.now()+Math.random(),kind,issuedAt:trialTime,resolveAt:trialTime+ms/1000,args});
-  toast(`${orderName(kind)} queued through C2 Net (${ms} ms).`, 'info'); syncUi();
-}
-function updatePendingOrders(){
-  const ready=pendingOrders.filter(o=>trialTime>=o.resolveAt);
-  pendingOrders=pendingOrders.filter(o=>trialTime<o.resolveAt);
-  for(const o of ready)resolveOrder(o);
-}
-function resolveOrder(o){
-  if(o.kind==='commandPush')resolveCommandPush();
-  else if(o.kind==='recover')resolveRecovery();
-  else if(o.kind==='dismount')resolveDismount();
-  else if(o.kind==='remount')resolveRemountAdvance();
-  else if(o.kind==='mg')resolveMgBase(o);
-  else if(o.kind==='fire')resolveFireSupport(o);
-}
-function orderName(k){return {commandPush:'Command Push',recover:'PSG Recover',dismount:'Dismount',remount:'Remount / Advance',mg:'MG Base',fire:'Fire Support'}[k]||k;}
-function commandPush(){if(mode!=='trial')return;if(commandPushCooldown>0){toast(`Command Push resetting: ${Math.ceil(commandPushCooldown)}s.`, 'warn');return;} const pc=getUnit('p7pc'); if(!fullyOperational(pc)){toast('Command Push unavailable: Platoon Commander not operational.','warn');return;} queueOrder('commandPush');}
-function resolveCommandPush(){commandBoost=8.0;commandPushCooldown=20.0;cohesion=clamp(cohesion+8,0,100);addBoardEvent(getUnit('p7pc')||point('arrival'),'CMD PUSH','good');addTimeline('Command Push improved cohesion and short-term latency.');setCoachResult('✔ Command Push resolved. Cohesion improved and order latency is temporarily better.');toast('Command Push resolved. Cohesion improves; short-term order latency improves.','good');}
-function taskRecovery(){if(mode!=='trial')return;const psg=getUnit('p7psg'),r7=getUnit('r7'); if(!fullyOperational(psg)){toast('PSG recovery unavailable.','warn');return;} if(!fullyOperational(r7)){toast('R7 recovery unavailable: R7 is not operational.','warn');return;} if(r7.task){toast('R7 is already on a recovery/repair route.','warn');return;} queueOrder('recover');}
-function resolveRecovery(){const psg=getUnit('p7psg'),r7=getUnit('r7'); if(!fullyOperational(psg)||!fullyOperational(r7)){toast('PSG / R7 Recover failed: recovery team unavailable.','warn');return;} if(r7.task){toast('Recover failed: R7 already has an active route.','warn');return;} const c=units.filter(u=>u.id!=='p7psg'&&u.id!=='r7'&&(u.status==='disabled'||u.status==='bogged')); if(!c.length){toast('No degraded vehicle requiring R7 recovery.','info');return;} c.sort((a,b)=>dist(r7,a)-dist(r7,b)); const target=c[0]; addBoardEvent(target,`${target.label} DOWN · R7 ROUTE`,'warn');r7.task={phase:'toTarget',targetId:target.id}; psg.task={phase:'coordinating',targetId:target.id,ttl:8.0}; recoveryActions++; target.status='disabled'; target.degradedEver=true; addTimeline(`Recovery ordered for ${target.label}.`);setCoachResult(`✔ Recovery ordered. PSG coordinates; R7 routes to ${target.label} and returns to Recovery Control.`);toast(`PSG coordinates recovery. R7 routes to ${target.label}, then back to Recovery Control.`, 'good');}
-function dismountAll(){if(mode!=='trial')return;if(stage!=='arrival'&&stage!=='screen'){toast('Dismount order gates after Arrival.','warn');return;} queueOrder('dismount');}
-function resolveDismount(){stage='screen';hold=true;dismountOrdered=true;let ready=0; for(const c of troopCards){const carrier=getUnit(c.unitId); if(c.state==='mounted'&&carrierAtDismountStart(carrier)){c.state='dismounting';c.stateTimer=6.0;c.screenCenter=null;ready++;}} addBoardEvent(point('dismount'),'DISMOUNT ORDER','good');addTimeline('Dismount order resolved. Troop line begins screening sequence.');setCoachResult(ready?`✔ Dismount resolved. ${ready} troop carrier(s) began the sequence.`:'✔ Dismount resolved. Troop carriers will begin as they reach DIS.');toast(ready?`Dismount order resolved. ${ready} troop carrier(s) begin sequence.`:'Dismount order resolved. Troop carriers will begin as they reach the dismount point.','good');}
-function remountAdvance(){if(mode!=='trial')return; if(troopCards.filter(c=>c.state==='rallied').length<2){toast('Remount requires at least two rallied troop bundles.','warn');return;} queueOrder('remount');}
-function resolveRemountAdvance(){if(troopCards.filter(c=>c.state==='rallied').length<2){toast('Remount order failed: not enough rallied bundles.','warn');return;} stage='remount'; addBoardEvent(point('remount'),'REMOUNT ORDER','good'); for(const c of troopCards){if(c.state==='screening'||c.state==='rallied'){c.state='remounting';c.stateTimer=5.0;c.screenCenter=null; const u=getUnit(c.unitId); if(u){u.flashTimer=1.2; addBoardEvent(u,'RLY → RMT','good',1.2);}}} addTimeline('Remount order resolved. Forward Advance will begin after remount timers.');setCoachResult('✔ Remount resolved. Watch troop bundle states clear before Forward Advance starts.');toast('Remount order resolved. Troop bundles remount before forward advance.','good');}
-function selectedPressureCell(){
-  if(!String(selectedId||'').startsWith('pressure:'))return null;
-  const [x,y]=selectedId.split(':')[1].split(',').map(Number);
-  if(Number.isFinite(x)&&Number.isFinite(y)&&board[y]&&board[y][x]&&board[y][x].overlays.includes('pressure'))return {x,y,cx:x+.5,cy:y+.5};
-  return null;
-}
-function selectedSupportTeam(){return String(selectedId||'').startsWith('support:')?supportTeams.find(t=>'support:'+t.id===selectedId):null;}
-function troopCardForSelected(kind){
-  const support=selectedSupportTeam();
-  if(support&&((kind==='mg'&&support.type==='MG')||(kind==='fire'&&support.type==='MTR')))return troopCards.find(c=>c.unitId===support.unitId);
-  const u=selectedId&&!String(selectedId).startsWith('support:')&&!String(selectedId).startsWith('pressure:')&&!String(selectedId).startsWith('group:')?getUnit(selectedId):null;
-  if(u&&u.troop)return troopCards.find(c=>c.unitId===u.id);
-  return null;
-}
-function mgBase(){
-  if(mode!=='trial')return;
-  if(!troopCards.some(c=>c.state==='screening'||c.state==='rallied')){toast('MG Base requires screening or rallied troop bundle.','warn');return;}
-  let card=troopCardForSelected('mg')||troopCards.find(c=>(c.state==='screening'||c.state==='rallied')&&c.mg==='ready');
-  if(!card||card.mg!=='ready'||(card.state!=='screening'&&card.state!=='rallied')){toast('Selected MG is not ready. Select a ready MG marker/troop carrier or wait for cooldown.','warn');return;}
-  const target=selectedPressureCell();
-  queueOrder('mg',{unitId:card.unitId,target});
-}
-function resolveMgBase(o={args:{}}){
-  let card=troopCards.find(c=>c.unitId===(o.args&&o.args.unitId));
-  if(!card||card.mg!=='ready'||(card.state!=='screening'&&card.state!=='rallied'))card=troopCards.find(c=>(c.state==='screening'||c.state==='rallied')&&c.mg==='ready');
-  if(!card){toast('MG Base failed: no ready screening/rallied card.','warn');return;}
-  if(!card.mgPos)setSupportPositions(card,card.state==='rallied'?'rally':'dismount');
-  card.mg='cool';card.mgCooldown=24.0;
-  const p=card.mgPos;mgZones.push({x:p.x,y:p.y,ttl:18.0,r:2.5,unitId:card.unitId});
-  const target=o.args&&o.args.target;
-  if(target&&board[target.y]&&board[target.y][target.x]&&board[target.y][target.x].overlays.includes('pressure'))suppressedCells.push({x:target.x,y:target.y,ttl:10.0});
-  const oldPressure=pressure;
-  pressure=clamp(pressure-12,0,100);
-  if(target)addCellEvent(target.x,target.y,`SUPPRESSED · ${Math.round(oldPressure)} → ${Math.round(pressure)}`,'good'); else addBoardEvent(p,`MG BASE · ${Math.round(oldPressure)} → ${Math.round(pressure)}`,'good');
-  addTimeline(target?`MG Base suppressed ADV/PRESS at ${target.x},${target.y}.`:'MG Base created a pressure-control zone.');
-  setCoachResult(target?`✔ MG Base resolved. ADV/PRESS ${target.x},${target.y} suppressed. Pressure ${Math.round(oldPressure)} → ${Math.round(pressure)}. Vehicles did not move.`:`✔ MG Base resolved from ${card.unitId}. Pressure ${Math.round(oldPressure)} → ${Math.round(pressure)}. Vehicles did not move.`);
-  scriptedGuidedDegradation();
-  toast(target?'MG Base resolved against selected adversary pressure. Vehicles do not move.':'MG Base resolved from map MG marker. Vehicles do not move.','good');
-}
-function fireSupport(){
-  if(mode!=='trial')return;
-  if(!troopCards.some(c=>c.state==='screening'||c.state==='rallied')){toast('Fire Support requires screening or rallied troop bundle.','warn');return;}
-  let card=troopCardForSelected('fire')||troopCards.find(c=>(c.state==='screening'||c.state==='rallied')&&c.mortar==='ready');
-  if(!card||card.mortar!=='ready'||(card.state!=='screening'&&card.state!=='rallied')){toast('Selected mortar/indirect marker is not ready. Select a ready marker/troop carrier or wait for cooldown.','warn');return;}
-  queueOrder('fire',{unitId:card.unitId,target:selectedPressureCell()});
-}
-function resolveFireSupport(o={args:{}}){
-  let card=troopCards.find(c=>c.unitId===(o.args&&o.args.unitId));
-  if(!card||card.mortar!=='ready'||(card.state!=='screening'&&card.state!=='rallied'))card=troopCards.find(c=>(c.state==='screening'||c.state==='rallied')&&c.mortar==='ready');
-  if(!card){toast('Fire Support failed: no ready screening/rallied card.','warn');return;}
-  const pressureCells=[];for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(board[y][x].overlays.includes('pressure'))pressureCells.push({x,y,cx:x+.5,cy:y+.5});
-  if(!pressureCells.length){toast('Fire Support failed: no adversary pressure marker exists. No movement triggered.','warn');return;}
-  if(!card.mortarPos)setSupportPositions(card,card.state==='rallied'?'rally':'dismount');
-  card.mortar='cool';card.mortarCooldown=34.0;
-  const base=card.mortarPos;
-  let target=o.args&&o.args.target;
-  if(!target||!board[target.y]||!board[target.y][target.x]||!board[target.y][target.x].overlays.includes('pressure'))target=pressureCells.sort((a,b)=>Math.hypot(a.cx-base.x,a.cy-base.y)-Math.hypot(b.cx-base.x,b.cy-base.y))[0];
-  fireBursts.push({x:target.cx,y:target.cy,ttl:1.7,r:.55,unitId:card.unitId});
-  suppressedCells.push({x:target.x,y:target.y,ttl:18.0});
-  const oldPressure=pressure;
-  pressure=clamp(pressure-18,0,100);
-  addCellEvent(target.x,target.y,`SUPPRESSED · ${Math.round(oldPressure)} → ${Math.round(pressure)}`,'good');
-  addTimeline(`Fire Support suppressed ADV/PRESS at ${target.x},${target.y}.`);
-  setCoachResult(`✔ Fire Support resolved. ADV/PRESS ${target.x},${target.y} suppressed. Pressure ${Math.round(oldPressure)} → ${Math.round(pressure)}. No vehicle movement.`);
-  scriptedGuidedDegradation();
-  toast('Fire Support resolved onto adversary pressure. No vehicle movement triggered.','good');
-}
-function toggleHold(){if(mode!=='trial')return;hold=!hold;toast(hold?'Hold/regroup: movement slows and cohesion can recover when net is stable.':'Hold released: platoon resumes planned movement.','info');syncUi();}
-function togglePause(){if(mode!=='trial')return;paused=!paused;toast(paused?'Trial paused.':'Trial resumed.','info');syncUi();}
-function finishTrial(){if(mode==='aar')return;mode='aar';paused=true;stage=objectiveReached()?'complete':stage;guidedMode=false;buildAAR();const ov=$('aarOverlay'); if(ov)ov.classList.add('active');document.querySelector('[data-tab="aar"]').click();setCoachResult('✔ AAR generated. Guided mode complete; next run is free play with a full reset.');toast('AAR generated. Review C2 tether, screening, pressure, and recovery posture.','info');syncUi();}
-
-
-function addBoardEvent(pos,label,level='info',ttl=1.55){
-  if(!pos)return; boardEvents.push({x:pos.x,y:pos.y,label,level,ttl,life:ttl});
-  if(boardEvents.length>12)boardEvents.shift();
-}
-function addCellEvent(x,y,label,level='info',ttl=1.55){addBoardEvent({x:x+.5,y:y+.5},label,level,ttl);}
-function addMotionEvent(from,to,label,level='info',ttl=1.0){
-  if(!from||!to)return; motionEvents.push({from:{x:from.x,y:from.y},to:{x:to.x,y:to.y},label,level,ttl,life:ttl});
-  if(motionEvents.length>16)motionEvents.shift();
-}
-function addSupportDeployAnimation(card,carrier){
-  if(!carrier||!card)return;
-  if(card.mgPos)addMotionEvent(carrier,card.mgPos,'MG DEPLOY','good',1.05);
-  if(card.mortarPos)addMotionEvent(carrier,card.mortarPos,'MTR DEPLOY','gold',1.05);
-}
-function updateVisualEvents(dt){
-  boardEvents=boardEvents.filter(e=>(e.ttl-=dt)>0);
-  motionEvents=motionEvents.filter(e=>(e.ttl-=dt)>0);
-  for(const u of units){if(u.flashTimer)u.flashTimer=Math.max(0,u.flashTimer-dt);}
-}
-
-function setCoachResult(text,level='info'){
-  lastCoachResult=text;
-  const el=$('coachResult'); if(el)el.textContent=text; const br=$('boardGuideResult'); if(br)br.textContent=text.replace(/^✔\s*/, '').replace(/^Recovery beat:\s*/, '');
-  if(level==='warn')toast(text,'warn');
-}
-function addTimeline(text){timelineEvents.push({t:trialTime,text}); if(timelineEvents.length>10)timelineEvents.shift();}
-function scriptedGuidedDegradation(){
-  if(!guidedMode||guidedBogInjected)return;
-  const u=getUnit('p7t4');
-  if(!u||u.status!=='operational')return;
-  guidedBogInjected=true;
-  u.status='bogged';u.bogTimer=10.0;u.bogStress=0;u.degradedEver=true;
-  downedHistory.push(`${elapsedText(trialTime)} · ${u.label} bogged under guided mobility stress.`);
-  addTimeline(`${u.label} degraded so the recovery loop can be observed.`);
-  setCoachResult(`Guided event: ${u.label} degraded. PSG coordinates; R7 recovers.`, 'warn');
-}
-function runNextTrial(){
-  guidedMode=false;
-  resetTrial(true);
-  lastCoachResult='Free play staged. Change one marker or control point, then launch the next trial. Full state reset complete.';
-  const result=$('coachResult'); if(result)result.textContent=lastCoachResult;
-  syncUi();
-  toast('Next trial staged in free play. Full run state reset; change one marker, then launch again.','info');
-}
-function buildAARReset(){
-  if($('aarStats'))$('aarStats').innerHTML='<p class="small">Run a trial to populate the AAR.</p>';
-  if($('aarNotes'))$('aarNotes').innerHTML='<li>No trial completed yet.</li>';
-  if($('aarRecommendation'))$('aarRecommendation').textContent='';
-}
-
-function categoryScores(){
-  const trial=Math.max(1,trialTime);
-  const scores={};
-  let c2Score=Math.round((c2UpTime/trial)*15); if(c2EstablishedAt===null||c2EstablishedAt>45)c2Score-=3; scores['Beach C2 Anchor']=clamp(c2Score,0,15);
-  const avgNet=avgNetAccumulator/Math.max(1,avgNetSamples); scores['Net Tether']=Math.round((avgNet/100)*15);
-  scores['Arrival Order']=arrivalTime!==null?(arrivalTime<=120?10:arrivalTime<=180?5:0):0;
-  scores['Screening Coverage']=Math.round((screenedPressureSeconds/Math.max(1,pressureSeconds))*15);
-  scores['Pressure Management']=Math.max(0,10-Math.floor(maxPressure/12));
-  scores['Command Continuity']=Math.round((timePCPSGTogetherOperational/trial)*15);
-  const degraded=units.filter(u=>u.degradedEver); if(!degraded.length)scores['Recovery Posture']=10; else {const ok=degraded.filter(u=>u.status==='operational'||dist(u,getUnit('r7'))<=2.0||dist(u,point('recovery'))<=2.0).length; scores['Recovery Posture']=ok===degraded.length?10:ok>=Math.ceil(degraded.length/2)?5:0;}
-  const p7Ops=units.filter(u=>u.kind==='p7'&&u.status==='operational').length; scores['Forward Advance']=objectiveReached()?(p7Ops>=5?10:p7Ops>=3?5:0):0;
-  return scores;
-}
-function gradeFromScore(score){if(score>=88)return['A','Clean planning trial'];if(score>=74)return['B','Mission capable / watch items'];if(score>=58)return['C','Partial success / rework needed'];if(score>=42)return['D','Fragile result / significant rework'];return['F','Mission not viable'];}
-function buildAAR(){
-  const scores=categoryScores(); const total=Object.values(scores).reduce((a,b)=>a+b,0); const [letter,title]=gradeFromScore(total);
-  const p7Ops=units.filter(u=>u.kind==='p7'&&u.status==='operational').length; const avgNet=avgNetAccumulator/Math.max(1,avgNetSamples);
-  const stats=[['Grade',`${letter} · ${title}`],['Score',`${Math.round(total)}/100`],['P7 operational',`${p7Ops}/8`],['C2 uptime',`${Math.round(c2UpTime)}s`],['Avg C2 Net',`${Math.round(avgNet)}%`],['Max order latency',`${Math.round(maxLatencyMs)} ms`],['Screened pressure time',`${Math.round(screenedPressureSeconds)}/${Math.round(pressureSeconds)}s`],['Max pressure',`${Math.round(maxPressure)}%`],['Recovery actions',String(recoveryActions)],['Repairs completed',String(repairsCompleted)],['Awaiting repair',String(units.filter(u=>u.awaitingRepair).length)],['Parts readiness',`${Math.round(parts)}%`]];
-  const catLines=Object.entries(scores).map(([k,v])=>`<div class="statLine"><span>${escapeHtml(k)}</span><b>${v}</b></div>`).join('');
-  $('aarStats').innerHTML=stats.map(([k,v])=>`<div class="statLine"><span>${escapeHtml(k)}</span><b>${escapeHtml(v)}</b></div>`).join('')+'<hr style="border:0;border-top:1px solid rgba(255,255,255,.12);margin:8px 0">'+catLines;
-  const entries=Object.entries(scores); entries.sort((a,b)=>a[1]-b[1]); const lowest=entries[0], highest=entries[entries.length-1];
-  const notes=[];
-  notes.push(`SUSTAIN: ${highest[0]} was strongest (${highest[1]} points).`);
-  notes.push(`FIX: ${lowest[0]} was weakest (${lowest[1]} points).`);
-  if(!c2Anchored&&c2EstablishedAt===null)notes.push('Beach C2 Anchor did not stabilize long enough to count as established.');
-  if(maxLatencyMs>1000)notes.push('C2 Net latency exceeded 1000 ms during quick-react orders.');
-  if(screenedPressureSeconds<pressureSeconds*.4&&pressureSeconds>4)notes.push('Pressure Screening did not cover enough pressure-marker exposure time.');
-  if(parts<25)notes.push('Parts readiness fell below recommended level for the simplified recovery model.');
-  if(downedHistory.length)notes.push(...downedHistory.slice(-4));
-  $('aarNotes').innerHTML=notes.map(n=>`<li>${escapeHtml(n)}</li>`).join('');
-  const recommendation=nextTrialRecommendation(lowest[0]);
-  $('aarRecommendation').textContent=recommendation;
-  const evidence=aarEvidence(lowest[0],scores[lowest[0]]);
-  if($('aarBigGrade'))$('aarBigGrade').textContent=letter;
-  if($('aarBigTitle'))$('aarBigTitle').textContent=`${title} · ${Math.round(total)}/100`;
-  if($('aarBigSummary'))$('aarBigSummary').textContent=`Strongest: ${highest[0]} (${highest[1]}). Weakest: ${lowest[0]} (${lowest[1]}).`;
-  if($('aarTimeline'))$('aarTimeline').innerHTML=aarTimelineItems().map(e=>`<div class="aarEvent">${escapeHtml(e)}</div>`).join('');
-  if($('aarBrokenBig'))$('aarBrokenBig').innerHTML=`<b>${escapeHtml(lowest[0])}: ${lowest[1]} pts</b><br>${escapeHtml(evidence)}`;
-  if($('aarAdjustBig'))$('aarAdjustBig').textContent=recommendation;
-  if($('aarNumbersBig'))$('aarNumbersBig').innerHTML=stats.slice(1).map(([k,v])=>`<div class="statLine"><span>${escapeHtml(k)}</span><b>${escapeHtml(v)}</b></div>`).join('');
-}
-function aarTimelineItems(){
-  const items=[];
-  if(c2EstablishedAt!==null)items.push(`${elapsedText(c2EstablishedAt)} · Beach C2 established.`);
-  if(arrivalTime!==null)items.push(`${elapsedText(arrivalTime)} · Operating platoon reached Arrival.`);
-  if(dismountOrdered)items.push('Dismount order executed; troop bundles began screening.');
-  items.push(...timelineEvents.slice(-5).map(e=>`${elapsedText(e.t)} · ${e.text}`));
-  if(objectiveReached())items.push(`${elapsedText(trialTime)} · Forward Advance complete.`);
-  if(!items.length)items.push('No major events recorded. Run a trial and issue orders.');
-  return items.slice(0,7);
-}
-function aarEvidence(category,score){
-  const avgNet=avgNetAccumulator/Math.max(1,avgNetSamples);
-  if(category==='Beach C2 Anchor'||category==='Net Tether')return `Average C2 Net was ${Math.round(avgNet)}%, max order latency was ${Math.round(maxLatencyMs)} ms, and C2 uptime was ${Math.round(c2UpTime)} seconds.`;
-  if(category==='Screening Coverage'||category==='Pressure Management')return `Screened pressure time was ${Math.round(screenedPressureSeconds)} of ${Math.round(pressureSeconds)} seconds. Max pressure reached ${Math.round(maxPressure)}%.`;
-  if(category==='Recovery Posture')return `Recovery actions: ${recoveryActions}. Repairs completed: ${repairsCompleted}. Awaiting repair: ${units.filter(u=>u.awaitingRepair).length}.`;
-  if(category==='Arrival Order')return arrivalTime!==null?`Arrival occurred at ${elapsedText(arrivalTime)} elapsed.`:'Arrival was not reached before the AAR.';
-  if(category==='Forward Advance')return objectiveReached()?'Objective reached; score reflects how much of the P7 package remained operational.':'Forward Advance did not complete before the AAR.';
-  return `Category scored ${score}; change one marker or friction cluster and rerun.`;
-}
-
-function nextTrialRecommendation(lowest){
-  if(lowest==='Beach C2 Anchor'||lowest==='Net Tether')return'NEXT TRIAL ADJUSTMENT: move the C2 Anchor closer to Arrival or shorten the PC↔C7 gap. Keep this as a board-marker change only.';
-  if(lowest==='Screening Coverage'||lowest==='Pressure Management')return'NEXT TRIAL ADJUSTMENT: move Dismount or Rally closer to the first pressure cluster so Pressure Screening can influence the lane sooner.';
-  if(lowest==='Recovery Posture')return'NEXT TRIAL ADJUSTMENT: move Recovery Control one to two cells forward or keep the parts track closer to the R7.';
-  if(lowest==='Arrival Order')return'NEXT TRIAL ADJUSTMENT: move Center Beach and Arrival closer together or reduce surf/soft-sand density between them.';
-  if(lowest==='Forward Advance')return'NEXT TRIAL ADJUSTMENT: reduce pressure density on the Remount-to-Forward-Advance leg or remount later after more bundles rally.';
-  return'NEXT TRIAL ADJUSTMENT: change one control point or one friction cluster before rerunning the trial.';
+function supportAction(){
+ if(supportCooldown>0)return;
+ const p=pressure.find(x=>x.active);if(!p){result('No active abstract pressure marker remains.');return}
+ p.active=false;supportCooldown=8;supportActions++;recordEvent('support','Abstract mortar support reduced one pressure area',{x:p.x,y:p.y});
+ result('Persistent mortar support node reduced one abstract pressure area. No fires or targeting are modeled.');
 }
 
 
-function getFirstPressureKey(){
-  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(board[y][x].overlays.includes('pressure'))return cellKey(x,y);
-  return null;
+function fmtTime(v){
+  if(v===null||v===undefined||Number.isNaN(v))return '—';
+  const m=Math.floor(v/60),s=Math.floor(v%60);
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
-function degradedUnits(){return units.filter(u=>u.id!=='r7'&&u.id!=='p7psg'&&(u.status==='disabled'||u.status==='bogged'||u.awaitingRepair));}
-function ralliedBundles(){return troopCards.filter(c=>c.state==='rallied').length;}
-function screeningBundles(){return troopCards.filter(c=>c.state==='screening'||c.state==='rallied').length;}
-function coachState(){
-  const degraded=degradedUnits();
-  if(mode==='aar')return {title:'AAR / Learn',now:'Read the AAR. Use the weakest category and Next Trial Adjustment to change one control point or friction cluster before rerunning.',click:'Right panel → AAR / Notes. Then Reset Control Points or adjust one marker.',why:'This closes the trial loop: plan, run, learn, adjust.',focus:'tab:aar',recommended:'endBtn'};
-  if(mode==='planning')return {title:'1 · Build the board',now:'Set or accept the control points, then launch the trial. The fastest path is Preset Trial → GATOR RAID. You can also accept the preset points and launch immediately.',click:'Optional: right panel → Terrain / Friction → Preset Trial. Then top-right GATOR RAID.',why:'Planning sets the beach problem before the force tests it.',focus:'tab:terrain',recommended:'launchBtn'};
-  if(degraded.length)return {title:'Recovery needed',now:`${degraded[0].label} is degraded. Coordinate recovery while keeping PSG with the operating platoon.`,click:'Left panel → Recovery group → PSG / R7 Recover.',why:'R7 performs the route and repair; PSG coordinates without leaving the operating platoon.',focus:'group:recovery',recommended:'recoverBtn'};
-  if(stage==='beach')return {title:'2 · Establish Beach C2',now:c2Anchored?'Beach C2 is established. Let the operating platoon continue to Arrival.':'Let C7 and P7-7 settle at Beach C2. Use Hold if the formation is outrunning the C2 anchor.',click:'No click required. Optional: Cmd Team → Hold if cohesion/net drops.',why:'The C2 anchor stabilizes the C2 Net before later orders.',focus:'group:cmd',recommended:c2Anchored?'':'holdBtn'};
-  if(stage==='arrival')return {title:'3 · Order Dismount',now:'The operating platoon is at Arrival. Start the dismount/screening sequence.',click:'Left panel → Troop Tracks → Dismount.',why:'Dismounted troop bundles create screening coverage and place MG/MTR markers on the map.',focus:'group:troops',recommended:'dismountBtn'};
-  if(stage==='screen'){
-    if(ralliedBundles()>=2)return {title:'5 · Remount / Advance',now:'At least two troop bundles are rallied. The guided run now hands off from pressure management to Remount.',click:'Left panel → Troop Line → Remount / Advance.',why:'This prevents the guided walkthrough from stalling on persistent pressure markers.',focus:'group:troops',recommended:'remountBtn'};
-    if(screeningBundles()>0&&getFirstPressureKey())return {title:'4 · Manage Pressure',now:'Troop bundles are screening. Select an ADV/PRESS marker and use MG Base or Fire Support to reduce abstract pressure.',click:'Map → ADV/PRESS marker → MG Base or Fire Support. Then remount after at least two bundles rally.',why:'Support actions affect pressure only; no vehicle movement or targeting procedure is modeled.',focus:'pressure:'+getFirstPressureKey(),recommended:'mgBtn'};
-    return {title:'4 · Wait for Screening',now:'Troop carriers are dismounting. Wait for MG and MTR markers to appear, then use them against pressure markers.',click:'Watch the troop carrier cards. When markers appear, select pressure or support marker.',why:'This prevents experimental clicking before the support layer exists.',focus:'group:troops',recommended:''};
-  }
-  if(stage==='remount')return {title:'5 · Remounting',now:'Troop bundles are remounting. Hold if you need stability; advance begins automatically when remount timers complete.',click:'No click required. Optional: Hold or Command Push.',why:'The transition must complete before the forward move.',focus:'group:troops',recommended:'holdBtn'};
-  if(stage==='advance')return {title:'6 · Forward Advance',now:'Monitor the C2 Net, pressure, and recovery lane. If the objective is reached, generate the AAR.',click:'If no degraded vehicle exists, continue watching. When complete: AAR.',why:'The AAR records whether the plan held under friction.',focus:'group:cmd',recommended:objectiveReached()?'endBtn':'cmdPushBtn'};
-  if(stage==='complete')return {title:'7 · Generate AAR',now:'Forward Advance is complete. Generate the AAR to see Sustain, Fix, and Next Trial Adjustment.',click:'Left panel → AAR.',why:'The board is a trial engine; the AAR tells you what to change next.',focus:'tab:aar',recommended:'endBtn'};
-  return {title:'Mission Coach',now:'Select a roster group or marker, then issue a phase-valid order.',click:'Left panel select → left panel order.',why:'Orders resolve through C2 Net latency.',focus:'',recommended:''};
+function recordEvent(type,text,data={}){
+  timeline.push({time:Number(time.toFixed(2)),type,text,...data});
 }
-function coachFocusNext(){
-  const c=coachState();
-  if(!c.focus){toast('Coach: select a unit or marker, then choose a valid order.','info');return;}
-  if(c.focus.startsWith('group:')){selectRosterGroup(c.focus.split(':')[1]);toast('Coach selected the recommended roster group. Now use the highlighted order.', 'info');return;}
-  if(c.focus.startsWith('pressure:')){selectedId=c.focus;selectedGroup='';syncUi();toast('Coach selected an adversary pressure marker. Use MG Base or Fire Support.', 'info');return;}
-  if(c.focus.startsWith('tab:')){const b=document.querySelector(`[data-tab="${c.focus.split(':')[1]}"]`); if(b)b.click(); toast('Coach opened the relevant planning tab.', 'info');return;}
+function deepCopy(v){return JSON.parse(JSON.stringify(v))}
+function captureLockedPlan(){
+  lockedPlan={
+    lockedAt:Number(time.toFixed(2)),
+    posture,
+    tempo,
+    markers:deepCopy(markers),
+    pressure:deepCopy(pressure),
+    friction:deepCopy(friction)
+  };
+  recordEvent('plan','Plan locked',{posture,tempo});
 }
-function updateCoachUi(){
-  const c=coachState(); currentCoach=c;
-  if($('coachTitle'))$('coachTitle').textContent=c.title;
-  if($('coachNow'))$('coachNow').textContent=c.now;
-  if($('coachNextClick'))$('coachNextClick').textContent=c.click;
-  if($('coachLookFor'))$('coachLookFor').textContent=lookForFromCoach(c);
-  if($('coachClick'))$('coachClick').textContent=c.click;
-  if($('coachWhy'))$('coachWhy').textContent=c.why;
-  if($('coachResult'))$('coachResult').textContent=lastCoachResult;
-  if($('boardGuideNow'))$('boardGuideNow').textContent=c.now||'Watch the board and follow the next action.';
-  if($('boardGuideWatch'))$('boardGuideWatch').textContent=lookForFromCoach(c);
-  if($('boardGuideResult'))$('boardGuideResult').textContent=lastCoachResult.replace(/^✔\s*/, '').replace(/^Recovery beat:\s*/, '');
-  const boardBtn=$('boardActionBtn'); if(boardBtn){const ready=!!(c.recommended&&$(c.recommended)&&!$(c.recommended).disabled); boardBtn.textContent=ready?orderNameFromButton(c.recommended):(c.focus?'Coach Select':'Watch Board'); boardBtn.disabled=!(ready||c.focus); boardBtn.title=ready?'Execute this action here on the board.':c.focus?'Select the recommended target/group first.':'No direct action is ready.';}
-  const focus=$('coachFocusBtn'); if(focus)focus.textContent=c.focus?'Coach Select':'Coach Hint';
-  const doBtn=$('coachDoBtn'); if(doBtn){doBtn.disabled=!(c.recommended&&$(c.recommended)&&!$(c.recommended).disabled); doBtn.title=doBtn.disabled?'The next step needs a selection, phase change, or prerequisite first.':'Execute the highlighted next step.';}
-  updateGuideSteps();
-  document.querySelectorAll('.btn.recommended').forEach(b=>b.classList.remove('recommended'));
-  if(c.recommended&&$(c.recommended)&&!$(c.recommended).disabled)$(c.recommended).classList.add('recommended');
+function downloadText(filename,content,mime='text/plain'){
+  const blob=new Blob([content],{type:mime});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-function updateGuideSteps(){
-  const host=$('guideSteps'); if(!host)return;
-  const steps=[
-    ['Plan',mode!=='planning','planning','Set control points/friction, then launch.'],
-    ['Beach C2',c2Anchored,stage==='beach'&&mode==='trial','C7 + P7-7 establish the beach command anchor.'],
-    ['Arrival',arrivalTime!==null,stage==='arrival','Operating platoon reaches Arrival.'],
-    ['Dismount / Screen',dismountOrdered,stage==='screen','Troop bundles dismount and create screening coverage.'],
-    ['Rally',ralliedBundles()>=2,stage==='screen'&&ralliedBundles()<2,'At least two troop bundles become rallied.'],
-    ['Remount',stage==='advance'||stage==='complete'||mode==='aar',stage==='remount','Troop bundles remount before the forward move.'],
-    ['Forward Advance',objectiveReached()||mode==='aar',stage==='advance'||stage==='complete','PC/PSG and troop carriers advance; recovery lane supports degraded tracks.'],
-    ['AAR',mode==='aar',false,'Review Sustain / Fix / Next Trial Adjustment.']
+
+function updatePlanUi(){
+ document.querySelectorAll('[data-plan]').forEach(b=>b.classList.toggle('active',b.dataset.plan===selectedPlanTool));
+ const status=$('planStatus');
+ if(status){
+   status.textContent=planLocked
+     ? 'Plan locked. Launch when ready or reset the plan.'
+     : missionAccepted
+       ? `Planning active. Selected tool: ${selectedPlanTool.toUpperCase()}. Click the board to place it.`
+       : 'Read and acknowledge the mission brief before planning.';
+   status.classList.toggle('planLocked',planLocked);
+ }
+ $('lockPlan').disabled=!missionAccepted||running;
+ $('resetPlan').disabled=!missionAccepted||running;
+ $('launch').disabled=!missionAccepted||!planLocked||running;
+ document.querySelector('.boardFrame').classList.toggle('planningActive',missionAccepted&&!planLocked&&!running);
+}
+function selectPlanTool(v){
+ if(running)return;
+ selectedPlanTool=v;
+ if(planLocked)planLocked=false;
+ updatePlanUi();
+ result(`Planning tool selected: ${v.toUpperCase()}. Click the board to place it.`);
+}
+function resetPlanLayout(){
+ if(running)return;
+ Object.keys(markers).forEach(k=>{markers[k].x=DEFAULT_MARKERS[k].x;markers[k].y=DEFAULT_MARKERS[k].y;});
+ pressure.splice(0,pressure.length,...JSON.parse(JSON.stringify(DEFAULT_PRESSURE)));
+ friction.splice(0,friction.length,...JSON.parse(JSON.stringify(DEFAULT_FRICTION)));
+ planLocked=false;
+ selectedPlanTool='c2';
+ updatePlanUi();
+ draw();
+ result('Planning board reset to the expanded-world default layout.');
+}
+function lockPlan(){
+ if(!missionAccepted||running)return;
+ planLocked=true;
+ captureLockedPlan();
+ updatePlanUi();
+ result('Plan locked. Review posture and tempo, then launch execution.');
+}
+function placePlanItem(clientX,clientY){
+ if(!missionAccepted||planLocked||running)return;
+ const r=canvas.getBoundingClientRect();
+ const x=clamp(Math.floor((clientX-r.left)/TILE),0,COLS-1);
+ const y=clamp(Math.floor((clientY-r.top)/TILE),1,ROWS-1);
+ if(markers[selectedPlanTool]){
+   markers[selectedPlanTool].x=x+.5;
+   markers[selectedPlanTool].y=y+.5;
+ }else if(selectedPlanTool==='pressure'){
+   const existing=pressure.find(p=>p.x===x&&p.y===y);
+   if(existing)existing.active=!existing.active;
+   else pressure.push({x,y,active:true});
+ }else if(selectedPlanTool==='bog'||selectedPlanTool==='comms'){
+   const i=friction.findIndex(f=>f.x===x&&f.y===y&&f.type===selectedPlanTool);
+   if(i>=0)friction.splice(i,1);
+   else friction.push({x,y,type:selectedPlanTool});
+ }
+ updatePlanUi();
+ draw();
+ result(`${selectedPlanTool.toUpperCase()} placed at ${x}, ${y}.`);
+}
+
+function updateTacticUi(){
+ document.querySelectorAll('[data-posture]').forEach(b=>b.classList.toggle('active',b.dataset.posture===posture));
+ document.querySelectorAll('[data-tempo]').forEach(b=>b.classList.toggle('active',b.dataset.tempo===tempo));
+ $('tacticReadout').textContent=`${postureMods[posture].label} posture · ${tempoMods[tempo].label} tempo`;
+}
+function setPosture(v){if(v!==posture&&running){postureChanges++;recordEvent('tactics',`Posture changed to ${postureMods[v].label}`)}posture=v;if(!running)planLocked=false;updateTacticUi();updatePlanUi();result(`Tactics layer: ${postureMods[v].label} posture selected.`)}
+function setTempo(v){if(v!==tempo&&running){tempoChanges++;recordEvent('tactics',`Tempo changed to ${tempoMods[v].label}`)}tempo=v;paused=running&&(v==='pause');if(!running)planLocked=false;updateTacticUi();updatePlanUi();result(`Tactics layer: ${tempoMods[v].label} tempo selected.`)}
+function guide(){
+ const text={
+  plan:missionAccepted?(planLocked?'Plan locked. Review posture and tempo, then launch.':'Build the operational plan: place control points and friction, then lock the plan.'):'Read and acknowledge the mission brief before planning begins.',
+  ship:'Watch the force move from launch through water and surf.',
+  beach:'Watch C7 and P7-7 establish Beach C2.',
+  arrival:'Watch the operating platoon move from beach to Arrival.',
+  screen:'Watch the force transition to Dismount / Screen.',
+  rally:'Watch the force organize at Rally.',
+  remount:'Watch the force complete Remount.',
+  advance:'Monitor C2 Net, pressure, and recovery as the force advances.',
+  complete:'The expanded operation is complete. Generate the AAR.'
+ }[stage]||'Watch the board.';
+ $('guideNow').textContent=text;
+ $('phase').textContent=stage.toUpperCase();
+ $('next').textContent=paused?'Resume':'Watch Board';
+ $('next').disabled=!running;
+}
+function result(msg){$('lastResult').textContent=msg;showToast(msg)}
+function showToast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('show'),3800)}
+function centerOn(col){scroll.scrollTo({left:clamp(col*TILE-scroll.clientWidth*.45,0,W-scroll.clientWidth),behavior:'smooth'})}
+function updateVisibleSector(){
+ const center=(scroll.scrollLeft+scroll.clientWidth/2)/TILE;
+ const s=sectors.find(x=>center>=x.x0&&center<=x.x1)||sectors[0];
+ $('sector').textContent=s.name;
+}
+function loop(ts){
+ const dt=Math.min(.04,(ts-last)/1000||0);last=ts;
+ if(running&&!paused&&stage!=='complete'){
+  time+=dt;units.forEach(u=>moveUnit(u,dt));updateRelationships(dt);stageAdvance();injectTestFriction();
+ }
+ $('clock').textContent=`${String(Math.floor(time/60)).padStart(2,'0')}:${String(Math.floor(time%60)).padStart(2,'0')}`;
+ $('net').textContent=`${Math.round(net)}%`;$('cohesion').textContent=`${Math.round(cohesion)}%`;$('parts').textContent=`${Math.round(parts)}%`;
+ $('hold').disabled=!running;$('support').disabled=!running||supportCooldown>0||!pressure.some(p=>p.active);
+ $('recover').disabled=!running||recovering||!units.some(u=>u.status==='degraded');
+ guide();draw();requestAnimationFrame(loop);
+}
+
+
+function buildAarData(){
+  const objectiveReached=stage==='complete';
+  const degradedDuration=(disruptionAt!==null&&recoveryCompletedAt!==null)?recoveryCompletedAt-disruptionAt:null;
+  const recoveryDelay=(disruptionAt!==null&&recoveryOrderedAt!==null)?recoveryOrderedAt-disruptionAt:null;
+  const partsUsed=100-parts;
+  const continuityScore=clamp(100-(100-minNet)*1.15-c2Below70Seconds*.35,0,100);
+  const recoveryScore=disruptionAt===null?70:
+    recoveryCompletedAt===null?25:
+    clamp(100-(recoveryDelay||0)*2-(degradedDuration||0)*.8,0,100);
+  const missionScore=objectiveReached?100:45;
+  const sustainmentScore=clamp((cohesion+parts)/2,0,100);
+  const score=Math.round(.35*missionScore+.25*continuityScore+.25*recoveryScore+.15*sustainmentScore);
+  const grade=score>=90?'A':score>=80?'B':score>=70?'C':score>=60?'D':'F';
+  return {
+    generatedAt:new Date().toISOString(),
+    objectiveReached,stage,time,score,grade,
+    metrics:{minNet,minCohesion,c2Below70Seconds,endingNet:net,endingCohesion:cohesion,partsRemaining:parts,partsUsed,supportActions,degradedDuration,recoveryDelay},
+    plan:lockedPlan||{posture,tempo,markers:deepCopy(markers),pressure:deepCopy(pressure),friction:deepCopy(friction)},
+    disruption:{occurred:disruptionAt!==null,at:disruptionAt,unitId:degradedUnitId},
+    recovery:{orderedAt:recoveryOrderedAt,completedAt:recoveryCompletedAt},
+    tactics:{endingPosture:posture,endingTempo:tempo,postureChanges,tempoChanges},
+    timeline:deepCopy(timeline),
+    notes:$('aarUserNotes')?$('aarUserNotes').value:''
+  };
+}
+function planRows(data){
+  const p=data.plan;
+  const rows=[
+    ['Posture',postureMods[p.posture]?.label||p.posture, data.metrics.minCohesion>=70?'Supported cohesion':'Cohesion degraded below desired level'],
+    ['Tempo',tempoMods[p.tempo]?.label||p.tempo, data.metrics.minNet>=70?'Maintained usable C2':'Contributed to C2 strain'],
+    ['Recovery Control',`${p.markers.recovery.x.toFixed(1)}, ${p.markers.recovery.y.toFixed(1)}`, data.recovery.completedAt!==null?'Supported completed recovery':'Recovery was not completed'],
+    ['Beach C2',`${p.markers.c2.x.toFixed(1)}, ${p.markers.c2.y.toFixed(1)}`,data.metrics.c2Below70Seconds<20?'Maintained continuity':'Extended C2 degradation'],
+    ['Mortar Support Nodes',`A ${p.markers.mortar1.x.toFixed(1)},${p.markers.mortar1.y.toFixed(1)} · B ${p.markers.mortar2.x.toFixed(1)},${p.markers.mortar2.y.toFixed(1)}`,`${data.metrics.supportActions} abstract support action(s)`],
+    ['Pressure Areas',`${p.pressure.filter(x=>x.active).length} active at lock`,`${pressure.filter(x=>x.active).length} remained at end`],
+    ['Friction',`${p.friction.length} planned friction marker(s)`,`Disruption ${data.disruption.occurred?'occurred':'did not occur'}`]
   ];
-  host.innerHTML=steps.map(([name,done,active,text])=>`<div class="guideStep ${done?'done':active?'active':'future'}"><b>${done?'✓':active?'▶':'○'} ${escapeHtml(name)}</b><br>${escapeHtml(text)}</div>`).join('');
+  return rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
 }
-
-function pressureMarkerExists(){for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)if(board[y][x].overlays.includes('pressure'))return true;return false;}
-function readyMgExists(){return troopCards.some(c=>(c.state==='screening'||c.state==='rallied')&&c.mg==='ready');}
-function readyFireExists(){return troopCards.some(c=>(c.state==='screening'||c.state==='rallied')&&c.mortar==='ready');}
-function actionAvailability(id){
-  const trial=mode==='trial'; const pc=getUnit('p7pc'), psg=getUnit('p7psg'), r7=getUnit('r7');
-  if(id==='pauseBtn')return {valid:trial,reason:trial?'Pause or resume the active trial.':'Launch the trial first.'};
-  if(id==='holdBtn')return {valid:trial,reason:trial?'Slow movement and stabilize the operating picture.':'Launch the trial first.'};
-  if(id==='cmdPushBtn'){
-    if(!trial)return {valid:false,reason:'Launch the trial first.'};
-    if(!fullyOperational(pc))return {valid:false,reason:'Blocked: Platoon Commander is not operational.'};
-    if(commandPushCooldown>0)return {valid:false,reason:`Blocked: Command Push cooldown ${Math.ceil(commandPushCooldown)}s.`};
-    return {valid:true,reason:'Ready: improves cohesion and short-term order latency.'};
-  }
-  if(id==='recoverBtn'){
-    if(!trial)return {valid:false,reason:'Launch the trial first.'};
-    if(!fullyOperational(psg))return {valid:false,reason:'Blocked: Platoon Sergeant unavailable.'};
-    if(!fullyOperational(r7))return {valid:false,reason:'Blocked: R7 unavailable.'};
-    if(r7&&r7.task)return {valid:false,reason:'Blocked: R7 already has an active recovery route.'};
-    if(!degradedUnits().length)return {valid:false,reason:'No degraded vehicle currently requires recovery.'};
-    return {valid:true,reason:'Ready: PSG coordinates while R7 performs recovery/repair route.'};
-  }
-  if(id==='dismountBtn'){
-    if(!trial)return {valid:false,reason:'Launch the trial first.'};
-    if(stage!=='arrival'&&stage!=='screen')return {valid:false,reason:'Blocked: Dismount opens after Arrival.'};
-    return {valid:true,reason:'Ready: troop carriers begin dismount/screening sequence.'};
-  }
-  if(id==='remountBtn'){
-    if(!trial)return {valid:false,reason:'Launch the trial first.'};
-    if(ralliedBundles()<2)return {valid:false,reason:`Blocked: need at least 2 rallied bundles; currently ${ralliedBundles()}.`};
-    if(stage!=='screen'&&stage!=='remount')return {valid:false,reason:'Blocked: Remount follows screening/rally.'};
-    return {valid:true,reason:'Ready: remount rallied bundles and transition toward Forward Advance.'};
-  }
-  if(id==='mgBtn'){
-    if(!trial)return {valid:false,reason:'Launch the trial first.'};
-    if(!readyMgExists())return {valid:false,reason:'Blocked: no ready MG marker from a screening/rallied troop bundle.'};
-    return {valid:true,reason:'Ready: MG Base reduces abstract pressure marker effects only.'};
-  }
-  if(id==='fireBtn'){
-    if(!trial)return {valid:false,reason:'Launch the trial first.'};
-    if(!readyFireExists())return {valid:false,reason:'Blocked: no ready mortar/indirect marker from a screening/rallied troop bundle.'};
-    if(!pressureMarkerExists())return {valid:false,reason:'Blocked: no ADV/PRESS marker exists on the board.'};
-    return {valid:true,reason:'Ready: Fire Support reduces abstract pressure marker effects only.'};
-  }
-  if(id==='endBtn')return {valid:trial,reason:trial?'Generate the AAR and next-trial recommendation.':'AAR is available after launch.'};
-  return {valid:true,reason:''};
-}
-function applyActionAvailability(){
-  const ids=['pauseBtn','holdBtn','cmdPushBtn','recoverBtn','dismountBtn','remountBtn','mgBtn','fireBtn','endBtn'];
-  const c=coachState();
-  const guidedRecommended=guidedMode&&mode==='trial'&&c&&c.recommended&&$(c.recommended)&&!['pauseBtn','endBtn'].includes(c.recommended)?c.recommended:'';
-  for(const id of ids){
-    const b=$(id); if(!b)continue; let av=actionAvailability(id);
-    const remountEscape=(id==='remountBtn'&&av.valid&&ralliedBundles()>=2);
-    if(guidedRecommended&&id!==guidedRecommended&&id!=='pauseBtn'&&id!=='endBtn'&&!remountEscape&&av.valid){av={valid:false,reason:`Guided run: use the highlighted next click first (${orderNameFromButton(guidedRecommended)}).`};}
-    b.disabled=!av.valid; b.title=av.reason; b.classList.toggle('blocked',!av.valid);
-  }
-  const launch=$('launchBtn'); if(launch){launch.disabled=mode==='trial'; launch.title=mode==='trial'?'Trial already running.':'Start the guided run.';}
-}
-function orderNameFromButton(id){return {holdBtn:'Hold',cmdPushBtn:'Cmd Push',recoverBtn:'PSG / R7 Recover',dismountBtn:'Dismount',remountBtn:'Remount / Advance',mgBtn:'MG Base',fireBtn:'Fire Support',endBtn:'AAR'}[id]||id;}
-function actionAvailabilitySummary(){
-  if(mode==='planning')return 'Ready now: set control points/friction or press GATOR RAID.';
-  if(mode==='aar')return 'Ready now: review AAR, then adjust one board item before rerun.';
-  const ids=[['cmdPushBtn','Cmd Push'],['recoverBtn','Recover'],['dismountBtn','Dismount'],['remountBtn','Remount'],['mgBtn','MG Base'],['fireBtn','Fire Support'],['endBtn','AAR']];
-  const ready=ids.filter(([id])=>actionAvailability(id).valid).map(([,name])=>name);
-  return ready.length?`Ready now: ${ready.join(', ')}.`:'No major order ready yet; watch the phase checklist and board movement.';
-}
-function lookForFromCoach(c){
-  const title=c&&c.title?c.title:'';
-  if(title.includes('Build'))return 'Look for the board to show control points and pressure/friction before launch.';
-  if(title.includes('Beach C2'))return 'Look for C7 and P7-7 to settle at the C2 marker and the C2 Net to stabilize.';
-  if(title.includes('Dismount'))return 'Look for troop carriers moving toward DIS and support markers appearing after the dismount timer.';
-  if(title.includes('Pressure'))return 'Look for the selected ADV/PRESS marker to become suppressed; vehicles should not move from support actions.';
-  if(title.includes('Recovery'))return 'Look for the green R7 route to the degraded track and back to Recovery Control.';
-  if(title.includes('Remount'))return 'Look for troop bundle states to clear remounting before Forward Advance begins.';
-  if(title.includes('Forward'))return 'Look for PC/PSG to reach the objective while C2 Net, pressure, and recovery posture are tracked.';
-  if(title.includes('AAR'))return 'Look for Sustain, Fix, and one Next Trial Adjustment.';
-  return 'Look for one visible board change, one phase change, or one AAR note after each action.';
-}
-function coachDoNext(){
-  const c=currentCoach||coachState();
-  if(!c||!c.recommended){if(c&&c.focus){coachFocusNext();return;}toast('Coach: follow the phase checklist; no direct action is ready yet.','info');return;}
-  const btn=$(c.recommended);
-  if(!btn){toast('Coach: recommended control is not available in this view.','warn');return;}
-  if(btn.disabled){if(c.focus){coachFocusNext();return;}const av=actionAvailability(c.recommended);setCoachResult(`Blocked: ${av.reason}`,'warn');return;}
-  btn.click();
-}
-
-function syncUi(renderCards=true){
-  const app=document.querySelector('.app'); if(app){app.classList.toggle('trialMode',mode==='trial');app.classList.toggle('planningMode',mode==='planning');app.classList.toggle('aarMode',mode==='aar');}
-  const p7Ops=units.filter(u=>u.kind==='p7'&&u.status==='operational').length; const pc=getUnit('p7pc'),psg=getUnit('p7psg');
-  $('p7Readout').textContent=`${p7Ops}/8`; $('pcReadout').textContent=pc?pc.status.toUpperCase():'N/A'; $('psgReadout').textContent=psg?(psg.task?'TASKED':psg.status.toUpperCase()):'N/A';
-  $('clockReadout').textContent=mode==='trial'?timeText(trialTime):mode==='aar'?'AAR':'PLAN'; $('cohesionReadout').textContent=`${Math.round(cohesion)}%`; $('netReadout').textContent=`${Math.round(net)}%`; $('partsReadout').textContent=`${Math.round(parts)}%`; $('cohesionFill').style.width=cohesion+'%'; $('netFill').style.width=net+'%'; $('partsFill').style.width=parts+'%';
-  $('phaseBadge').textContent=phaseLabel();
-  const brief=phaseLabel()+'|'+boardText();
-  $('boardTitle').textContent=phaseLabel(); $('boardText').textContent=boardText();
-  if(brief!==lastBoardBrief){ lastBoardBrief=brief; showBoardBrief(false); }
-  applyActionAvailability(); $('pauseBtn').textContent=paused?'Resume':'Pause'; $('holdBtn').textContent=hold?'Move':'Hold';
-  const sel=selectedId&&!String(selectedId).startsWith('support:')&&!String(selectedId).startsWith('pressure:')&&!String(selectedId).startsWith('group:')?getUnit(selectedId):null; const selectedSupport=selectedSupportTeam(); const selectedPressure=String(selectedId||'').startsWith('pressure:')?selectedId.split(':')[1]:null; const selectedGroupName=String(selectedId||'').startsWith('group:')?selectedGroup:''; const pending=pendingOrders.length?`<br/><span style="color:var(--muted)">Pending orders: ${pendingOrders.map(o=>orderName(o.kind)).join(', ')}</span>`:'';
-  $('selectedBox').innerHTML=selectionTruthBox(sel,selectedSupport,selectedPressure,selectedGroupName,pending);
-  $('actionHint').textContent=actionHintText(sel,selectedSupport,selectedPressure,selectedGroupName)+' '+actionAvailabilitySummary();
-  updateCoachUi();
-  if(renderCards){renderCardsUi();initPalettes();}
-}
-function phaseLabel(){if(mode==='aar')return'After-Action Review'; if(mode==='planning')return'PLAN'; if(stage==='beach')return'BEACH / C2 ESTABLISH'; if(stage==='arrival')return'ARRIVAL'; if(stage==='screen')return'DISMOUNT / SCREEN'; if(stage==='remount')return'REMOUNT'; if(stage==='advance')return'ADVANCE'; if(stage==='complete')return'FORWARD ADVANCE COMPLETE'; return'TRIAL RUNNING';}
-function boardText(){if(mode==='planning')return'Set eight control points. v0.3.8a uses one-honest-screen control: left roster/status, center board-docked guide, right phase checklist. Select a track or marker, then issue a valid order.'; if(stage==='beach')return'C7 and P7-7 establish Beach C2; PC/PSG and troop P7s move to Center Beach.'; if(stage==='arrival')return'Operating platoon moves to Arrival. Queue Dismount when ready.'; if(stage==='screen')return'Troop bundles dismount, screen pressure-marker effects, then rally. MG Base and Fire Support only affect pressure markers.'; if(stage==='remount')return'Troop bundles remount. Forward Advance starts when remount timers complete.'; if(stage==='advance')return'PC/PSG and troop carriers advance. R7/parts work the recovery lane between Beach C2 and platoon; PSG remains with the operating platoon.'; if(mode==='aar')return'Review C2 tether, pressure screening, recovery posture, and next trial adjustment.';return'Run the trial.';}
-function timeText(t){const remain=Math.max(0,maxTrialTime-t);const m=Math.floor(remain/60);const s=Math.floor(remain%60).toString().padStart(2,'0');return`${m}:${s}`;}
-function elapsedText(t){t=Math.max(0,t||0);const m=Math.floor(t/60);const s=Math.floor(t%60).toString().padStart(2,'0');return`${m}:${s}`;}
-
-function selectionTruthBox(sel,selectedSupport,selectedPressure,selectedGroupName,pending=''){
-  const platoonNote='<br/><span style="color:var(--muted)">Platoon-level orders target the whole relevant group, not this single card.</span>';
-  if(sel&&sel.troop)return `<b>${sel.label}</b><br/>Troop carrier selected · ${sel.status.toUpperCase()}<br/><span style="color:var(--muted)">${sel.detail}</span>${platoonNote}${pending}`;
-  if(sel&&sel.pc)return `<b>${sel.label}</b><br/>COMMAND AUTHORITY · ${sel.status.toUpperCase()}<br/><span style="color:var(--muted)">Cmd Push / Hold are platoon-level orders. C2 tether uses PC ↔ C7 relationship.</span>${pending}`;
-  if(sel&&sel.psg)return `<b>${sel.label}</b><br/>RECOVERY COORDINATION · ${sel.status.toUpperCase()}<br/><span style="color:var(--muted)">Recovery order targets degraded vehicles. PSG coordinates; R7 performs the route.</span>${pending}`;
-  if(sel&&sel.kind==='r7')return `<b>${sel.label}</b><br/>R7 RECOVERY TRACK · ${sel.status.toUpperCase()}<br/><span style="color:var(--muted)">R7 moves to degraded tracks, returns them to Recovery Control, then runs repair cycle.</span>${pending}`;
-  if(sel)return `<b>${sel.label}</b><br/>${sel.role} · ${sel.status.toUpperCase()}<br/><span style="color:var(--muted)">${sel.detail}</span>${pending}`;
-  if(selectedSupport)return `<b>TARGET / SOURCE: ${selectedSupport.label}</b><br/>${selectedSupport.type==='MG'?'MG Base source':'Fire Support source'} · ${selectedSupport.state.toUpperCase()}<br/><span style="color:var(--muted)">Tap an empty board cell to reposition. Support markers only affect ADV/PRESS markers; no vehicles move.</span>${pending}`;
-  if(selectedPressure)return `<b>TARGET: ADV/PRESS ${selectedPressure}</b><br/>Abstract pressure marker selected.<br/><span style="color:var(--muted)">MG Base / Fire Support will resolve against this marker if a ready support source exists.</span>${pending}`;
-  if(selectedGroupName)return `<b>${escapeHtml(selectedGroupName)}</b><br/>Group selected. Orders below show whether they target PLATOON, TROOP LINE, RECOVERY TEAM, or a selected pressure marker.${pending}`;
-  return `<b>No Selection</b><br/>Use Coach Select or tap a roster tree row / ADV/PRESS marker. Platoon-level orders do not require a single vehicle target.${pending}`;
-}
-
-function actionHintText(sel,support,pressureKey,groupName){
-  if(mode==='planning')return 'Planning mode: set control points and terrain. Launch when the board tells the story you want to test.';
-  if(sel&&sel.psg)return 'PSG selected: use PSG / R7 Recover when a vehicle is degraded. PSG coordinates; R7 performs the recovery route and repair.';
-  if(sel&&sel.kind==='r7')return 'R7 selected: R7 repairs/recovers. Keep it on the recovery lane with the parts track close.';
-  if(sel&&sel.troop)return 'Troop carrier selected: Dismount at DIS; after support markers appear, this selected carrier can source MG Base or Fire Support.';
-  if(support)return 'Support marker selected: tap an empty map cell to reposition it, or issue its matching pressure-only order.';
-  if(pressureKey)return 'Pressure marker selected: MG Base / Fire Support will resolve against this selected pressure marker when possible.';
-  if(groupName)return 'Group selected: issue a phase-valid order. The board will queue it through C2 Net latency.';
-  return actionAvailabilitySummary()+' Use Coach Select if the next target is unclear.';
-}
-function groupIncludesUnit(id){
-  if(selectedId==='group:cmd')return ['p7pc','p7psg','c7','p7c'].includes(id);
-  if(selectedId==='group:troops')return ['p7t1','p7t2','p7t3','p7t4'].includes(id);
-  if(selectedId==='group:recovery')return ['p7psg','r7','p7r'].includes(id);
-  return false;
-}
-function selectRosterGroup(kind){
-  selectedId='group:'+kind;
-  selectedGroup=kind==='cmd'?'Command Team: PC / PSG / C7 / C7 Chase':kind==='troops'?'Troop Tracks: P7-3 through P7-6':kind==='recovery'?'Recovery Team: R7 / Parts Track / PSG Coordination':'Selected Group';
-  toast(`${selectedGroup} selected. Choose a valid order from the roster action screen.`, 'info');
-  syncUi();
-}
-function clearSelection(){selectedId=null;selectedGroup='';syncUi();}
-function renderCardsUi(){
-  const host=$('unitCards'); host.innerHTML=''; host.className='rosterTree';
-  const degraded=degradedUnits();
-  if(degraded.length){
-    const strip=document.createElement('div'); strip.className='degradedStrip';
-    strip.innerHTML=`<b>Degraded / Recovery Needed</b>${degraded.map(u=>`${u.label} · ${u.status.toUpperCase()}`).join('<br>')}<button class="btn good" type="button">Recover with R7</button>`;
-    strip.querySelector('button').onclick=()=>{selectRosterGroup('recovery'); if(!actionAvailability('recoverBtn').valid)setCoachResult(`Blocked: ${actionAvailability('recoverBtn').reason}`,'warn'); else taskRecovery();};
-    host.appendChild(strip);
-  }
-  const sections=[
-    ['cmd','COMMAND','P7-1 PC ─ P7-2 PSG',['p7pc','p7psg']],
-    ['troops','TROOP LINE','P7-3 / P7-4 / P7-5 / P7-6',['p7t1','p7t2','p7t3','p7t4']],
-    ['c2','C2 NODE','C7 + P7-7 chase',['c7','p7c']],
-    ['recovery','RECOVERY','R7 + P7-8 parts',['r7','p7r']]
+function compareRows(data){
+  const m=data.metrics;
+  const recoveryText=data.disruption.occurred
+    ? (data.recovery.completedAt!==null?`Recovery completed in ${fmtTime(m.degradedDuration)}.`:'Disruption remained unresolved.')
+    :'No disruption occurred.';
+  const rows=[
+    ['Did the plan preserve mission continuity?',`Objective ${data.objectiveReached?'reached':'not reached'}; minimum C2 ${Math.round(m.minNet)}%.`,data.objectiveReached&&m.minNet>=60?'Yes':'Partially'],
+    ['Did the plan anticipate disruption?',`${data.plan.friction.length} friction marker(s); recovery control at ${data.plan.markers.recovery.x.toFixed(1)}, ${data.plan.markers.recovery.y.toFixed(1)}.`,data.disruption.occurred?'Tested under disruption':'Not fully tested'],
+    ['Was recovery timely?',recoveryText,(m.recoveryDelay!==null&&m.recoveryDelay<15)?'Timely':data.recovery.completedAt!==null?'Delayed':'Not completed'],
+    ['Did C2 remain meaningful?',`${fmtTime(m.c2Below70Seconds)} below 70%; minimum ${Math.round(m.minNet)}%.`,m.c2Below70Seconds<20?'Yes':'Degraded'],
+    ['Did tactics create an acceptable tradeoff?',`${postureMods[data.plan.posture]?.label} / ${tempoMods[data.plan.tempo]?.label}; ${data.tactics.postureChanges+data.tactics.tempoChanges} in-run change(s).`,m.minCohesion>=65&&m.minNet>=60?'Acceptable':'Needs adjustment']
   ];
-  for(const [key,title,summary,ids] of sections){
-    const sec=document.createElement('div'); sec.className='rosterSection';
-    const head=document.createElement('button'); head.className='rosterSectionHead'; head.type='button';
-    head.innerHTML=`<span>${title}</span><small>${summary}</small>`;
-    head.onclick=()=>selectRosterGroup(key==='c2'?'cmd':key);
-    const rows=document.createElement('div'); rows.className='treeUnits';
-    for(const id of ids){
-      const u=getUnit(id); if(!u)continue;
-      const row=document.createElement('button'); row.type='button';
-      row.className='treeRow'+((selectedId===u.id||groupIncludesUnit(u.id))?' selected':'')+(u.status==='disabled'||u.status==='bogged'?' down':'')+((currentCoach&&currentCoach.focus&&((currentCoach.focus==='group:cmd'&&['p7pc','p7psg','c7','p7c'].includes(u.id))||(currentCoach.focus==='group:troops'&&['p7t1','p7t2','p7t3','p7t4'].includes(u.id))||(currentCoach.focus==='group:recovery'&&['p7psg','r7','p7r'].includes(u.id))))?' recommended':'');
-      const status=u.status==='operational'?'READY':u.status.toUpperCase();
-      const detail=u.troop?troopSummary(u.id):u.chase==='c7'?'C7 chase / support element':u.chase==='r7'?`Parts ${Math.round(parts)}% · supports R7`:u.kind==='c7'?`Anchor ${c2Anchored?'YES':'NO'} · Net ${Math.round(net)}%`:u.kind==='r7'?recoverySummary():u.psg?'Coordinates recovery; stays with platoon.':u.pc?'Command authority; C2 tether to C7.':u.detail;
-      row.innerHTML=`<div class="treeTop"><span>${u.label} · ${u.role}</span><span class="tag ${u.status==='operational'?'green':u.status==='repairing'?'blue':u.status==='bogged'?'gold':'red'}">${status}</span></div><div class="treeMeta">${detail}</div>`;
-      row.onclick=()=>{selectedId=u.id;selectedGroup='';syncUi();};
-      rows.appendChild(row);
-    }
-    sec.appendChild(head); sec.appendChild(rows); host.appendChild(sec);
-  }
+  return rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
 }
-function recoverySummary(){
-  const r7=getUnit('r7'); const active=units.find(u=>u.status==='repairing'); const wait=units.filter(u=>u.awaitingRepair).length;
-  if(r7&&r7.task){const t=getUnit(r7.task.targetId); return `${r7.task.phase==='toTarget'?'EN ROUTE':'RETURN'} ${t?t.label:''} · queue ${wait}`;}
-  if(active)return `REPAIR ${active.label} · ${Math.max(0,Math.ceil(active.repairTimer))}s · queue ${wait}`;
-  return `IDLE · queue ${wait}`;
+function renderAar(){
+  const d=buildAarData();lastAarData=d;
+  $('aarGrade').textContent=d.grade;
+  $('aarObjective').textContent=d.objectiveReached?'Yes':'No';
+  $('aarMinNet').textContent=`${Math.round(d.metrics.minNet)}%`;
+  $('aarMinCohesion').textContent=`${Math.round(d.metrics.minCohesion)}%`;
+  $('aarRecoveryTime').textContent=fmtTime(d.metrics.degradedDuration);
+  $('aarPartsUsed').textContent=`${Math.round(d.metrics.partsUsed)}%`;
+  $('aarSupportCount').textContent=String(d.metrics.supportActions);
+  $('aarMissionLine').textContent=`Mission score ${d.score}/100 · Runtime ${fmtTime(d.time)} · ${new Date(d.generatedAt).toLocaleString()}`;
+  $('aarMissionAssessment').textContent=d.objectiveReached
+    ? `The force reached the final objective. Mission continuity was ${d.metrics.minNet>=70?'maintained':'degraded but preserved'} through the run.`
+    : 'The force did not complete the mission. Review where continuity, recovery, or pacing broke down.';
+  $('aarPlanTable').innerHTML=planRows(d);
+  $('aarTimelineList').innerHTML=d.timeline.length
+    ? d.timeline.map(e=>`<div class="aarTimelineItem"><b>${fmtTime(e.time)}</b><span>${e.text}</span></div>`).join('')
+    : '<div class="aarTimelineItem"><b>—</b><span>No events recorded.</span></div>';
+  $('aarDisruption').innerHTML=d.disruption.occurred
+    ? `<p><b>Disrupted unit:</b> ${d.disruption.unitId||'Unknown'}</p><p><b>Time:</b> ${fmtTime(d.disruption.at)}</p><p><b>Effect:</b> Abstract mobility degradation and cohesion loss.</p>`
+    : '<p>No disruption was recorded during this run.</p>';
+  $('aarRecovery').innerHTML=d.recovery.completedAt!==null
+    ? `<p><b>Ordered:</b> ${fmtTime(d.recovery.orderedAt)}</p><p><b>Completed:</b> ${fmtTime(d.recovery.completedAt)}</p><p><b>Degraded duration:</b> ${fmtTime(d.metrics.degradedDuration)}</p><p><b>Parts consumed:</b> ${Math.round(d.metrics.partsUsed)}%</p>`
+    : '<p>Recovery was not completed.</p>';
+  $('aarContinuity').innerHTML=`<p><b>Minimum C2 Net:</b> ${Math.round(d.metrics.minNet)}%</p><p><b>Time below 70%:</b> ${fmtTime(d.metrics.c2Below70Seconds)}</p><p><b>Minimum cohesion:</b> ${Math.round(d.metrics.minCohesion)}%</p><p><b>Ending C2:</b> ${Math.round(d.metrics.endingNet)}%</p>`;
+  $('aarTactics').innerHTML=`<p><b>Locked posture:</b> ${postureMods[d.plan.posture]?.label||d.plan.posture}</p><p><b>Locked tempo:</b> ${tempoMods[d.plan.tempo]?.label||d.plan.tempo}</p><p><b>In-run posture changes:</b> ${d.tactics.postureChanges}</p><p><b>In-run tempo changes:</b> ${d.tactics.tempoChanges}</p>`;
+  $('aarCompareTable').innerHTML=compareRows(d);
+  $('aarSustain').textContent=d.objectiveReached
+    ? `Sustain the mission-first sequence, explicit disruption assumption, and ${d.recovery.completedAt!==null?'completed PSG/R7 recovery pathway':'current command-board visibility'}.`
+    : 'Sustain the planning gate and evidence capture; they made the failure visible.';
+  let improve='Reduce avoidable C2 degradation by adjusting tempo or Beach C2 placement.';
+  if(d.disruption.occurred&&d.recovery.completedAt===null)improve='Prioritize recovery immediately after degradation and protect the recovery lane.';
+  else if(d.metrics.recoveryDelay!==null&&d.metrics.recoveryDelay>15)improve='Shorten the delay between disruption detection and recovery order.';
+  else if(d.metrics.minCohesion<65)improve='Use a more protected posture or deliberate tempo before the pressure sector.';
+  else if(!d.objectiveReached)improve='Rebalance route sequencing and tempo so the force can complete the objective.';
+  $('aarImprove').textContent=improve;
+  $('aarFooter').textContent=`Generated from GATOR RAID offline test harness · Mission resilience ${d.score}/100 · GitHub production source unchanged.`;
+  $('aarWorkspace').classList.add('open');
 }
-function troopSummary(id){const c=troopCards.find(x=>x.unitId===id);if(!c)return'';const mgp=c.mgPos?`MG@${c.mgPos.x.toFixed(1)},${c.mgPos.y.toFixed(1)}`:'MG not set'; const mp=c.mortarPos?`MTR@${c.mortarPos.x.toFixed(1)},${c.mortarPos.y.toFixed(1)}`:'MTR not set'; return `${c.state.toUpperCase()} · Rifle A/B · ${mgp} ${c.mg} ${c.mgCooldown?Math.ceil(c.mgCooldown)+'s':''} · ${mp} ${c.mortar} ${c.mortarCooldown?Math.ceil(c.mortarCooldown)+'s':''}`;}
-function toast(text,level='info'){messages.push({text,level,ttl:4.2}); if(messages.length>6)messages.shift();}
-function renderToast(){const host=$('toast');host.innerHTML=messages.map(m=>`<div class="msg ${m.level||''}">${escapeHtml(m.text)}</div>`).join('');}
+function aarText(d){
+ return `OPERATION GATOR RAID — AFTER-ACTION REVIEW
+Generated: ${d.generatedAt}
 
-function draw(){resizeCanvas();const w=canvas.getBoundingClientRect().width,h=canvas.getBoundingClientRect().height;ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(offsetX,offsetY);drawBoard();drawZoneLabels();drawControlRoute();drawSupportZones();drawScreenedCells();drawPsgRecoveryRoute();drawRecoveryStrip();drawSupportTeams();drawMotionEvents();drawUnits();drawRepairProgress();drawBoardEvents();drawToolPreview();ctx.restore();renderToast();}
-function drawBoard(){for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const tile=board[y][x],px=x*cell,py=y*cell;ctx.fillStyle=terrainDefs[tile.terrain].color;ctx.fillRect(px,py,cell,cell);ctx.globalAlpha=.12;ctx.fillStyle=(x+y)%2?'#fff':'#000';ctx.fillRect(px,py,cell,cell);ctx.globalAlpha=1;if(tile.terrain==='water'||tile.terrain==='surf')drawWater(px,py,x,y);if(tile.terrain==='dunes'||tile.terrain==='soft')drawSand(px,py,x,y);ctx.strokeStyle='rgba(255,255,255,.17)';ctx.lineWidth=1;ctx.strokeRect(px+.5,py+.5,cell,cell);for(const ov of tile.overlays)drawOverlay(ov,px,py);}}
-function drawZoneLabels(){const zones=[['WATER LANE',1.4,0.5],['SURF',3.5,0.5],['BEACH / C2',5.5,0.5],['INLAND',14.8,0.5]];ctx.save();ctx.font=`900 ${Math.max(9,cell*.15)}px system-ui`;ctx.textAlign='center';ctx.globalAlpha=.78;for(const [t,x,y] of zones){ctx.fillStyle='rgba(0,0,0,.38)';roundRect(ctx,x*cell-45,y*cell-12,90,22,8);ctx.fill();ctx.fillStyle='#fff6dc';ctx.fillText(t,x*cell,y*cell+4);}ctx.restore();}
-function drawWater(px,py,x,y){ctx.save();ctx.strokeStyle='rgba(255,255,255,.20)';ctx.lineWidth=1;for(let i=0;i<3;i++){ctx.beginPath();let yy=py+(i+1)*cell/4+Math.sin(x*.8+y+i)*4;ctx.moveTo(px+5,yy);ctx.quadraticCurveTo(px+cell*.5,yy-7,px+cell-5,yy+2);ctx.stroke();}ctx.restore();}
-function drawSand(px,py,x,y){ctx.save();ctx.strokeStyle='rgba(80,58,28,.17)';ctx.lineWidth=1;for(let i=0;i<3;i++){let yy=py+10+i*cell/4;ctx.beginPath();ctx.moveTo(px+6,yy);ctx.quadraticCurveTo(px+cell*.45,yy+Math.sin(x+y+i)*5,px+cell-7,yy+2);ctx.stroke();}ctx.restore();}
-function drawOverlay(id,px,py){const cx=px+cell/2,cy=py+cell/2;ctx.save();const def=overlayDefs[id];if(['bog','comms','pressure'].includes(id)){ctx.globalAlpha=.33;ctx.fillStyle=def.color;roundRect(ctx,px+6,py+6,cell-12,cell-12,12);ctx.fill();ctx.globalAlpha=.9;ctx.strokeStyle=def.color;ctx.lineWidth=2;ctx.setLineDash([5,4]);roundRect(ctx,px+7,py+7,cell-14,cell-14,12);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#fff6dc';ctx.font=`900 ${Math.max(9,cell*.19)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(id==='bog'?'BOG':id==='comms'?'NET':'ADV',cx,cy-2);if(id==='pressure'){ctx.font=`800 ${Math.max(7,cell*.12)}px system-ui`;ctx.fillText('PRESS',cx,cy+cell*.20);}}else{ctx.fillStyle=def.color;ctx.strokeStyle='rgba(255,255,255,.72)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,cell*.23,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.strokeStyle=def.color;ctx.globalAlpha=.72;ctx.setLineDash([4,4]);ctx.beginPath();ctx.arc(cx,cy,cell*.38,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;ctx.fillStyle='#fff';ctx.font=`900 ${Math.max(13,cell*.32)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(id==='rally'?'⚑':'+',cx,cy+1);}ctx.restore();}
-function drawControlRoute(){
-  ctx.save();
-  const ids=['beach','arrival','dismount','rally','remount','objective']; const pts=ids.map(id=>point(id));
-  const activeIndex=stage==='beach'?0:stage==='arrival'?1:stage==='screen'?2:stage==='remount'?4:stage==='advance'||stage==='complete'?5:0;
-  for(let i=0;i<pts.length-1;i++){
-    const a=pts[i],b=pts[i+1];
-    ctx.lineWidth=i===activeIndex?6:3;
-    ctx.strokeStyle=i<activeIndex?'rgba(124,175,109,.50)':i===activeIndex?'rgba(255,225,154,.92)':'rgba(244,236,212,.22)';
-    ctx.setLineDash(i===activeIndex?[]:[9,8]);
-    ctx.beginPath();ctx.moveTo(a.x*cell,a.y*cell);ctx.lineTo(b.x*cell,b.y*cell);ctx.stroke();
-  }
-  ctx.setLineDash([]);
-  for(const id of markerItems){const p=point(id),def=markerDefs[id];const active=ids[activeIndex]===id||selectedTool.id===id;ctx.globalAlpha=active?1:.82;ctx.fillStyle=def.color;ctx.strokeStyle=active?'rgba(255,255,255,.86)':'rgba(0,0,0,.55)';ctx.lineWidth=active?4:2;ctx.beginPath();ctx.arc(p.x*cell,p.y*cell,cell*.25,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#11150f';ctx.font=`950 ${Math.max(8,cell*.16)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(def.short,p.x*cell,p.y*cell);ctx.fillStyle='#fff5d7';ctx.font=`800 ${Math.max(7,cell*.11)}px system-ui`;ctx.fillText(def.name.toUpperCase(),p.x*cell,p.y*cell-cell*.38);}
-  ctx.restore();
-}
-function drawSupportZones(){
-  drawNetTether();
-  drawSelectedRadius();
-  for(const z of mgZones)drawTempZone(z,'#7caf6d','MG BASE');
-  for(const z of fireBursts)drawTempZone(z,'#d6b85f','SUPPORT');
-  for(const z of suppressedCells)drawSuppressed(z);
-  drawLinksMinimal();
-}
-function drawNetTether(){
-  const pc=getUnit('p7pc'),c7=getUnit('c7'); if(!pc||!c7)return;
-  const color=net>=75?'rgba(104,169,204,.95)':net>=45?'rgba(214,184,95,.95)':'rgba(201,95,85,.96)';
-  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=net>=75?5:net>=45?4:3;ctx.globalAlpha=.95;
-  if(net<45)ctx.setLineDash([7,5]);
-  ctx.beginPath();ctx.moveTo(pc.x*cell,pc.y*cell);ctx.lineTo(c7.x*cell,c7.y*cell);ctx.stroke();ctx.setLineDash([]);
-  const mx=(pc.x+c7.x)*cell/2,my=(pc.y+c7.y)*cell/2;
-  ctx.fillStyle='rgba(6,8,7,.82)';ctx.strokeStyle=color;ctx.lineWidth=1.5;roundRect(ctx,mx-48,my-13,96,26,9);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#fff6dc';ctx.font=`900 ${Math.max(8,cell*.13)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`C2 NET ${Math.round(net)}%`,mx,my+1);ctx.restore();
-}
-function drawSelectedRadius(){
-  const u=selectedId&&!String(selectedId).startsWith('group:')&&!String(selectedId).startsWith('support:')&&!String(selectedId).startsWith('pressure:')?getUnit(selectedId):null;
-  if(!u)return;
-  if(u.kind==='c7')drawRadius(u,4.0,'#68a9cc','C2');
-  else if(u.pc)drawRadius(u,3.0,'#d6b85f','COMMAND');
-  else if(u.psg)drawRadius(u,2.4,'#d6b85f','PSG COORD');
-  else if(u.kind==='r7')drawRadius(u,2.2,'#7caf6d','R7 SUPPORT');
-}
-function drawLinksMinimal(){
-  const pairs=[['c7','p7c','#68a9cc',1.2],['r7','p7r','#7caf6d',1.8]];ctx.save();ctx.lineWidth=2;ctx.setLineDash([5,6]);
-  for(const [a,b,color,threshold] of pairs){const u=getUnit(a),v=getUnit(b);if(!u||!v)continue; if(dist(u,v)<=threshold)continue;ctx.strokeStyle=color;ctx.globalAlpha=.72;ctx.beginPath();ctx.moveTo(u.x*cell,u.y*cell);ctx.lineTo(v.x*cell,v.y*cell);ctx.stroke();}
-  ctx.restore();
-}
+MISSION RESILIENCE: ${d.grade} (${d.score}/100)
+Objective reached: ${d.objectiveReached?'YES':'NO'}
+Runtime: ${fmtTime(d.time)}
 
-function drawScreenedCells(){ctx.save();for(const s of screenedCells){const alpha=0.10+0.08*s.stacks;ctx.fillStyle=`rgba(104,169,204,${alpha})`;ctx.fillRect(s.x*cell+5,s.y*cell+5,cell-10,cell-10);ctx.strokeStyle=`rgba(104,169,204,${0.25+0.10*s.stacks})`;ctx.lineWidth=2;ctx.strokeRect(s.x*cell+6,s.y*cell+6,cell-12,cell-12);if(board[s.y][s.x].overlays.includes('pressure')){ctx.strokeStyle='rgba(210,210,210,.80)';ctx.lineWidth=3;ctx.strokeRect(s.x*cell+9,s.y*cell+9,cell-18,cell-18);}}ctx.restore();}
-function drawSupportTeams(){
-  ctx.save();
-  for(const t of supportTeams){
-    const x=t.x*cell,y=t.y*cell;
-    const isMg=t.type==='MG';
-    ctx.save();ctx.translate(x,y);
-    ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=7;ctx.shadowOffsetY=3;
-    ctx.fillStyle=isMg?'#7caf6d':'#d6b85f';ctx.strokeStyle='rgba(255,255,255,.72)';ctx.lineWidth=2;
-    if(isMg){roundRect(ctx,-cell*.24,-cell*.24,cell*.48,cell*.48,cell*.09);ctx.fill();ctx.stroke();}
-    else{ctx.beginPath();ctx.moveTo(0,-cell*.28);ctx.lineTo(cell*.29,cell*.24);ctx.lineTo(-cell*.29,cell*.24);ctx.closePath();ctx.fill();ctx.stroke();}
-    ctx.shadowBlur=0;ctx.fillStyle='#11150f';ctx.font=`950 ${Math.max(8,cell*.15)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t.type,0,isMg?0:cell*.05);
-    ctx.fillStyle='#fff6dc';ctx.font=`800 ${Math.max(7,cell*.12)}px system-ui`;ctx.fillText(t.label,0,cell*.44);
-    if(t.state==='cool'){ctx.fillStyle='rgba(0,0,0,.62)';ctx.beginPath();ctx.arc(cell*.27,-cell*.26,cell*.14,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff6dc';ctx.font=`800 ${Math.max(6,cell*.10)}px system-ui`;ctx.fillText(Math.ceil(t.cooldown),cell*.27,-cell*.26);}
-    ctx.restore();
-  }
-  ctx.restore();
+LOCKED PLAN
+Posture: ${postureMods[d.plan.posture]?.label||d.plan.posture}
+Tempo: ${tempoMods[d.plan.tempo]?.label||d.plan.tempo}
+Recovery Control: ${d.plan.markers.recovery.x.toFixed(1)}, ${d.plan.markers.recovery.y.toFixed(1)}
+Beach C2: ${d.plan.markers.c2.x.toFixed(1)}, ${d.plan.markers.c2.y.toFixed(1)}
+Pressure areas at lock: ${d.plan.pressure.filter(x=>x.active).length}
+Friction markers: ${d.plan.friction.length}
+
+EXECUTION
+Minimum C2 Net: ${Math.round(d.metrics.minNet)}%
+Time below 70% C2: ${fmtTime(d.metrics.c2Below70Seconds)}
+Minimum cohesion: ${Math.round(d.metrics.minCohesion)}%
+Parts consumed: ${Math.round(d.metrics.partsUsed)}%
+Support actions: ${d.metrics.supportActions}
+
+DISRUPTION
+Occurred: ${d.disruption.occurred?'YES':'NO'}
+Time: ${fmtTime(d.disruption.at)}
+Unit: ${d.disruption.unitId||'—'}
+
+RECOVERY
+Ordered: ${fmtTime(d.recovery.orderedAt)}
+Completed: ${fmtTime(d.recovery.completedAt)}
+Degraded duration: ${fmtTime(d.metrics.degradedDuration)}
+
+TIMELINE
+${d.timeline.map(e=>`${fmtTime(e.time)} — ${e.text}`).join('\n')}
+
+PLAYER / FACILITATOR NOTES
+${$('aarUserNotes').value||'—'}
+`;
 }
 
-function drawMotionEvents(){
-  ctx.save();
-  for(const e of motionEvents){
-    const pct=clamp(1-e.ttl/e.life,0,1);
-    const x=(e.from.x+(e.to.x-e.from.x)*pct)*cell, y=(e.from.y+(e.to.y-e.from.y)*pct)*cell;
-    const color=e.level==='gold'?'#d6b85f':'#7caf6d';
-    ctx.globalAlpha=clamp(e.ttl/e.life,.15,1);
-    ctx.strokeStyle=color;ctx.lineWidth=3;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(e.from.x*cell,e.from.y*cell);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);
-    ctx.fillStyle=color;ctx.strokeStyle='rgba(255,255,255,.78)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,cell*.19,0,Math.PI*2);ctx.fill();ctx.stroke();
-    ctx.fillStyle='#11150f';ctx.font=`900 ${Math.max(7,cell*.11)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(e.label.split(' ')[0],x,y);
-  }
-  ctx.restore();
+function showMission(){
+  $('missionOverlay').classList.remove('hidden');
 }
-function drawBoardEvents(){
-  ctx.save();
-  for(const e of boardEvents){
-    const pct=clamp(e.ttl/e.life,0,1), inv=1-pct;
-    const x=e.x*cell,y=e.y*cell;
-    const color=e.level==='warn'?'rgba(201,95,85,':e.level==='good'?'rgba(124,175,109,':'rgba(214,184,95,';
-    ctx.globalAlpha=clamp(pct,.05,1);
-    ctx.strokeStyle=color+'.95)';ctx.lineWidth=3+4*inv;ctx.beginPath();ctx.arc(x,y,cell*(.42+.28*inv),0,Math.PI*2);ctx.stroke();
-    const tw=Math.min(Math.max(130,ctx.measureText?ctx.measureText(e.label).width+28:180),260);
-    ctx.fillStyle='rgba(6,8,7,.88)';ctx.strokeStyle=color+'.80)';ctx.lineWidth=1.5;roundRect(ctx,x-tw/2,y-cell*.86-18,tw,30,10);ctx.fill();ctx.stroke();
-    ctx.fillStyle='#fff6dc';ctx.font=`900 ${Math.max(9,cell*.13)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(e.label,x,y-cell*.86-2);
-  }
-  ctx.restore();
+function acceptMission(){
+  missionAccepted=true;
+  mode='planning';
+  $('missionOverlay').classList.add('hidden');
+  planLocked=false;
+  updatePlanUi();
+  result('Mission accepted. Planning may begin. Disruption is expected.');
 }
 
-function drawRepairProgress(){
-  const active=units.find(u=>u.status==='repairing'); if(!active)return;
-  const rec=point('recovery'); const x=rec.x*cell,y=rec.y*cell; const pct=clamp(1-(active.repairTimer||0)/18,0,1);
-  ctx.save();ctx.lineWidth=6;ctx.strokeStyle='rgba(255,255,255,.18)';ctx.beginPath();ctx.arc(x,y,cell*.48,0,Math.PI*2);ctx.stroke();ctx.strokeStyle='rgba(124,175,109,.95)';ctx.beginPath();ctx.arc(x,y,cell*.48,-Math.PI/2,-Math.PI/2+pct*Math.PI*2);ctx.stroke();ctx.fillStyle='rgba(8,10,9,.86)';roundRect(ctx,x-cell*.72,y+cell*.52,cell*1.44,24,9);ctx.fill();ctx.fillStyle='#c9f5bd';ctx.font=`900 ${Math.max(8,cell*.12)}px system-ui`;ctx.textAlign='center';ctx.fillText(`REPAIR ${active.label} · ${Math.ceil(active.repairTimer)}s`,x,y+cell*.52+16);ctx.restore();
+function reset(){
+ mode=missionAccepted?'planning':'briefing';stage='plan';running=false;paused=false;time=0;net=100;cohesion=100;parts=100;recovering=false;supportCooldown=0;posture='balanced';tempo='steady';planLocked=false;timeline=[];lockedPlan=null;minNet=100;minCohesion=100;c2Below70Seconds=0;disruptionAt=null;degradedUnitId=null;recoveryOrderedAt=null;recoveryCompletedAt=null;supportActions=0;postureChanges=0;tempoChanges=0;lastAarData=null;updateTacticUi();
+ pressure.forEach(p=>p.active=true);makeUnits();$('aar').disabled=true;scroll.scrollLeft=0;updatePlanUi();
+ result('Mission-framework test reset. GitHub source remains unchanged.');
 }
-function drawRecoveryStrip(){
-  const r7=getUnit('r7'); const active=units.find(u=>u.status==='repairing'); const wait=units.filter(u=>u.awaitingRepair).length;
-  if(!(r7&&r7.task)||active||wait)return drawRecoveryStripActive(null,active,wait);
-  drawRecoveryStripActive(r7.task,active,wait);
-}
-function drawRecoveryStripActive(task,active,wait){
-  if(!task&&!active&&!wait)return;
-  const x=10,y=(rows*cell)-36,w=Math.min(cols*cell-20,520),h=28;
-  let label='DOWN → PSG COORD → R7 EN ROUTE → RETURN → REPAIR';
-  if(task){label=task.phase==='toTarget'?'DOWN → PSG COORD → R7 EN ROUTE':'DOWN → PSG COORD → R7 LINKED → RETURN';}
-  if(active)label=`DOWN → PSG COORD → R7 RETURN → REPAIR ${Math.ceil(active.repairTimer)}s`;
-  if(wait&&!active)label+=` · QUEUE ${wait}`;
-  ctx.save();ctx.fillStyle='rgba(8,10,9,.88)';ctx.strokeStyle='rgba(124,175,109,.70)';ctx.lineWidth=1.5;roundRect(ctx,x,y,w,h,10);ctx.fill();ctx.stroke();ctx.fillStyle='#c9f5bd';ctx.font=`900 ${Math.max(8,cell*.13)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,x+w/2,y+h/2+1);ctx.restore();
-}
-
-function drawPsgRecoveryRoute(){
-  const psg=getUnit('p7psg'), r7=getUnit('r7');
-  const task=(r7&&r7.task)||(psg&&psg.task); if(!task)return;
-  const target=getUnit(task.targetId); const rec=point('recovery'); if(!target)return;
-  ctx.save();
-  if(r7){
-    ctx.strokeStyle='rgba(124,175,109,.95)';ctx.lineWidth=4;ctx.setLineDash([10,6]);
-    ctx.beginPath();ctx.moveTo(r7.x*cell,r7.y*cell);ctx.lineTo(target.x*cell,target.y*cell);ctx.lineTo(rec.x*cell,rec.y*cell);ctx.stroke();
-  }
-  if(psg&&r7){
-    ctx.strokeStyle='rgba(214,184,95,.75)';ctx.lineWidth=2;ctx.setLineDash([4,7]);
-    ctx.beginPath();ctx.moveTo(psg.x*cell,psg.y*cell);ctx.lineTo(r7.x*cell,r7.y*cell);ctx.stroke();
-  }
-  ctx.setLineDash([]);
-  ctx.fillStyle='rgba(8,10,9,.88)';ctx.strokeStyle='rgba(124,175,109,.7)';ctx.lineWidth=1.5;const lx=(rec.x+.35)*cell,ly=(rec.y-.9)*cell;roundRect(ctx,lx-78,ly-15,156,30,9);ctx.fill();ctx.stroke();ctx.fillStyle='#baf2a7';ctx.font=`900 ${Math.max(8,cell*.13)}px system-ui`;ctx.textAlign='center';ctx.fillText('R7 RECOVERY / REPAIR ROUTE',lx,ly-1);ctx.fillStyle='#ffe19a';ctx.font=`800 ${Math.max(7,cell*.105)}px system-ui`;ctx.fillText('PSG COORDINATES · STAYS WITH PLT',lx,ly+10);
-  ctx.restore();
-}
-function drawRadius(u,r,color,label){if(!u||u.status==='disabled')return;ctx.save();ctx.strokeStyle=color;ctx.globalAlpha=.42;ctx.lineWidth=2;ctx.setLineDash([7,6]);ctx.beginPath();ctx.arc(u.x*cell,u.y*cell,r*cell,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=.85;ctx.fillStyle=color;ctx.font=`800 ${Math.max(9,cell*.14)}px system-ui`;ctx.textAlign='center';ctx.fillText(label,u.x*cell,u.y*cell-r*cell-5);ctx.restore();}
-function drawTempZone(z,color,label){ctx.save();ctx.strokeStyle=color;ctx.globalAlpha=.65;ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.beginPath();ctx.arc(z.x*cell,z.y*cell,(z.r||1.8)*cell,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=color;ctx.globalAlpha=.12;ctx.beginPath();ctx.arc(z.x*cell,z.y*cell,(z.r||1.8)*cell,0,Math.PI*2);ctx.fill();ctx.globalAlpha=.9;ctx.fillStyle='#fff6dc';ctx.font=`900 ${Math.max(9,cell*.16)}px system-ui`;ctx.textAlign='center';ctx.fillText(label,z.x*cell,z.y*cell);ctx.restore();}
-function drawSuppressed(z){ctx.save();ctx.strokeStyle='rgba(214,184,95,.75)';ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.strokeRect(z.x*cell+7,z.y*cell+7,cell-14,cell-14);ctx.setLineDash([]);ctx.fillStyle='rgba(214,184,95,.12)';ctx.fillRect(z.x*cell+8,z.y*cell+8,cell-16,cell-16);ctx.restore();}
-function drawLinks(){const pairs=[['c7','p7c','#68a9cc'],['r7','p7r','#7caf6d'],['p7pc','p7psg','#d6b85f'],['c7','r7','#68a9cc'],['r7','p7psg','#7caf6d'],['p7pc','c7','#68a9cc']];ctx.save();ctx.lineWidth=2;ctx.setLineDash([5,6]);for(const [a,b,color] of pairs){const u=getUnit(a),v=getUnit(b);if(!u||!v)continue;ctx.strokeStyle=color;ctx.globalAlpha=.62;ctx.beginPath();ctx.moveTo(u.x*cell,u.y*cell);ctx.lineTo(v.x*cell,v.y*cell);ctx.stroke();}ctx.restore();}
-function drawUnits(){for(const u of units)drawUnit(u);}
-function drawUnit(u){const x=u.x*cell,y=u.y*cell;ctx.save();ctx.translate(x,y);let color='#9da78b';if(u.pc||u.psg)color='#d6b85f';if(u.kind==='c7')color='#68a9cc';if(u.kind==='r7')color='#7caf6d';if(u.status==='disabled')color='#c95f55';if(u.status==='bogged')color='#c98545';if(u.status==='repairing')color='#7caf6d';if(u.flashTimer){ctx.strokeStyle='rgba(255,225,154,.95)';ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,cell*(.48+.12*u.flashTimer),0,Math.PI*2);ctx.stroke();}if(selectedId===u.id){ctx.strokeStyle='#fff6dc';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,cell*.45,0,Math.PI*2);ctx.stroke();}ctx.shadowColor='rgba(0,0,0,.48)';ctx.shadowBlur=8;ctx.shadowOffsetY=4;ctx.fillStyle=color;ctx.strokeStyle='rgba(255,255,255,.62)';ctx.lineWidth=1.5;roundRect(ctx,-cell*.35,-cell*.22,cell*.70,cell*.44,cell*.09);ctx.fill();ctx.stroke();ctx.fillStyle='rgba(0,0,0,.28)';roundRect(ctx,-cell*.40,-cell*.25,cell*.15,cell*.50,cell*.05);ctx.fill();roundRect(ctx,cell*.25,-cell*.25,cell*.15,cell*.50,cell*.05);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='rgba(0,0,0,.32)';if(u.kind==='c7'){ctx.fillRect(-cell*.04,-cell*.40,cell*.08,cell*.22);ctx.beginPath();ctx.arc(0,-cell*.43,cell*.06,0,Math.PI*2);ctx.fill();}else if(u.kind==='r7'){ctx.fillRect(-cell*.06,-cell*.36,cell*.12,cell*.30);ctx.fillRect(-cell*.24,-cell*.40,cell*.42,cell*.07);}else{ctx.fillRect(-cell*.06,-cell*.32,cell*.12,cell*.20);ctx.beginPath();ctx.arc(0,-cell*.33,cell*.09,0,Math.PI*2);ctx.fill();}ctx.fillStyle='#11150f';ctx.font=`900 ${Math.max(8,cell*.16)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(u.label.replace('P7-','P'),0,0);ctx.fillStyle='#fff6dc';ctx.font=`800 ${Math.max(8,cell*.13)}px system-ui`;ctx.fillText(statusShort(u.status),0,cell*.43);ctx.restore();}
-function statusShort(s){return s==='operational'?'READY':s==='repairing'?'REPAIR':s==='bogged'?'BOGGED':'DOWN';}
-function drawToolPreview(){if(mode==='planning'){ctx.save();ctx.fillStyle='rgba(0,0,0,.52)';roundRect(ctx,8,8,cell*4.9,32,12);ctx.fill();ctx.fillStyle='#ffe19a';ctx.font=`900 ${Math.max(10,cell*.18)}px system-ui`;ctx.fillText(`SELECTED TOOL: ${selectedTool.id.toUpperCase()}`,22,29);ctx.restore();}}
-function roundRect(ctx,x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
-
-function bind(){
-  canvas.addEventListener('pointerdown',boardPointer); window.addEventListener('resize',()=>draw());
-  $('launchBtn').onclick=launchTrial; $('selCmdBtn').onclick=()=>selectRosterGroup('cmd'); $('selTroopsBtn').onclick=()=>selectRosterGroup('troops'); $('selRecoveryBtn').onclick=()=>selectRosterGroup('recovery'); $('selClearBtn').onclick=clearSelection; $('pauseBtn').onclick=togglePause; $('holdBtn').onclick=toggleHold; $('cmdPushBtn').onclick=commandPush; $('recoverBtn').onclick=taskRecovery; $('dismountBtn').onclick=dismountAll; $('remountBtn').onclick=remountAdvance; $('mgBtn').onclick=mgBase; $('fireBtn').onclick=fireSupport; $('endBtn').onclick=finishTrial;
-  $('presetBtn').onclick=()=>{presetTrial();syncUi();}; $('clearBtn').onclick=()=>{clearTerrain();syncUi();}; $('eraseBtn').onclick=()=>{selectedTool={kind:'overlay',id:'erase'};initPalettes();toast('Erase overlay tool selected.','info');}; $('resetPlanBtn').onclick=()=>{resetMarkers();initPalettes();syncUi();}; const runNext=$('runNextBtn'); if(runNext)runNext.onclick=runNextTrial; const closeAar=$('closeAarBtn'); if(closeAar)closeAar.onclick=()=>{$('aarOverlay').classList.remove('active');};
-  window.addEventListener('keydown',e=>{if(e.target&&['TEXTAREA','INPUT'].includes(e.target.tagName))return; const k=e.key.toLowerCase(); if(k===' '){e.preventDefault(); mode==='trial'?togglePause():launchTrial();} if(k==='h')toggleHold(); if(k==='c')commandPush(); if(k==='r')taskRecovery(); if(k==='d')dismountAll(); if(k==='a')remountAdvance(); if(k==='m')mgBase(); if(k==='f')fireSupport(); if(k==='escape'){clearSelection();}});
-}
-function boot(){makeBoard();resetUnits();initTabs();initPalettes();bind();syncUi();requestAnimationFrame(loop);}
-boot();
+$('missionAck').onchange=()=>{$('beginPlanning').disabled=!$('missionAck').checked};
+document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>selectPlanTool(b.dataset.plan));
+$('lockPlan').onclick=lockPlan;
+$('resetPlan').onclick=resetPlanLayout;
+canvas.addEventListener('click',e=>placePlanItem(e.clientX,e.clientY));
+$('beginPlanning').onclick=acceptMission;
+$('showMission').onclick=showMission;
+$('aarClose').onclick=()=>$('aarWorkspace').classList.remove('open');
+$('aarPrint').onclick=()=>window.print();
+$('aarSaveJson').onclick=()=>{const d=buildAarData();d.notes=$('aarUserNotes').value;downloadText('gator-raid-aar.json',JSON.stringify(d,null,2),'application/json')};
+$('aarSaveText').onclick=()=>{const d=buildAarData();downloadText('gator-raid-aar.txt',aarText(d),'text/plain')};
+$('aarSaveHtml').onclick=()=>{
+ const d=buildAarData();
+ const clone=$('aarSheet').cloneNode(true);
+ clone.querySelector('.aarToolbar')?.remove();
+ const notes=clone.querySelector('#aarUserNotes');if(notes){const p=document.createElement('p');p.textContent=$('aarUserNotes').value||'—';notes.replaceWith(p)}
+ const doc=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>GATOR RAID AAR</title><style>body{font-family:Arial,sans-serif;margin:32px;color:#171a17}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:7px;text-align:left;vertical-align:top}.aarGrid2,.aarGrid3{display:grid;grid-template-columns:1fr 1fr;gap:12px}.aarMetric,.aarSection{border:1px solid #bbb;padding:10px;margin:10px 0}.aarTimelineItem{display:grid;grid-template-columns:70px 1fr;gap:8px;padding:5px}@media print{@page{size:landscape}}</style></head><body>${clone.innerHTML}</body></html>`;
+ downloadText('gator-raid-aar.html',doc,'text/html');
+};
+$('launch').onclick=()=>{if(!missionAccepted){showMission();return;}if(!planLocked){result('Planning is not locked. Place or accept control points, then press Lock Plan.');return;}running=true;stage='ship';recordEvent('mission','Execution launched');$('launch').disabled=true;result('Test run launched. Ship-to-shore movement started.');centerOn(7)};
+$('reset').onclick=reset;
+$('hold').onclick=()=>{paused=!paused;result(paused?'Hold applied. Operational picture stabilized.':'Hold released. Movement resumed.')};
+$('next').onclick=()=>$('hold').click();
+$('recover').onclick=recoverAction;
+$('support').onclick=supportAction;
+$('aar').onclick=renderAar;
+document.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>scroll.scrollTo({left:Number(b.dataset.x),behavior:'smooth'}));
+document.querySelectorAll('[data-posture]').forEach(b=>b.onclick=()=>setPosture(b.dataset.posture));
+document.querySelectorAll('[data-tempo]').forEach(b=>b.onclick=()=>setTempo(b.dataset.tempo));
+scroll.addEventListener('scroll',updateVisibleSector,{passive:true});
+reset();showMission();requestAnimationFrame(loop);
 })();
 </script>
+
+<!--
+GATOR RAID OFFLINE PATCH NOTES — v0.4.1-M
+1. Mission Brief is now a hard gate into a restored planning phase.
+2. Disruption is explicitly prefaced as an expected planning assumption.
+3. Mission, Commander's Intent, Operational Picture, Planning Guidance,
+   Success Criteria, Exercise Evaluation, and Core Rule are presented before play.
+4. Actual planning is restored: marker placement, friction placement, plan reset, and plan lock occur before execution.
+5. Existing world-expansion and abstract tactics-layer test behavior is preserved.
+6. GitHub production source remains untouched.
+7. Expanded evidence-based AAR added with plan-versus-actual comparison.
+8. Print AAR uses browser print with print-specific formatting.
+9. Save options export JSON, plain text, and standalone HTML.
+10. This remains an offline test harness, not the production v0.3.8a engine.
+-->
+
 </body>
 </html>
