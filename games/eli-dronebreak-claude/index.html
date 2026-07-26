@@ -1,0 +1,1828 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#08111f">
+  <title>Eli: Dronebreak — Three Level Demo</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #d9f5ff;
+      --muted: #88a6b7;
+      --panel: #0d1a2a;
+      --panel-2: #111f32;
+      --line: #294961;
+      --cyan: #59e6e0;
+      --yellow: #ffd34e;
+      --red: #ff5c72;
+      --green: #76e36b;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 50% -10%, #334459 0, #121823 34%, #05070c 100%);
+      color: var(--ink);
+      font-family: "Courier New", ui-monospace, monospace;
+      overflow-x: hidden;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+    }
+
+    .cabinet {
+      width: min(760px, 100%);
+      margin: 0 auto;
+      padding: 18px 12px 30px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.035), transparent 8%, transparent 92%, rgba(0,0,0,.18)),
+        linear-gradient(#252d38, #111720 72%, #0b0f16);
+      border-left: 3px solid #3d4855;
+      border-right: 3px solid #070a0f;
+      box-shadow: 12px 0 30px rgba(0,0,0,.28), -12px 0 30px rgba(0,0,0,.22);
+    }
+
+    .masthead {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0 6px 10px;
+      letter-spacing: .08em;
+    }
+
+    .masthead h1 {
+      margin: 0;
+      color: #f3fbff;
+      font-size: clamp(15px, 3vw, 25px);
+      line-height: 1;
+      text-shadow: 2px 2px 0 #080b10;
+      white-space: nowrap;
+    }
+
+    .eyebrow, .build {
+      color: var(--muted);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .eyebrow { color: var(--yellow); }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      margin: 0 auto;
+      border: 10px solid #080b10;
+      border-radius: 9px;
+      background: #02050a;
+      box-shadow:
+        0 0 0 3px #56616d,
+        0 0 0 6px #151b24,
+        inset 0 0 34px rgba(0, 0, 0, .8);
+      overflow: hidden;
+    }
+
+    .stage::after {
+      content: "";
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.025) 0,
+        rgba(255,255,255,.025) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+      mix-blend-mode: screen;
+    }
+
+    .control-deck {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin: 13px auto 0;
+      padding: 15px 18px 17px;
+      border: 3px solid #070a0f;
+      border-radius: 10px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.045), transparent 20%),
+        linear-gradient(#171d26, #0b0f16);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.07), 0 4px 0 #070a0e;
+      user-select: none;
+    }
+
+    .control-label {
+      margin-top: 8px;
+      color: #708092;
+      font-size: 8px;
+      letter-spacing: .16em;
+      text-align: center;
+    }
+
+    .dpad {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, 34px);
+      grid-template-rows: repeat(3, 34px);
+      width: 102px;
+      height: 102px;
+      flex: 0 0 102px;
+    }
+
+    .dpad .touch-button {
+      position: relative;
+      z-index: 1;
+      min-height: 34px;
+      width: 34px;
+      padding: 0;
+      border: 2px solid #090c12;
+      border-radius: 4px;
+      background: linear-gradient(#3b4552, #202833);
+      color: #dbe5ed;
+      font-size: 19px;
+      line-height: 1;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.13), 2px 2px 0 #080a0e;
+    }
+
+    .dpad .touch-button[data-touch="up"] { grid-column: 2; grid-row: 1; border-bottom-color: #11161d; }
+    .dpad .touch-button[data-touch="left"] { grid-column: 1; grid-row: 2; border-right-color: #11161d; }
+    .dpad .touch-button[data-touch="right"] { grid-column: 3; grid-row: 2; border-left-color: #11161d; }
+    .dpad .touch-button[data-touch="down"] { grid-column: 2; grid-row: 3; border-top-color: #11161d; }
+
+    .dpad::after {
+      content: "";
+      position: absolute;
+      left: 34px;
+      top: 34px;
+      width: 34px;
+      height: 34px;
+      border-radius: 4px;
+      background: linear-gradient(#343e4a, #202833);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.08), 2px 2px 0 #080a0e;
+    }
+
+    .face-buttons {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 8px 2px 0;
+    }
+
+    .face-button {
+      display: grid;
+      place-items: center;
+      width: 55px;
+      height: 55px;
+      border: 3px solid #090b11;
+      border-radius: 50%;
+      background: #a52e62;
+      color: #ffe0ee;
+      font-size: 17px;
+      font-weight: 900;
+      box-shadow: inset 0 4px 0 rgba(255,255,255,.18), 3px 4px 0 #07090e;
+    }
+
+    .face-button[data-touch="jump"] { background: #bd3c68; }
+    .face-button[data-touch="pulse"] { background: #2d7d91; color: #d9ffff; }
+
+    .face-button.is-held, .face-button:active,
+    .dpad .touch-button.is-held, .dpad .touch-button:active {
+      transform: translate(2px, 3px);
+      filter: brightness(1.25);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.12), 1px 1px 0 #07090e;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background: #03070d;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(2, 6, 13, .72);
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .overlay.hidden { display: none; }
+
+    .card {
+      width: min(520px, 100%);
+      padding: 22px 22px 20px;
+      border: 2px solid var(--cyan);
+      background:
+        linear-gradient(135deg, rgba(24, 61, 79, .96), rgba(7, 16, 29, .97));
+      box-shadow: 8px 8px 0 rgba(0, 0, 0, .38);
+      text-align: center;
+    }
+
+    .card .pixel-mark {
+      display: inline-grid;
+      place-items: center;
+      width: 54px;
+      height: 42px;
+      margin-bottom: 9px;
+      border: 3px solid #07111e;
+      background: var(--cyan);
+      color: #06131d;
+      font-size: 20px;
+      font-weight: 900;
+      box-shadow: 5px 5px 0 #06111a;
+    }
+
+    .card h2 {
+      margin: 0 0 8px;
+      color: #fbffff;
+      font-size: clamp(20px, 5vw, 34px);
+      letter-spacing: .09em;
+      line-height: 1.05;
+      text-shadow: 3px 3px 0 #0a586d;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      color: var(--yellow);
+      font-size: 18px;
+      letter-spacing: .08em;
+    }
+
+    .card p {
+      max-width: 430px;
+      margin: 8px auto;
+      color: #b9d4df;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .card .rule {
+      height: 1px;
+      margin: 15px 0;
+      background: rgba(89, 230, 224, .45);
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 9px;
+      margin-top: 15px;
+    }
+
+    .pixel-button {
+      min-width: 150px;
+      min-height: 44px;
+      padding: 11px 14px;
+      border: 2px solid var(--yellow);
+      border-radius: 2px;
+      background: #473b15;
+      color: #fff4b2;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      box-shadow: 4px 4px 0 #080d14;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pixel-button.secondary {
+      border-color: var(--cyan);
+      background: #0a3a48;
+      color: #caffff;
+    }
+
+    .pixel-button:hover, .pixel-button:focus-visible {
+      filter: brightness(1.25);
+      outline: none;
+    }
+
+    .pixel-button:active {
+      transform: translate(3px, 3px);
+      box-shadow: 1px 1px 0 #080d14;
+    }
+
+    .legend {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin: 12px 2px 0;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .legend span { white-space: nowrap; }
+    .legend b { color: var(--cyan); font-weight: 700; }
+
+    .touch-controls {
+      display: block;
+      width: 100%;
+      margin: 0 auto;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .touch-controls.active { display: block; }
+
+    .touch-button {
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .touch-button[data-touch="up"],
+    .touch-button[data-touch="down"],
+    .touch-button[data-touch="left"],
+    .touch-button[data-touch="right"] {
+      min-height: 34px;
+    }
+
+    .touch-button[data-touch="jump"],
+    .touch-button[data-touch="pulse"] {
+      min-height: 55px;
+      padding: 0;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: .06em;
+    }
+
+    .footer-note {
+      margin: 13px 2px 0;
+      color: #587081;
+      font-size: 10px;
+      text-align: center;
+      letter-spacing: .05em;
+    }
+
+    @media (pointer: coarse), (max-width: 720px) {
+      /* Mobile emulator composition: screen = top 2/3, controls = bottom 1/3. */
+      .cabinet {
+        height: 100dvh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        padding: 12px 8px 14px;
+      }
+      .masthead { margin-bottom: 8px; }
+      .eyebrow, .build { font-size: 8px; }
+      .legend { display: none; }
+      .footer-note {
+        flex: 0 0 auto;
+        margin-top: 8px;
+        font-size: 9px;
+      }
+
+      .stage {
+        flex: 2 1 0;
+        min-height: 0;
+        display: flex;
+        border: 12px solid #070a0f;
+        border-radius: 14px;
+        box-shadow:
+          0 0 0 3px #6b7784,
+          0 0 0 7px #151c26,
+          0 0 0 10px #05070b,
+          inset 0 0 34px rgba(0, 0, 0, .9);
+      }
+
+      .stage canvas {
+        width: 100%;
+        height: 100%;
+        aspect-ratio: auto;
+      }
+
+      .control-deck {
+        height: 100%;
+        min-height: 0;
+        gap: 10px;
+        margin-top: 14px;
+        padding: 16px 13px 18px;
+        border-width: 4px;
+        border-radius: 14px;
+        box-shadow: inset 0 3px 0 rgba(255,255,255,.08), 0 5px 0 #070a0e;
+      }
+
+      .touch-controls {
+        flex: 1 1 0;
+        min-height: 0;
+        display: flex;
+      }
+
+      .touch-controls > .control-deck { flex: 1 1 auto; }
+
+      .dpad {
+        grid-template-columns: repeat(3, clamp(38px, 12vw, 48px));
+        grid-template-rows: repeat(3, clamp(38px, 12vw, 48px));
+        width: clamp(114px, 36vw, 144px);
+        height: clamp(114px, 36vw, 144px);
+        flex-basis: clamp(114px, 36vw, 144px);
+      }
+
+      .dpad .touch-button {
+        width: clamp(38px, 12vw, 48px);
+        min-height: clamp(38px, 12vw, 48px);
+        border-width: 3px;
+        font-size: clamp(20px, 6vw, 27px);
+      }
+
+      .dpad::after {
+        left: clamp(38px, 12vw, 48px);
+        top: clamp(38px, 12vw, 48px);
+        width: clamp(38px, 12vw, 48px);
+        height: clamp(38px, 12vw, 48px);
+      }
+
+      .face-buttons { gap: clamp(10px, 3vw, 16px); }
+      .face-button {
+        width: clamp(62px, 19vw, 78px);
+        height: clamp(62px, 19vw, 78px);
+        border-width: 4px;
+        font-size: clamp(18px, 5vw, 24px);
+      }
+
+      /* The title card must fit inside the 16:9 game viewport.  The prior
+         full instruction card was taller than a phone canvas, so overflow
+         hidden on the stage clipped START RUN and prevented touch controls
+         from ever becoming available. */
+      .overlay { padding: 7px; align-items: center; }
+      .overlay .card {
+        max-height: calc(100% - 6px);
+        padding: 8px 10px 9px;
+        overflow: hidden;
+      }
+      .overlay .card .pixel-mark {
+        width: 34px;
+        height: 25px;
+        margin-bottom: 3px;
+        border-width: 2px;
+        font-size: 14px;
+        box-shadow: 3px 3px 0 #06111a;
+      }
+      .overlay .card h2 {
+        margin-bottom: 3px;
+        font-size: clamp(14px, 5vw, 22px);
+      }
+      .overlay .card p {
+        margin: 3px auto;
+        font-size: 9px;
+        line-height: 1.25;
+      }
+      .overlay .card p:nth-of-type(2) { display: none; }
+      .overlay .card .rule { display: none; }
+      .overlay .card .button-row { margin-top: 6px; }
+      .overlay .card .pixel-button {
+        min-width: 132px;
+        min-height: 38px;
+        padding: 8px 10px;
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="cabinet">
+    <header class="masthead">
+      <span class="eyebrow">EMULATOR MODE</span>
+      <h1>ELI: DRONEBREAK</h1>
+      <span class="build">ROM DEMO</span>
+    </header>
+
+    <section class="stage" aria-label="Eli Dronebreak game">
+      <canvas id="game" width="320" height="180"></canvas>
+      <div id="overlay" class="overlay"></div>
+    </section>
+
+    <div id="touch-controls" class="touch-controls" aria-label="Emulator controls">
+      <div class="control-deck">
+        <div>
+          <div class="dpad" aria-label="Directional pad">
+            <button class="touch-button" data-touch="up" aria-label="Move up">▲</button>
+            <button class="touch-button" data-touch="left" aria-label="Move left">◀</button>
+            <button class="touch-button" data-touch="right" aria-label="Move right">▶</button>
+            <button class="touch-button" data-touch="down" aria-label="Move down">▼</button>
+          </div>
+          <div class="control-label">D-PAD</div>
+        </div>
+        <div class="face-buttons" aria-label="Action buttons">
+          <button class="touch-button face-button" data-touch="jump" aria-label="A button: jump or confirm">A</button>
+          <button class="touch-button face-button" data-touch="pulse" aria-label="B button: pulse or secondary action">B</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><b>D-PAD</b> arrows / WASD</span>
+      <span><b>A</b> Z / SPACE — jump</span>
+      <span><b>B</b> X / SHIFT — pulse</span>
+      <span><b>GOAL</b> Reach the uplink gate</span>
+    </div>
+    <div class="footer-note">EMULATOR MODE • THREE LEVELS • NO BOSS YET</div>
+  </main>
+
+  <script>
+  (function () {
+    "use strict";
+
+    var canvas = document.getElementById("game");
+    var ctx = canvas.getContext("2d", { alpha: false });
+    var overlay = document.getElementById("overlay");
+    var touchControls = document.getElementById("touch-controls");
+    var W = canvas.width;
+    var H = canvas.height;
+    var GRAVITY = 0.32;
+    var MAX_DT = 0.033;
+
+    ctx.imageSmoothingEnabled = false;
+
+    var held = { up: false, down: false, left: false, right: false, jump: false, pulse: false };
+    var justPressed = {};
+    var mode = "title";
+    var levelIndex = 0;
+    var level = null;
+    var totalScore = 0;
+    var bestScore = 0;
+    var lives = 3;
+    var elapsed = 0;
+    var lastTime = 0;
+    var screenShake = 0;
+    var flash = 0;
+
+    try {
+      bestScore = Number(localStorage.getItem("eli-dronebreak-best") || 0);
+    } catch (error) {
+      bestScore = 0;
+    }
+
+    function rect(x, y, w, h, kind) {
+      return { x: x, y: y, w: w, h: h, kind: kind || "block" };
+    }
+
+    function chip(x, y) {
+      return { x: x, y: y, w: 6, h: 6, collected: false };
+    }
+
+    function powerup(type, x, y) {
+      return { type: type, x: x, y: y, w: 10, h: 10, collected: false, phase: Math.random() * 6 };
+    }
+
+    function walker(x, groundY, left, right) {
+      return {
+        type: "walker", x: x, y: groundY - 12, w: 14, h: 12,
+        left: left, right: right, vx: -0.45, alive: true, phase: Math.random() * 6
+      };
+    }
+
+    function hover(x, y, left, right) {
+      return {
+        type: "hover", x: x, y: y, baseY: y, w: 15, h: 10,
+        left: left, right: right, vx: 0.55, alive: true, phase: Math.random() * 6
+      };
+    }
+
+    function turret(x, groundY) {
+      return {
+        type: "turret", x: x, y: groundY - 15, w: 16, h: 15,
+        cooldown: 55 + Math.random() * 50, alive: true, phase: Math.random() * 6
+      };
+    }
+
+    function mecha(x, groundY, left, right) {
+      return {
+        type: "mecha", x: x, y: groundY - 18, w: 20, h: 18,
+        left: left, right: right, vx: -0.28, alive: true, phase: Math.random() * 6
+      };
+    }
+
+    function movingPlatform(x, y, w, axis, range, speed, phase, kind) {
+      return {
+        baseX: x, baseY: y, x: x, y: y, w: w, h: 8,
+        axis: axis || "x", range: range || 20, speed: speed || 1,
+        phase: phase || 0, kind: kind || "moving", push: 0
+      };
+    }
+
+    function makeLevel(title, subtitle, theme, worldWidth, goalX, startX, platforms, hazards, chips, powerups, enemies, movers) {
+      return {
+        title: title,
+        subtitle: subtitle,
+        theme: theme,
+        worldWidth: worldWidth,
+        goalX: goalX,
+        startX: startX,
+        startY: 138,
+        platforms: platforms,
+        hazards: hazards,
+        chips: chips,
+        powerups: powerups,
+        enemies: enemies,
+        movers: movers || []
+      };
+    }
+
+    var LEVEL_DEFS = [
+      makeLevel(
+        "SCRAPYARD RUN",
+        "BOOT SECTOR // REACH THE UPLINK",
+        "scrap",
+        3040,
+        2880,
+        24,
+        [
+          rect(0, 160, 440, 20), rect(480, 160, 360, 20),
+          rect(880, 160, 420, 20), rect(1340, 160, 300, 20),
+          rect(1680, 160, 380, 20), rect(2120, 160, 420, 20),
+          rect(2600, 160, 440, 20),
+          rect(120, 128, 72, 8), rect(280, 112, 80, 8),
+          rect(520, 128, 88, 8), rect(700, 96, 72, 8),
+          rect(980, 120, 88, 8), rect(1120, 88, 72, 8),
+          rect(1400, 128, 88, 8), rect(1530, 104, 80, 8),
+          rect(1780, 124, 90, 8), rect(1920, 92, 72, 8),
+          rect(2210, 128, 80, 8), rect(2360, 100, 96, 8),
+          rect(2680, 128, 88, 8)
+        ],
+        [
+          rect(360, 152, 32, 8), rect(780, 152, 32, 8),
+          rect(1240, 152, 44, 8), rect(1580, 152, 36, 8),
+          rect(2024, 152, 64, 8), rect(2460, 152, 60, 8),
+          rect(2800, 152, 42, 8)
+        ],
+        [
+          chip(74, 143), chip(146, 112), chip(244, 143), chip(318, 96),
+          chip(536, 112), chip(618, 143), chip(716, 80), chip(820, 143),
+          chip(996, 104), chip(1140, 72), chip(1240, 143), chip(1432, 112),
+          chip(1554, 88), chip(1728, 143), chip(1810, 108), chip(1938, 76),
+          chip(2048, 143), chip(2230, 112), chip(2400, 84), chip(2520, 143),
+          chip(2704, 112), chip(2840, 143)
+        ],
+        [
+          powerup("capacitor", 728, 78),
+          powerup("overdrive", 1840, 106)
+        ],
+        [
+          walker(236, 160, 190, 330), walker(552, 160, 500, 690),
+          hover(742, 62, 670, 810), walker(1000, 160, 930, 1090),
+          hover(1164, 56, 1080, 1260), turret(1270, 160),
+          walker(1430, 160, 1370, 1540), walker(1810, 160, 1710, 1900),
+          hover(1980, 60, 1880, 2070), turret(2094, 160),
+          walker(2240, 160, 2150, 2350), mecha(2470, 160, 2340, 2520),
+          walker(2730, 160, 2630, 2820)
+        ]
+      ),
+      makeLevel(
+        "UNDERGRID",
+        "MAINTENANCE TUNNELS // KEEP MOVING",
+        "undergrid",
+        3000,
+        2832,
+        24,
+        [
+          rect(0, 160, 300, 20), rect(340, 160, 600, 20),
+          rect(990, 160, 230, 20), rect(1260, 160, 270, 20),
+          rect(1570, 160, 260, 20), rect(1870, 160, 270, 20),
+          rect(2180, 160, 320, 20), rect(2540, 160, 420, 20),
+          rect(64, 120, 80, 8), rect(210, 88, 72, 8),
+          rect(370, 128, 72, 8), rect(500, 104, 70, 8),
+          rect(680, 120, 90, 8), rect(820, 80, 64, 8),
+          rect(1010, 128, 72, 8), rect(1140, 96, 80, 8),
+          rect(1320, 120, 80, 8), rect(1460, 72, 64, 8),
+          rect(1600, 120, 80, 8), rect(1760, 88, 72, 8),
+          rect(1900, 128, 80, 8), rect(2070, 96, 72, 8),
+          rect(2220, 120, 80, 8), rect(2380, 80, 80, 8),
+          rect(2600, 112, 88, 8), rect(2740, 88, 80, 8),
+          rect(1120, 30, 120, 8, "ceiling"),
+          rect(2020, 28, 130, 8, "ceiling")
+        ],
+        [
+          rect(222, 152, 40, 8), rect(548, 152, 42, 8),
+          rect(890, 152, 50, 8), rect(1170, 152, 42, 8),
+          rect(1490, 152, 40, 8), rect(1790, 152, 40, 8),
+          rect(2100, 152, 60, 8), rect(2460, 152, 70, 8),
+          rect(2770, 152, 50, 8)
+        ],
+        [
+          chip(82, 104), chip(232, 72), chip(390, 112), chip(520, 88),
+          chip(698, 104), chip(842, 64), chip(1018, 112), chip(1162, 80),
+          chip(1338, 104), chip(1480, 56), chip(1618, 104), chip(1780, 72),
+          chip(1920, 112), chip(2090, 80), chip(2240, 104), chip(2400, 64),
+          chip(2620, 96), chip(2760, 72), chip(2880, 143)
+        ],
+        [
+          powerup("capacitor", 842, 62),
+          powerup("overdrive", 2238, 102)
+        ],
+        [
+          walker(160, 160, 86, 260), walker(420, 160, 360, 520),
+          hover(466, 62, 390, 580), turret(574, 160),
+          walker(720, 160, 670, 850), hover(930, 54, 850, 970),
+          turret(1090, 160), walker(1350, 160, 1280, 1450),
+          hover(1490, 52, 1410, 1540), walker(1640, 160, 1590, 1750),
+          turret(1800, 160), walker(1930, 160, 1880, 2040),
+          hover(2140, 56, 2040, 2170), walker(2240, 160, 2200, 2370),
+          mecha(2460, 160, 2320, 2490), turret(2500, 160),
+          walker(2660, 160, 2580, 2760), mecha(2830, 160, 2700, 2910)
+        ],
+        [
+          movingPlatform(300, 136, 48, "x", 28, 1.15, 0, "moving"),
+          movingPlatform(946, 112, 48, "y", 24, 0.9, 1.4, "moving"),
+          movingPlatform(1218, 126, 48, "x", 26, 1.1, 2.2, "moving"),
+          movingPlatform(1834, 118, 52, "x", 28, 1.0, 0.6, "moving"),
+          movingPlatform(2138, 104, 50, "y", 28, 0.8, 2.8, "moving"),
+          movingPlatform(2500, 132, 52, "x", 26, 1.0, 1.8, "moving")
+        ]
+      ),
+      makeLevel(
+        "MECHA FOUNDRY",
+        "VESTRA INDUSTRIAL // BREAK THE LINE",
+        "foundry",
+        3120,
+        2990,
+        24,
+        [
+          rect(0, 160, 260, 20), rect(300, 160, 320, 20),
+          rect(660, 160, 260, 20), rect(960, 160, 290, 20),
+          rect(1290, 160, 240, 20), rect(1570, 160, 330, 20),
+          rect(1940, 160, 300, 20), rect(2280, 160, 300, 20),
+          rect(2640, 160, 480, 20),
+          rect(90, 120, 80, 8), rect(210, 80, 72, 8),
+          rect(350, 128, 80, 8), rect(500, 96, 70, 8),
+          rect(700, 120, 90, 8), rect(840, 72, 80, 8),
+          rect(990, 120, 70, 8), rect(1120, 80, 96, 8),
+          rect(1340, 128, 80, 8), rect(1460, 96, 64, 8),
+          rect(1600, 120, 80, 8), rect(1760, 72, 88, 8),
+          rect(1980, 128, 80, 8), rect(2110, 88, 72, 8),
+          rect(2320, 120, 90, 8), rect(2480, 72, 80, 8),
+          rect(2670, 120, 88, 8), rect(2840, 88, 80, 8),
+          rect(1030, 28, 140, 8, "ceiling"),
+          rect(1710, 30, 120, 8, "ceiling"),
+          rect(2350, 28, 130, 8, "ceiling")
+        ],
+        [
+          rect(176, 152, 48, 8), rect(560, 152, 40, 8),
+          rect(870, 152, 40, 8), rect(1190, 152, 42, 8),
+          rect(1490, 152, 40, 8), rect(1838, 152, 58, 8),
+          rect(2170, 152, 50, 8), rect(2530, 152, 50, 8),
+          rect(2890, 152, 66, 8)
+        ],
+        [
+          chip(108, 104), chip(232, 64), chip(370, 112), chip(520, 80),
+          chip(718, 104), chip(860, 56), chip(1008, 104), chip(1142, 64),
+          chip(1360, 112), chip(1480, 80), chip(1618, 104), chip(1780, 56),
+          chip(2000, 112), chip(2132, 72), chip(2340, 104), chip(2500, 56),
+          chip(2690, 104), chip(2860, 72), chip(3000, 143)
+        ],
+        [
+          powerup("capacitor", 860, 54),
+          powerup("overdrive", 1775, 54),
+          powerup("capacitor", 2502, 54)
+        ],
+        [
+          walker(120, 160, 74, 220), walker(380, 160, 330, 500),
+          mecha(540, 160, 420, 600), hover(760, 58, 690, 890),
+          turret(900, 160), walker(1030, 160, 980, 1130),
+          mecha(1180, 160, 1060, 1230), turret(1230, 160),
+          walker(1360, 160, 1300, 1450), hover(1490, 54, 1410, 1530),
+          mecha(1680, 160, 1590, 1810), walker(1780, 160, 1710, 1870),
+          turret(1890, 160), walker(2010, 160, 1960, 2100),
+          hover(2180, 56, 2070, 2230), mecha(2380, 160, 2300, 2490),
+          turret(2570, 160), walker(2700, 160, 2650, 2810),
+          mecha(2840, 160, 2750, 2940), walker(3010, 160, 2940, 3070)
+        ],
+        [
+          movingPlatform(260, 132, 48, "x", 30, 1.1, 0.2, "moving"),
+          movingPlatform(620, 104, 48, "y", 26, 0.85, 2.0, "moving"),
+          movingPlatform(920, 132, 48, "x", 28, 1.0, 1.1, "moving"),
+          movingPlatform(1250, 116, 48, "x", 26, 1.1, 2.9, "moving"),
+          movingPlatform(1530, 132, 50, "x", 26, 1.0, 0.9, "moving"),
+          movingPlatform(1900, 104, 52, "y", 28, 0.8, 1.7, "moving"),
+          movingPlatform(2240, 132, 52, "x", 28, 1.0, 2.6, "moving"),
+          movingPlatform(2580, 116, 50, "x", 26, 1.05, 1.0, "moving")
+        ]
+      )
+    ];
+
+    function cloneLevel(def) {
+      return {
+        def: def,
+        platforms: def.platforms.map(function (p) {
+          return { x: p.x, y: p.y, w: p.w, h: p.h, kind: p.kind };
+        }),
+        movers: def.movers.map(function (p) {
+          return {
+            baseX: p.baseX, baseY: p.baseY, x: p.baseX, y: p.baseY,
+            w: p.w, h: p.h, axis: p.axis, range: p.range, speed: p.speed,
+            phase: p.phase, kind: p.kind, push: 0
+          };
+        }),
+        hazards: def.hazards.map(function (h) {
+          return { x: h.x, y: h.y, w: h.w, h: h.h };
+        }),
+        chips: def.chips.map(function (c) {
+          return { x: c.x, y: c.y, w: c.w, h: c.h, collected: false };
+        }),
+        powerups: def.powerups.map(function (p) {
+          return { type: p.type, x: p.x, y: p.y, w: p.w, h: p.h, collected: false, phase: p.phase };
+        }),
+        enemies: def.enemies.map(function (e) {
+          var copy = {};
+          Object.keys(e).forEach(function (key) { copy[key] = e[key]; });
+          return copy;
+        }),
+        shots: [],
+        pulses: [],
+        particles: [],
+        player: {
+          x: def.startX, y: def.startY, w: 12, h: 15, vx: 0, vy: 0,
+          facing: 1, onGround: true, standingOn: null, prevBottom: 153,
+          invuln: 0, pulseCooldown: 0, shield: 0, overdrive: 0
+        },
+        cameraX: 0,
+        checkpointX: def.startX,
+        nextCheckpoint: 760,
+        complete: false,
+        labelFlash: 0
+      };
+    }
+
+    function loadLevel(index) {
+      levelIndex = index;
+      level = cloneLevel(LEVEL_DEFS[index]);
+      elapsed = 0;
+      flash = 0;
+      screenShake = 0;
+      if (mode !== "playing") {
+        setMode("playing");
+      }
+      updateOverlayText();
+    }
+
+    function startRun() {
+      totalScore = 0;
+      lives = 3;
+      loadLevel(0);
+      setMode("playing");
+    }
+
+    function setMode(nextMode) {
+      mode = nextMode;
+      if (mode === "title") {
+        level = null;
+      }
+      if (mode === "playing") {
+        overlay.classList.add("hidden");
+        touchControls.classList.add("active");
+      } else {
+        overlay.classList.remove("hidden");
+        touchControls.classList.remove("active");
+        updateOverlayText();
+      }
+    }
+
+    function updateOverlayText() {
+      if (!overlay) return;
+      if (mode === "title") {
+        overlay.innerHTML =
+          '<div class="card">' +
+            '<div class="pixel-mark">E</div>' +
+            '<h2>ELI: DRONEBREAK</h2>' +
+            '<p>One small NES-style run. Three levels. Eli versus the VESTRA drone line.</p>' +
+            '<div class="rule"></div>' +
+            '<p><span style="color:#ffd34e">A</span> jumps, <span style="color:#59e6e0">B</span> pulses, and the D-pad carries Eli to each uplink gate.</p>' +
+            '<div class="button-row"><button class="pixel-button" id="overlay-primary">START RUN</button></div>' +
+          '</div>';
+        document.getElementById("overlay-primary").addEventListener("click", startRun);
+      } else if (mode === "complete") {
+        var isFinal = levelIndex === LEVEL_DEFS.length - 1;
+        overlay.innerHTML =
+          '<div class="card">' +
+            '<div class="pixel-mark">' + (isFinal ? "✓" : ">" ) + '</div>' +
+            '<h3>' + (isFinal ? "THREE LEVELS CLEAR" : "UPLINK SECURED") + '</h3>' +
+            '<p>' + (isFinal ? "Eli broke the first drone line. No boss in this build—King Kupa is still beyond the command gate." : "Sector " + String(levelIndex + 1) + " is clear. The next route is opening.") + '</p>' +
+            '<div class="rule"></div>' +
+            '<p>SCORE <span style="color:#ffd34e">' + formatNumber(totalScore) + '</span> &nbsp; • &nbsp; BEST <span style="color:#59e6e0">' + formatNumber(bestScore) + '</span></p>' +
+            '<div class="button-row"><button class="pixel-button" id="overlay-primary">' + (isFinal ? "RETURN TO TITLE" : "NEXT LEVEL") + '</button></div>' +
+          '</div>';
+        document.getElementById("overlay-primary").addEventListener("click", function () {
+          if (isFinal) {
+            setMode("title");
+          } else {
+            loadLevel(levelIndex + 1);
+          }
+        });
+      } else if (mode === "gameover") {
+        overlay.innerHTML =
+          '<div class="card">' +
+            '<div class="pixel-mark">!</div>' +
+            '<h3>RUN INTERRUPTED</h3>' +
+            '<p>The drone line got the better of this attempt. Eli can restart from the beginning.</p>' +
+            '<div class="rule"></div>' +
+            '<p>SCORE <span style="color:#ffd34e">' + formatNumber(totalScore) + '</span></p>' +
+            '<div class="button-row"><button class="pixel-button" id="overlay-primary">RESTART RUN</button><button class="pixel-button secondary" id="overlay-secondary">TITLE</button></div>' +
+          '</div>';
+        document.getElementById("overlay-primary").addEventListener("click", startRun);
+        document.getElementById("overlay-secondary").addEventListener("click", function () {
+          setMode("title");
+        });
+      } else if (mode === "title") {
+        return;
+      }
+    }
+
+    function formatNumber(number) {
+      return String(Math.max(0, Math.floor(number))).padStart(6, "0");
+    }
+
+    function press(action) {
+      if (!held[action]) {
+        justPressed[action] = true;
+      }
+      held[action] = true;
+    }
+
+    function release(action) {
+      held[action] = false;
+    }
+
+    function consume(action) {
+      if (justPressed[action]) {
+        delete justPressed[action];
+        return true;
+      }
+      return false;
+    }
+
+    var keyActions = {
+      arrowup: "up", w: "up",
+      arrowdown: "down", s: "down",
+      arrowleft: "left", a: "left",
+      arrowright: "right", d: "right",
+      z: "jump", " ": "jump",
+      x: "pulse", shift: "pulse"
+    };
+
+    window.addEventListener("keydown", function (event) {
+      var key = String(event.key).toLowerCase();
+      var action = keyActions[key];
+      if (action) {
+        event.preventDefault();
+        press(action);
+        if (mode === "title" && (action === "jump" || action === "pulse")) {
+          delete justPressed[action];
+          startRun();
+        } else if (mode === "complete" && (action === "jump" || action === "pulse")) {
+          delete justPressed[action];
+          if (levelIndex < LEVEL_DEFS.length - 1) loadLevel(levelIndex + 1);
+          else setMode("title");
+        } else if (mode === "gameover" && (action === "jump" || action === "pulse")) {
+          delete justPressed[action];
+          startRun();
+        }
+      }
+    });
+
+    window.addEventListener("keyup", function (event) {
+      var key = String(event.key).toLowerCase();
+      var action = keyActions[key];
+      if (action) {
+        event.preventDefault();
+        release(action);
+      }
+    });
+
+    window.addEventListener("blur", function () {
+      Object.keys(held).forEach(function (key) { held[key] = false; });
+      justPressed = {};
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll("[data-touch]"), function (button) {
+      var action = button.getAttribute("data-touch");
+      function down(event) {
+        event.preventDefault();
+        button.classList.add("is-held");
+        if (button.setPointerCapture && event.pointerId !== undefined) {
+          try { button.setPointerCapture(event.pointerId); } catch (ignore) {}
+        }
+        if (mode === "title" && (action === "jump" || action === "pulse")) {
+          startRun();
+        } else if (mode === "complete" && (action === "jump" || action === "pulse")) {
+          if (levelIndex < LEVEL_DEFS.length - 1) loadLevel(levelIndex + 1);
+          else setMode("title");
+        } else if (mode === "gameover" && (action === "jump" || action === "pulse")) {
+          startRun();
+        } else {
+          press(action);
+        }
+      }
+      function up(event) {
+        event.preventDefault();
+        button.classList.remove("is-held");
+        release(action);
+      }
+      button.addEventListener("pointerdown", down);
+      button.addEventListener("pointerup", up);
+      button.addEventListener("pointercancel", up);
+      button.addEventListener("pointerleave", function (event) {
+        if (event.buttons === 0) up(event);
+      });
+    });
+
+    function overlap(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x &&
+             a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    function solids() {
+      return level.platforms.concat(level.movers);
+    }
+
+    function updateMovers() {
+      level.movers.forEach(function (p) {
+        var value = Math.sin(elapsed * p.speed + p.phase) * p.range;
+        if (p.axis === "y") {
+          p.x = p.baseX;
+          p.y = p.baseY + value;
+        } else {
+          p.x = p.baseX + value;
+          p.y = p.baseY;
+        }
+      });
+    }
+
+    function update(dt) {
+      if (mode !== "playing" || !level) return;
+      elapsed += dt;
+      flash = Math.max(0, flash - dt);
+      screenShake = Math.max(0, screenShake - dt * 24);
+      level.labelFlash = Math.max(0, level.labelFlash - dt);
+
+      updateMovers();
+      updatePlayer(dt);
+      updateEnemies(dt);
+      updateShots(dt);
+      updatePulses(dt);
+      updateParticles(dt);
+      updateCamera(dt);
+
+      if (level.player.x > level.nextCheckpoint && level.nextCheckpoint < level.def.goalX - 300) {
+        level.checkpointX = level.nextCheckpoint;
+        level.nextCheckpoint += 760;
+        level.labelFlash = 1.4;
+        addTextParticle(level.checkpointX, 60, "CHECKPOINT", "#76e36b");
+      }
+
+      if (level.player.x + level.player.w >= level.def.goalX) {
+        completeLevel();
+      }
+    }
+
+    function updatePlayer(dt) {
+      var p = level.player;
+      p.prevBottom = p.y + p.h;
+      p.invuln = Math.max(0, p.invuln - dt);
+      p.pulseCooldown = Math.max(0, p.pulseCooldown - dt);
+      p.overdrive = Math.max(0, p.overdrive - dt);
+
+      if (consume("jump") && p.onGround) {
+        p.vy = -6.35;
+        p.onGround = false;
+        spawnBurst(p.x + p.w / 2, p.y + p.h, "#ffd34e", 5);
+      }
+
+      var direction = 0;
+      if (held.left) direction -= 1;
+      if (held.right) direction += 1;
+      if (direction !== 0) {
+        p.vx += direction * 0.16;
+        p.facing = direction;
+      } else {
+        p.vx *= Math.pow(0.78, dt * 60);
+      }
+
+      var maxSpeed = p.overdrive > 0 ? 3.15 : 2.45;
+      p.vx = Math.max(-maxSpeed, Math.min(maxSpeed, p.vx));
+
+      if (consume("pulse") && p.pulseCooldown <= 0) {
+        firePulse();
+      }
+
+      p.vy += GRAVITY * dt * 60;
+      if (p.vy > 7.5) p.vy = 7.5;
+
+      var horizontalBefore = p.x;
+      p.x += p.vx * dt * 60;
+      resolveHorizontal(p, solids());
+
+      p.y += p.vy * dt * 60;
+      p.onGround = false;
+      p.standingOn = null;
+      resolveVertical(p, solids());
+
+      if (p.standingOn && p.standingOn.kind === "conveyor") {
+        p.x += p.standingOn.push * dt * 60;
+      }
+
+      if (p.x < 0) {
+        p.x = 0;
+        p.vx = 0;
+      }
+      if (p.x > level.def.worldWidth - p.w) {
+        p.x = level.def.worldWidth - p.w;
+        p.vx = 0;
+      }
+
+      collectItems(p);
+      checkHazards(p);
+      checkEnemyContacts(p);
+
+      if (p.y > H + 34) {
+        hurtPlayer("fall");
+      }
+
+      if (Math.abs(p.x - horizontalBefore) > 0.1 && Math.abs(p.vx) > 0.2 && p.onGround && Math.random() < 0.12) {
+        spawnDust(p.x + (p.facing < 0 ? p.w : 0), p.y + p.h, "#79a6a8");
+      }
+    }
+
+    function resolveHorizontal(body, platforms) {
+      platforms.forEach(function (p) {
+        if (!overlap(body, p)) return;
+        if (body.vx > 0) body.x = p.x - body.w;
+        else if (body.vx < 0) body.x = p.x + p.w;
+        body.vx = 0;
+      });
+    }
+
+    function resolveVertical(body, platforms) {
+      platforms.forEach(function (p) {
+        if (!overlap(body, p)) return;
+        if (body.vy > 0 && body.y + body.h - body.vy * 1.1 <= p.y + 2) {
+          body.y = p.y - body.h;
+          body.vy = 0;
+          body.onGround = true;
+          body.standingOn = p;
+        } else if (body.vy < 0 && body.y - body.vy * 1.1 >= p.y + p.h - 2) {
+          body.y = p.y + p.h;
+          body.vy = 0;
+        }
+      });
+    }
+
+    function collectItems(p) {
+      level.chips.forEach(function (c) {
+        if (!c.collected && overlap(p, c)) {
+          c.collected = true;
+          totalScore += 100;
+          flash = 0.06;
+          spawnBurst(c.x + 3, c.y + 3, "#ffd34e", 8);
+        }
+      });
+
+      level.powerups.forEach(function (item) {
+        if (!item.collected && overlap(p, item)) {
+          item.collected = true;
+          if (item.type === "capacitor") {
+            p.shield = 1;
+            addTextParticle(item.x, item.y - 5, "SHIELD", "#59e6e0");
+          } else {
+            p.overdrive = 8;
+            addTextParticle(item.x, item.y - 5, "OVERDRIVE", "#ff8bd0");
+          }
+          totalScore += 250;
+          spawnBurst(item.x + 5, item.y + 5, item.type === "capacitor" ? "#59e6e0" : "#ff8bd0", 12);
+        }
+      });
+    }
+
+    function checkHazards(p) {
+      level.hazards.forEach(function (hazard) {
+        if (overlap(p, hazard)) hurtPlayer("spike");
+      });
+    }
+
+    function checkEnemyContacts(p) {
+      level.enemies.forEach(function (enemy) {
+        if (!enemy.alive || !overlap(p, enemy)) return;
+        var stomp = p.vy >= 0 && p.prevBottom <= enemy.y + 5;
+        if (stomp) {
+          disableEnemy(enemy);
+          p.y = enemy.y - p.h;
+          p.vy = -4.3;
+        } else {
+          hurtPlayer("drone");
+        }
+      });
+    }
+
+    function disableEnemy(enemy) {
+      if (!enemy.alive) return;
+      enemy.alive = false;
+      totalScore += enemy.type === "mecha" ? 350 : 200;
+      screenShake = Math.max(screenShake, enemy.type === "mecha" ? 5 : 2);
+      spawnBurst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, enemy.type === "mecha" ? "#ff765c" : "#a9f6ff", enemy.type === "mecha" ? 16 : 9);
+    }
+
+    function hurtPlayer(reason) {
+      var p = level && level.player;
+      if (!p || p.invuln > 0 || mode !== "playing") return;
+
+      if (p.shield > 0) {
+        p.shield = 0;
+        p.invuln = 1.25;
+        p.vy = -3.6;
+        p.vx = -p.facing * 1.8;
+        screenShake = 5;
+        addTextParticle(p.x, p.y - 8, "SHIELD BREAK", "#59e6e0");
+        spawnBurst(p.x + p.w / 2, p.y + p.h / 2, "#59e6e0", 14);
+        return;
+      }
+
+      lives -= 1;
+      screenShake = 8;
+      flash = 0.18;
+      if (lives <= 0) {
+        setMode("gameover");
+        return;
+      }
+
+      p.x = level.checkpointX;
+      p.y = level.def.startY;
+      p.vx = 0;
+      p.vy = 0;
+      p.invuln = 2;
+      p.onGround = true;
+      addTextParticle(p.x, p.y - 12, reason === "fall" ? "RECOVERED" : "REBOOT", "#ffdc73");
+    }
+
+    function firePulse() {
+      var p = level.player;
+      p.pulseCooldown = 0.48;
+      level.pulses.push({
+        x: p.facing > 0 ? p.x + p.w + 1 : p.x - 7,
+        y: p.y + 6, w: 7, h: 3, vx: p.facing * 4.9, life: 1.2
+      });
+      spawnBurst(p.facing > 0 ? p.x + p.w : p.x, p.y + 7, "#ff8bd0", 3);
+    }
+
+    function updatePulses(dt) {
+      level.pulses = level.pulses.filter(function (pulse) {
+        pulse.x += pulse.vx * dt * 60;
+        pulse.life -= dt;
+        var active = pulse.life > 0 && pulse.x > -20 && pulse.x < level.def.worldWidth + 20;
+        if (!active) return false;
+        for (var i = 0; i < level.enemies.length; i += 1) {
+          var enemy = level.enemies[i];
+          if (enemy.alive && overlap(pulse, enemy)) {
+            disableEnemy(enemy);
+            return false;
+          }
+        }
+        return true;
+      });
+    }
+
+    function updateEnemies(dt) {
+      level.enemies.forEach(function (enemy) {
+        if (!enemy.alive) return;
+        if (enemy.type === "walker" || enemy.type === "mecha") {
+          enemy.x += enemy.vx * dt * 60;
+          if (enemy.x <= enemy.left) {
+            enemy.x = enemy.left;
+            enemy.vx = Math.abs(enemy.vx);
+          } else if (enemy.x + enemy.w >= enemy.right) {
+            enemy.x = enemy.right - enemy.w;
+            enemy.vx = -Math.abs(enemy.vx);
+          }
+        } else if (enemy.type === "hover") {
+          enemy.x += enemy.vx * dt * 60;
+          enemy.y = enemy.baseY + Math.sin(elapsed * 3 + enemy.phase) * 7;
+          if (enemy.x <= enemy.left) {
+            enemy.x = enemy.left;
+            enemy.vx = Math.abs(enemy.vx);
+          } else if (enemy.x + enemy.w >= enemy.right) {
+            enemy.x = enemy.right - enemy.w;
+            enemy.vx = -Math.abs(enemy.vx);
+          }
+        } else if (enemy.type === "turret") {
+          enemy.cooldown -= dt * 60;
+          if (enemy.cooldown <= 0) {
+            var direction = level.player.x + level.player.w / 2 >= enemy.x ? 1 : -1;
+            level.shots.push({
+              x: enemy.x + (direction > 0 ? enemy.w : -3),
+              y: enemy.y + 5, w: 5, h: 3,
+              vx: direction * 2.25, life: 2.8
+            });
+            enemy.cooldown = 85 + Math.random() * 45;
+            spawnBurst(enemy.x + enemy.w / 2, enemy.y + 5, "#ff6f75", 3);
+          }
+        }
+      });
+    }
+
+    function updateShots(dt) {
+      level.shots = level.shots.filter(function (shot) {
+        shot.x += shot.vx * dt * 60;
+        shot.life -= dt;
+        if (shot.life <= 0 || shot.x < -20 || shot.x > level.def.worldWidth + 20) return false;
+        if (overlap(shot, level.player)) {
+          hurtPlayer("shot");
+          return false;
+        }
+        return true;
+      });
+    }
+
+    function updateCamera(dt) {
+      var target = level.player.x - W * 0.34;
+      var maxCamera = Math.max(0, level.def.worldWidth - W);
+      target = Math.max(0, Math.min(maxCamera, target));
+      level.cameraX += (target - level.cameraX) * Math.min(1, dt * 8);
+    }
+
+    function completeLevel() {
+      if (!level || level.complete || mode !== "playing") return;
+      level.complete = true;
+      totalScore += level.chips.filter(function (c) { return c.collected; }).length * 50;
+      if (totalScore > bestScore) {
+        bestScore = totalScore;
+        try { localStorage.setItem("eli-dronebreak-best", String(bestScore)); } catch (error) {}
+      }
+      spawnBurst(level.def.goalX, 132, "#76e36b", 26);
+      setMode("complete");
+    }
+
+    function spawnBurst(x, y, color, amount) {
+      if (!level) return;
+      for (var i = 0; i < amount; i += 1) {
+        level.particles.push({
+          type: "dot",
+          x: x, y: y,
+          vx: (Math.random() - 0.5) * 3.2,
+          vy: (Math.random() - 0.5) * 3.6,
+          life: 0.35 + Math.random() * 0.45,
+          maxLife: 0.8,
+          color: color,
+          size: Math.random() > 0.6 ? 3 : 2
+        });
+      }
+    }
+
+    function spawnDust(x, y, color) {
+      if (!level) return;
+      level.particles.push({
+        type: "dot", x: x, y: y, vx: -0.2 * level.player.facing,
+        vy: -0.45, life: 0.25, maxLife: 0.25, color: color, size: 2
+      });
+    }
+
+    function addTextParticle(x, y, textValue, color) {
+      if (!level) return;
+      level.particles.push({
+        type: "text", x: x, y: y, vx: 0, vy: -0.25,
+        life: 1.25, maxLife: 1.25, text: textValue, color: color, size: 7
+      });
+    }
+
+    function updateParticles(dt) {
+      if (!level) return;
+      level.particles = level.particles.filter(function (particle) {
+        particle.x += particle.vx * dt * 60;
+        particle.y += particle.vy * dt * 60;
+        particle.vy += particle.type === "text" ? 0 : 0.04;
+        particle.life -= dt;
+        return particle.life > 0;
+      });
+    }
+
+    function draw() {
+      var shakeX = screenShake > 0 ? Math.round((Math.random() - 0.5) * screenShake) : 0;
+      var shakeY = screenShake > 0 ? Math.round((Math.random() - 0.5) * screenShake) : 0;
+      ctx.save();
+      ctx.translate(shakeX, shakeY);
+      if (level) {
+        drawBackground(level.def.theme, level.cameraX);
+        ctx.save();
+        ctx.translate(-Math.floor(level.cameraX), 0);
+        drawWorld();
+        ctx.restore();
+        drawHud();
+      } else {
+        drawBackground("scrap", 0);
+        drawTitleBackdrop();
+      }
+      if (flash > 0) {
+        ctx.fillStyle = "rgba(255, 244, 202, " + Math.min(0.5, flash * 2.3) + ")";
+        ctx.fillRect(0, 0, W, H);
+      }
+      ctx.restore();
+    }
+
+    function drawBackground(theme, cameraX) {
+      var colors = {
+        scrap: ["#081522", "#123449", "#204d55"],
+        undergrid: ["#070d1b", "#101a39", "#26316a"],
+        foundry: ["#10131e", "#263243", "#4c3746"]
+      };
+      var palette = colors[theme] || colors.scrap;
+      ctx.fillStyle = palette[0];
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = palette[1];
+      ctx.fillRect(0, 0, W, 74);
+      ctx.fillStyle = palette[2];
+      ctx.fillRect(0, 74, W, 86);
+
+      ctx.globalAlpha = 0.28;
+      if (theme === "scrap") {
+        for (var i = -1; i < 12; i += 1) {
+          var x = i * 44 - ((cameraX * 0.16) % 44);
+          ctx.fillStyle = i % 2 ? "#5b817f" : "#d08c54";
+          ctx.fillRect(Math.floor(x), 56 + (i % 3) * 8, 18, 3);
+          ctx.fillRect(Math.floor(x + 7), 49 + (i % 3) * 8, 3, 22);
+        }
+        ctx.globalAlpha = 0.65;
+        ctx.fillStyle = "#9dd6c4";
+        for (var s = 0; s < 25; s += 1) {
+          var starX = (s * 67 - Math.floor(cameraX * 0.08)) % (W + 24);
+          if (starX < -4) starX += W + 24;
+          ctx.fillRect(Math.floor(starX), 28 + (s * 23) % 72, 2, 2);
+        }
+      } else if (theme === "undergrid") {
+        ctx.strokeStyle = "#637fd5";
+        ctx.lineWidth = 1;
+        for (var line = -1; line < 9; line += 1) {
+          var lineX = line * 56 - ((cameraX * 0.25) % 56);
+          ctx.beginPath();
+          ctx.moveTo(lineX, 24);
+          ctx.lineTo(lineX + 22, 160);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = "#79e4d8";
+        for (var lamp = -1; lamp < 8; lamp += 1) {
+          var lampX = lamp * 72 - ((cameraX * 0.4) % 72);
+          ctx.fillRect(Math.floor(lampX), 35 + (lamp % 2) * 31, 12, 2);
+          ctx.fillRect(Math.floor(lampX + 2), 37 + (lamp % 2) * 31, 8, 2);
+        }
+      } else {
+        ctx.globalAlpha = 0.52;
+        ctx.fillStyle = "#e5a548";
+        for (var column = -1; column < 9; column += 1) {
+          var columnX = column * 64 - ((cameraX * 0.18) % 64);
+          ctx.fillRect(Math.floor(columnX), 26, 4, 124);
+          ctx.fillRect(Math.floor(columnX + 24), 44, 3, 106);
+        }
+        ctx.fillStyle = "#71a5c1";
+        for (var stripe = -1; stripe < 7; stripe += 1) {
+          var stripeX = stripe * 86 - ((cameraX * 0.3) % 86);
+          ctx.fillRect(Math.floor(stripeX), 60, 40, 2);
+          ctx.fillRect(Math.floor(stripeX + 13), 78, 28, 2);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawTitleBackdrop() {
+      ctx.save();
+      ctx.globalAlpha = 0.7;
+      ctx.translate(0, 20);
+      ctx.fillStyle = "#162c42";
+      for (var i = 0; i < 10; i += 1) {
+        ctx.fillRect(i * 38 - 12, 102 - (i % 3) * 12, 30, 6);
+        ctx.fillRect(i * 38 + 4, 108 - (i % 3) * 12, 4, 28);
+      }
+      ctx.globalAlpha = 1;
+      drawEli(151, 119, 1, 0, false);
+      drawWalker({ x: 205, y: 138, w: 14, h: 12, phase: 0 }, 0);
+      drawHover({ x: 102, y: 82, w: 15, h: 10, phase: 0 }, 0);
+      ctx.restore();
+    }
+
+    function drawWorld() {
+      var cam = level.cameraX;
+      level.platforms.forEach(function (p) { drawPlatform(p, level.def.theme); });
+      level.movers.forEach(function (p) { drawMovingPlatform(p, level.def.theme); });
+      level.hazards.forEach(function (h) { drawHazard(h); });
+      drawGoal(level.def.goalX);
+
+      level.chips.forEach(function (c) {
+        if (!c.collected) drawChip(c);
+      });
+      level.powerups.forEach(function (item) {
+        if (!item.collected) drawPowerup(item);
+      });
+      level.shots.forEach(function (shot) { drawShot(shot); });
+      level.pulses.forEach(function (pulse) { drawPulse(pulse); });
+      level.enemies.forEach(function (enemy) {
+        if (!enemy.alive) return;
+        if (enemy.type === "walker") drawWalker(enemy);
+        else if (enemy.type === "hover") drawHover(enemy);
+        else if (enemy.type === "turret") drawTurret(enemy);
+        else if (enemy.type === "mecha") drawMecha(enemy);
+      });
+      level.particles.forEach(function (particle) { drawParticle(particle); });
+      drawEli(level.player.x, level.player.y, level.player.facing, elapsed, level.player.invuln > 0);
+
+      if (level.labelFlash > 0) {
+        var alpha = Math.min(1, level.labelFlash * 2);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = "#07131e";
+        ctx.fillRect(cam + 12, 28, 100, 14);
+        drawText("CHECKPOINT", cam + 18, 38, 7, "#76e36b");
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawPlatform(p, theme) {
+      var x = Math.floor(p.x);
+      var y = Math.floor(p.y);
+      if (x > level.cameraX + W + 20 || x + p.w < level.cameraX - 20) return;
+      var base = theme === "foundry" ? "#394757" : theme === "undergrid" ? "#2a3766" : "#34565d";
+      var edge = theme === "foundry" ? "#a3b4b4" : theme === "undergrid" ? "#6c9db6" : "#80c1b2";
+      ctx.fillStyle = "#07111b";
+      ctx.fillRect(x, y, p.w, p.h);
+      ctx.fillStyle = base;
+      ctx.fillRect(x + 2, y + 2, p.w - 4, p.h - 2);
+      ctx.fillStyle = edge;
+      ctx.fillRect(x + 2, y + 2, p.w - 4, 2);
+      ctx.fillStyle = "rgba(4, 9, 15, .45)";
+      for (var px = x + 8; px < x + p.w - 3; px += 16) {
+        ctx.fillRect(px, y + 6, 5, Math.max(2, p.h - 8));
+      }
+      if (p.h >= 16) {
+        ctx.fillStyle = theme === "foundry" ? "#5e6c77" : "#406b67";
+        ctx.fillRect(x + 2, y + 7, p.w - 4, 2);
+      }
+    }
+
+    function drawMovingPlatform(p, theme) {
+      drawPlatform(p, theme);
+      var x = Math.floor(p.x);
+      var y = Math.floor(p.y);
+      ctx.fillStyle = "#ffd34e";
+      ctx.fillRect(x + 5, y + 4, 3, 2);
+      ctx.fillRect(x + p.w - 8, y + 4, 3, 2);
+    }
+
+    function drawHazard(h) {
+      var x = Math.floor(h.x);
+      var y = Math.floor(h.y);
+      ctx.fillStyle = "#160b19";
+      ctx.fillRect(x, y + 6, h.w, 2);
+      ctx.fillStyle = "#ff5c72";
+      for (var px = x; px < x + h.w; px += 8) {
+        ctx.beginPath();
+        ctx.moveTo(px, y + 8);
+        ctx.lineTo(px + 4, y);
+        ctx.lineTo(px + 8, y + 8);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#ffd34e";
+      ctx.fillRect(x + 2, y + 6, Math.max(2, h.w - 4), 1);
+    }
+
+    function drawGoal(goalX) {
+      var x = Math.floor(goalX);
+      ctx.fillStyle = "#061017";
+      ctx.fillRect(x, 126, 20, 34);
+      ctx.fillStyle = "#76e36b";
+      ctx.fillRect(x + 3, 130, 14, 30);
+      ctx.fillStyle = "#102a24";
+      ctx.fillRect(x + 6, 136, 8, 17);
+      ctx.fillStyle = "#d9ff9e";
+      ctx.fillRect(x + 5, 132, 10, 2);
+      ctx.fillRect(x + 5, 158, 10, 2);
+      ctx.fillStyle = Math.sin(elapsed * 7) > 0 ? "#ffd34e" : "#ff8bd0";
+      ctx.fillRect(x + 8, 143, 3, 3);
+      ctx.fillStyle = "#9af1b4";
+      ctx.fillRect(x - 3, 122, 26, 3);
+      drawText("UPLINK", x - 1, 117, 6, "#9af1b4");
+    }
+
+    function drawChip(c) {
+      var x = Math.floor(c.x);
+      var y = Math.floor(c.y + Math.sin(elapsed * 5 + c.x) * 1.5);
+      ctx.fillStyle = "#433712";
+      ctx.fillRect(x + 2, y, 2, 6);
+      ctx.fillStyle = "#ffd34e";
+      ctx.fillRect(x + 1, y + 1, 4, 4);
+      ctx.fillStyle = "#fff0a2";
+      ctx.fillRect(x + 2, y + 1, 2, 2);
+    }
+
+    function drawPowerup(item) {
+      var x = Math.floor(item.x);
+      var y = Math.floor(item.y + Math.sin(elapsed * 4 + item.phase) * 2);
+      var color = item.type === "capacitor" ? "#59e6e0" : "#ff8bd0";
+      ctx.fillStyle = "#07111c";
+      ctx.fillRect(x - 2, y - 2, 14, 14);
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, 10, 10);
+      ctx.fillStyle = "#07111c";
+      if (item.type === "capacitor") {
+        ctx.fillRect(x + 4, y + 2, 2, 6);
+        ctx.fillRect(x + 2, y + 4, 6, 2);
+      } else {
+        ctx.fillRect(x + 2, y + 4, 6, 2);
+        ctx.fillRect(x + 4, y + 2, 2, 6);
+      }
+    }
+
+    function drawWalker(enemy) {
+      var x = Math.floor(enemy.x);
+      var y = Math.floor(enemy.y);
+      var blink = Math.sin(elapsed * 8 + enemy.phase) > 0.65;
+      ctx.fillStyle = "#170f1d";
+      ctx.fillRect(x + 1, y + 2, 12, 9);
+      ctx.fillStyle = "#d34f62";
+      ctx.fillRect(x + 2, y + 1, 10, 7);
+      ctx.fillStyle = "#ff9a57";
+      ctx.fillRect(x + 4, y + 3, 6, 3);
+      ctx.fillStyle = blink ? "#fff4b2" : "#271c28";
+      ctx.fillRect(x + 6, y + 3, 3, 2);
+      ctx.fillStyle = "#8a2e4e";
+      ctx.fillRect(x + 3, y + 8, 3, 4);
+      ctx.fillRect(x + 9, y + 8, 3, 4);
+      ctx.fillStyle = "#ffdc73";
+      ctx.fillRect(x, y + 5, 2, 2);
+      ctx.fillRect(x + 12, y + 5, 2, 2);
+    }
+
+    function drawHover(enemy) {
+      var x = Math.floor(enemy.x);
+      var y = Math.floor(enemy.y);
+      ctx.fillStyle = "#130f2c";
+      ctx.fillRect(x + 2, y + 2, 11, 6);
+      ctx.fillStyle = "#8d67e8";
+      ctx.fillRect(x + 4, y, 7, 8);
+      ctx.fillStyle = "#59e6e0";
+      ctx.fillRect(x + 6, y + 2, 4, 2);
+      ctx.fillStyle = "#f45d9e";
+      ctx.fillRect(x, y + 5, 3, 2);
+      ctx.fillRect(x + 12, y + 5, 3, 2);
+      ctx.fillStyle = "#5340a4";
+      ctx.fillRect(x + 4, y + 8, 7, 2);
+    }
+
+    function drawTurret(enemy) {
+      var x = Math.floor(enemy.x);
+      var y = Math.floor(enemy.y);
+      var targetRight = level.player.x >= enemy.x;
+      ctx.fillStyle = "#07111b";
+      ctx.fillRect(x, y + 4, 16, 11);
+      ctx.fillStyle = "#8d5d68";
+      ctx.fillRect(x + 2, y + 5, 12, 9);
+      ctx.fillStyle = "#d2a25f";
+      ctx.fillRect(x + 4, y + 2, 8, 5);
+      ctx.fillStyle = "#ff5c72";
+      ctx.fillRect(x + 7, y + 7, 3, 3);
+      ctx.fillStyle = "#e4c47a";
+      ctx.fillRect(targetRight ? x + 12 : x - 4, y + 3, 7, 3);
+      ctx.fillStyle = "#4b303f";
+      ctx.fillRect(x + 1, y + 14, 5, 2);
+      ctx.fillRect(x + 10, y + 14, 5, 2);
+    }
+
+    function drawMecha(enemy) {
+      var x = Math.floor(enemy.x);
+      var y = Math.floor(enemy.y);
+      var pulse = Math.sin(elapsed * 6 + enemy.phase) > 0;
+      ctx.fillStyle = "#080d16";
+      ctx.fillRect(x + 1, y + 3, 18, 13);
+      ctx.fillStyle = "#6f785d";
+      ctx.fillRect(x + 3, y + 2, 14, 11);
+      ctx.fillStyle = "#b0a45c";
+      ctx.fillRect(x + 5, y, 10, 5);
+      ctx.fillStyle = pulse ? "#ff5c72" : "#6a273f";
+      ctx.fillRect(x + 8, y + 3, 4, 3);
+      ctx.fillStyle = "#bf6d49";
+      ctx.fillRect(x, y + 6, 4, 6);
+      ctx.fillRect(x + 16, y + 6, 4, 6);
+      ctx.fillStyle = "#454b40";
+      ctx.fillRect(x + 4, y + 13, 4, 5);
+      ctx.fillRect(x + 12, y + 13, 4, 5);
+      ctx.fillStyle = "#e4c47a";
+      ctx.fillRect(x + 2, y + 15, 5, 3);
+      ctx.fillRect(x + 13, y + 15, 5, 3);
+    }
+
+    function drawEli(x, y, facing, animation, invulnerable) {
+      if (invulnerable && Math.floor(animation * 18) % 2 === 0) return;
+      x = Math.floor(x);
+      y = Math.floor(y);
+      var walking = level && level.player && level.player.onGround && Math.abs(level.player.vx) > 0.25;
+      var step = walking ? Math.floor(animation * 12) % 2 : 0;
+      ctx.fillStyle = "#07101a";
+      ctx.fillRect(x + 1, y + 3, 10, 11);
+      ctx.fillStyle = "#1c637b";
+      ctx.fillRect(x + 2, y + 4, 8, 7);
+      ctx.fillStyle = "#59e6e0";
+      ctx.fillRect(x + 3, y + 1, 7, 6);
+      ctx.fillStyle = "#b8ffff";
+      ctx.fillRect(facing > 0 ? x + 7 : x + 3, y + 3, 3, 2);
+      ctx.fillStyle = "#ffd34e";
+      ctx.fillRect(x + 2, y + 8, 8, 2);
+      ctx.fillStyle = "#102f4a";
+      ctx.fillRect(x + 2, y + 11, 3, 4 - step);
+      ctx.fillRect(x + 7, y + 11 + step, 3, 4 - step);
+      ctx.fillStyle = "#ff8bd0";
+      ctx.fillRect(facing > 0 ? x + 10 : x - 2, y + 8, 3, 3);
+      ctx.fillStyle = "#d9f5ff";
+      ctx.fillRect(facing > 0 ? x + 11 : x - 3, y + 9, 2, 2);
+    }
+
+    function drawShot(shot) {
+      ctx.fillStyle = "#ff5c72";
+      ctx.fillRect(Math.floor(shot.x), Math.floor(shot.y), shot.w, shot.h);
+      ctx.fillStyle = "#ffd34e";
+      ctx.fillRect(Math.floor(shot.x + 1), Math.floor(shot.y), 2, 1);
+    }
+
+    function drawPulse(pulse) {
+      ctx.fillStyle = "#ff8bd0";
+      ctx.fillRect(Math.floor(pulse.x), Math.floor(pulse.y), pulse.w, pulse.h);
+      ctx.fillStyle = "#ffe1f5";
+      ctx.fillRect(Math.floor(pulse.x + 2), Math.floor(pulse.y), 2, 1);
+    }
+
+    function drawParticle(particle) {
+      var alpha = Math.max(0, Math.min(1, particle.life / particle.maxLife));
+      ctx.globalAlpha = alpha;
+      if (particle.type === "text") {
+        drawText(particle.text, Math.floor(particle.x), Math.floor(particle.y), particle.size, particle.color);
+      } else {
+        ctx.fillStyle = particle.color;
+        ctx.fillRect(Math.floor(particle.x), Math.floor(particle.y), particle.size, particle.size);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawHud() {
+      var p = level.player;
+      ctx.fillStyle = "rgba(3, 8, 14, .86)";
+      ctx.fillRect(0, 0, W, 19);
+      ctx.fillStyle = "#294961";
+      ctx.fillRect(0, 19, W, 1);
+      drawText("ELI", 6, 12, 8, "#59e6e0");
+      drawText((levelIndex + 1) + "-1", 28, 12, 7, "#9bbdca");
+      drawText("SCORE " + formatNumber(totalScore), 68, 12, 7, "#ffd34e");
+      drawText("CELLS " + String(level.chips.filter(function (c) { return c.collected; }).length).padStart(2, "0"), 166, 12, 7, "#d9f5ff");
+      drawText("CORE", 224, 12, 7, "#9bbdca");
+      for (var i = 0; i < 3; i += 1) {
+        ctx.fillStyle = i < lives ? "#ff5c72" : "#2e3341";
+        ctx.fillRect(258 + i * 10, 7, 7, 7);
+        if (i < lives) {
+          ctx.fillStyle = "#ffd34e";
+          ctx.fillRect(260 + i * 10, 9, 3, 3);
+        }
+      }
+      if (p.shield > 0) {
+        drawText("SH", 294, 12, 7, "#59e6e0");
+      } else if (p.overdrive > 0) {
+        drawText("OD", 294, 12, 7, "#ff8bd0");
+      }
+    }
+
+    function drawText(textValue, x, y, size, color) {
+      ctx.fillStyle = color;
+      ctx.font = "bold " + size + "px monospace";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText(textValue, Math.floor(x), Math.floor(y));
+    }
+
+    function gameLoop(now) {
+      if (!lastTime) lastTime = now;
+      var dt = Math.min(MAX_DT, (now - lastTime) / 1000);
+      lastTime = now;
+      update(dt);
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    updateOverlayText();
+    requestAnimationFrame(gameLoop);
+  }());
+  </script>
+</body>
+</html>
