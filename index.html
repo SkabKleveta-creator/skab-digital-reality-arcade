@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="arcade-build" content="cabinet-rebuild-2026-07-26-three-game-upload">
+<meta name="arcade-build" content="cabinet-rebuild-2026-07-30-chaos-goblin-quick-play">
 <title>SKAB'S DIGITAL REALITY ARCADE // Select a Cabinet</title>
 <style>
 :root{--ink:#fff8e9;--muted:#c8bfd7;--black:#100b18;--screen:#191025;--pink:#ff4f9a;--yellow:#ffd34d;--blue:#61d9ff;--green:#7bf2a7;--line:rgba(255,255,255,.18);--shadow:rgba(0,0,0,.52)}
@@ -33,7 +33,7 @@
       <p class="marquee-copy">Pick a cabinet, look at the cover, flip it for the quick rundown, and run the thing. Some are solid. Some are still being figured out. That is the point.</p>
     </section>
     <aside class="operator-panel" aria-label="Arcade status">
-      <div class="operator-screen"><span class="live-dot">21 CABINETS LOADED</span><strong>SELECT A GAME</strong><span>Tap the cover to see the back.</span><span>Run Game / Run Demo lives down there.</span></div>
+      <div class="operator-screen"><span class="live-dot">22 CABINETS LOADED</span><strong>SELECT A GAME</strong><span>Tap the cover to see the back.</span><span>Run Game / Run Demo lives down there.</span></div>
       <div class="coin-row"><span>PLAYER 1</span><span>NO COINS REQUIRED</span></div>
     </aside>
   </header>
@@ -54,6 +54,7 @@
 <script>
 (() => {
   const games = [
+    {id:'chaos-goblin',section:'event-playables',format:'Quick Play',status:'Verified Candidate',evidence:'Recovery',kicker:'Six-Level Handheld Mischief Run',title:'Chaos Goblin: The Big Shiny',description:'A six-stage mobile-friendly platform run about bashing through Orderlings, collecting shiny scraps, and recovering the one prize that matters.',howTo:'Use the D-pad to move. A bashes or dashes. B jumps. Land on enemies only after a committed fall to stomp.',href:'./games/chaos-goblin/',cover:'./assets/arcade-covers/cards/22-chaos-goblin.svg'},
     {id:'lady-liberty-street-sweep',section:'event-playables',format:'Quick Play',status:'Playable Now',evidence:'Pressure',kicker:'America 250 Five-Lane Shooter',title:'Lady Liberty: Street Sweep',description:'A fast, patriotic, phone-first five-lane shooter built for event energy and quick public play.',howTo:'Move between five lanes, manage survival pressure, and see if you can reach the 250-point payoff.',href:'./games/lady_liberty/',cover:'./assets/arcade-covers/cards/01-lady-liberty.jpg'},
     {id:'bottle-rocket-rodeo',section:'event-playables',format:'Quick Play',status:'Stable Baseline',evidence:'Pressure',kicker:'America 250 One-Thumb Climb',title:'Bottle Rocket Rodeo',description:'Steer a bottle rocket upward with one-thumb controls and reach the pure fireworks finale at 250.',howTo:'Steer with one thumb or the arrow keys, dodge the hazards, and keep the fuse alive.',href:'./games/bottle_rocket_rodeo/',cover:'./assets/arcade-covers/cards/02-bottle-rocket-rodeo.jpg'},
     {id:'grill-sergeant',section:'event-playables',format:'Quick Play',status:'Stable Baseline',evidence:'Recovery',kicker:'America 250 Cookout Chaos',title:'Grill Sergeant',description:'Run the cookout, manage burgers, buns, chili, and Gary without turning unlocked capacity into punishment.',howTo:'Keep the grill moving, prep the next order, and use capacity to make the loop easier—not meaner.',href:'./games/grill_sergeant/',cover:'./assets/arcade-covers/cards/03-grill-sergeant.jpg'},
@@ -107,7 +108,7 @@
   games.forEach((game,index)=>{const card=renderCard(game,index),target=game.href?document.querySelector('#'+game.section+' .cabinet-grid'):document.querySelector('#coming-soon .cabinet-grid');if(target){target.append(card);sectionCounts[game.section]=(sectionCounts[game.section]||0)+1;}});
   const comingSoon=document.querySelector('#coming-soon'); if(comingSoon.querySelector('.cabinet-grid').children.length) comingSoon.hidden=false;
   document.addEventListener('keydown',(event)=>{if(event.key==='Escape') document.querySelectorAll('.cabinet-card.is-open .flip-back').forEach((button)=>button.click());});
-  window.__arcadeAudit={build:'cabinet-rebuild-2026-07-26-three-game-upload',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
+  window.__arcadeAudit={build:'cabinet-rebuild-2026-07-30-chaos-goblin-quick-play',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
 })();
 </script>
 </body>
