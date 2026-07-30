@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="576" viewBox="0 0 768 576" role="img" aria-labelledby="title desc">
+  <title id="title">Chaos Goblin The Big Shiny arcade cover</title>
+  <desc id="desc">Original arcade cover showing a green goblin charging toward a huge golden diamond across six colorful stages.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1">
+      <stop stop-color="#17122d"/>
+      <stop offset="1" stop-color="#080711"/>
+    </linearGradient>
+    <radialGradient id="shine">
+      <stop stop-color="#fff7b0"/>
+      <stop offset=".42" stop-color="#ffd34d"/>
+      <stop offset="1" stop-color="#ff8a3d"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="768" height="576" fill="url(#bg)"/>
+  <g opacity=".34">
+    <path d="M0 344h768v232H0z" fill="#0f1524"/>
+    <path d="M0 388h768M0 454h768M0 520h768M80 344L18 576M210 344l-37 232M340 344l-12 232M470 344l18 232M600 344l48 232M720 344l70 232" stroke="#6f53a6" stroke-width="3"/>
+  </g>
+  <g opacity=".78">
+    <rect x="0" y="318" width="128" height="14" fill="#6ed7ff"/>
+    <rect x="128" y="318" width="128" height="14" fill="#ff6b8b"/>
+    <rect x="256" y="318" width="128" height="14" fill="#b8f25a"/>
+    <rect x="384" y="318" width="128" height="14" fill="#ffbd69"/>
+    <rect x="512" y="318" width="128" height="14" fill="#b18cff"/>
+    <rect x="640" y="318" width="128" height="14" fill="#ffd34d"/>
+  </g>
+  <g transform="translate(590 188) rotate(45)" filter="url(#glow)">
+    <rect x="-64" y="-64" width="128" height="128" rx="12" fill="url(#shine)" stroke="#fff7b0" stroke-width="8"/>
+    <rect x="-27" y="-27" width="54" height="54" fill="#fff9ca" opacity=".86"/>
+  </g>
+  <g transform="translate(250 250)">
+    <path d="M-42 4l-44-22 17 48-22 34 55-7zM45 4l45-22-18 48 23 34-56-7z" fill="#6d9d3a" stroke="#19210e" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M-58 5c0-53 31-89 62-89S65-48 65 5v73H-58z" fill="#8bd24d" stroke="#19210e" stroke-width="9"/>
+    <path d="M-36-24l22-12 5 15-25 8zM39-24L17-36l-5 15 25 8z" fill="#fff2b0"/>
+    <circle cx="-21" cy="-19" r="5" fill="#23132b"/>
+    <circle cx="24" cy="-19" r="5" fill="#23132b"/>
+    <path d="M-11 9l15 9 17-9-8 25h-18z" fill="#351629"/>
+    <path d="M-32 78l-35 91M41 78l41 88M-48 34l-73 49M56 36l74 31" stroke="#8bd24d" stroke-width="28" stroke-linecap="round"/>
+    <path d="M-70 171h42M66 168h43" stroke="#ffbd69" stroke-width="24" stroke-linecap="round"/>
+    <path d="M-53 45h102v49H-53z" fill="#7146a1" stroke="#251832" stroke-width="8"/>
+    <circle cx="0" cy="69" r="14" fill="#ffd34d"/>
+  </g>
+  <g fill="#ff6b8b" stroke="#281321" stroke-width="6">
+    <circle cx="420" cy="390" r="31"/>
+    <circle cx="504" cy="425" r="26"/>
+  </g>
+  <path d="M399 389l42 0M419 368v42M486 425h36M504 407v36" stroke="#fff0b5" stroke-width="7"/>
+  <text x="42" y="66" fill="#ffd34d" font-family="Trebuchet MS,Arial,sans-serif" font-size="20" font-weight="900" letter-spacing="4">SKAB DIGITAL ARCADE</text>
+  <text x="38" y="137" fill="#fff" font-family="Trebuchet MS,Arial,sans-serif" font-size="67" font-weight="900">CHAOS GOBLIN</text>
+  <text x="42" y="190" fill="#b8f25a" font-family="Trebuchet MS,Arial,sans-serif" font-size="38" font-weight="900" letter-spacing="3">THE BIG SHINY</text>
+  <text x="43" y="548" fill="#fff" font-family="Trebuchet MS,Arial,sans-serif" font-size="21" font-weight="900" letter-spacing="2">SIX LEVELS · D-PAD · A/B</text>
+</svg>
