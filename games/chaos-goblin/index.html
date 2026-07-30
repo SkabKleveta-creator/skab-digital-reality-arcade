@@ -1,0 +1,2134 @@
+<!doctype html>
+<!-- CHAOS GOBLIN v0.4.1: six-level route expansion with distinct stage identities. Defect pass + verification gate. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#111321">
+  <meta name="description" content="Chaos Goblin — The Big Shiny. A standalone, touch-playable arcade platformer.">
+  <title>Chaos Goblin — The Big Shiny v0.4.1</title>
+  <style>
+    :root {
+      --ink: #10111b;
+      --panel: #1a1d31;
+      --panel-2: #252945;
+      --cream: #ffe8ae;
+      --gold: #ffc857;
+      --acid: #b8f25a;
+      --pink: #ff6b8b;
+      --blue: #6ed7ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #0e0f18;
+      color: var(--cream);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      overscroll-behavior: none;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 12px;
+      touch-action: none;
+    }
+
+    #app {
+      width: min(100%, 1080px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      padding: 2px 4px 0;
+    }
+
+    .title-lockup h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 4vw, 2.35rem);
+      letter-spacing: .08em;
+      line-height: 1;
+      color: var(--gold);
+      text-shadow: 3px 3px 0 #512e5e;
+    }
+
+    .title-lockup p {
+      margin: 5px 0 0;
+      color: #aeb4d1;
+      font-size: .78rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .badge {
+      background: var(--acid);
+      color: #202315;
+      border: 3px solid #12151f;
+      box-shadow: 4px 4px 0 #000;
+      padding: 6px 9px;
+      font-size: .72rem;
+      font-weight: 900;
+      letter-spacing: .1em;
+      white-space: nowrap;
+    }
+
+    .emulator-shell {
+      position: relative;
+      padding: 14px 16px 16px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.06), transparent 24%),
+        linear-gradient(180deg, #363a55, #1d2034 58%, #111321);
+      border: 4px solid #080911;
+      border-radius: 16px 16px 11px 11px;
+      box-shadow: 0 0 0 3px #4c5170, 11px 13px 0 #000, inset 0 2px 0 rgba(255,255,255,.12);
+    }
+
+    .emulator-topbar,
+    .emulator-base {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .emulator-topbar {
+      min-height: 30px;
+      padding: 0 3px 10px;
+      color: #aeb4d1;
+      font-size: .68rem;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .emulator-name,
+    .emulator-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .emulator-name { color: #fff0b5; }
+    .emulator-name small { color: #7c83a4; font-size: .58rem; }
+
+    .status-led {
+      width: 8px;
+      height: 8px;
+      display: inline-block;
+      border-radius: 50%;
+      background: var(--acid);
+      box-shadow: 0 0 9px var(--acid);
+    }
+
+    .emulator-status { color: #b8f25a; }
+
+    #crtToggle {
+      border: 1px solid #0b0c14;
+      background: #272b46;
+      color: #ffc857;
+      padding: 4px 7px;
+      font: 900 .6rem "Trebuchet MS", sans-serif;
+      letter-spacing: .08em;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .emulator-screen-frame {
+      padding: 10px;
+      background: #080911;
+      border: 3px solid #111321;
+      border-radius: 9px;
+      box-shadow: inset 0 0 0 2px #555a79, inset 0 0 28px rgba(0,0,0,.85);
+    }
+
+    #screen {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      max-height: 72vh;
+      background: #16182b;
+      border: 2px solid #02030a;
+      border-radius: 5px;
+      box-shadow: inset 0 0 18px rgba(0,0,0,.95), 0 0 0 1px #6c7293;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    #screen::before,
+    #screen::after {
+      position: absolute;
+      inset: 0;
+      content: "";
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    #screen::before {
+      background: repeating-linear-gradient(180deg, rgba(255,255,255,.06) 0, rgba(255,255,255,.06) 1px, transparent 1px, transparent 4px);
+      mix-blend-mode: screen;
+      opacity: .42;
+    }
+
+    #screen::after {
+      background: radial-gradient(ellipse at center, transparent 56%, rgba(0,0,0,.38) 100%);
+      box-shadow: inset 0 0 24px rgba(110,215,255,.08);
+    }
+
+    #screen.crt-off::before { opacity: 0; }
+    #screen.crt-off::after { background: radial-gradient(ellipse at center, transparent 72%, rgba(0,0,0,.13) 100%); }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      z-index: 1;
+      image-rendering: auto;
+      touch-action: none;
+    }
+
+    #startButton {
+      position: absolute;
+      left: 50%;
+      top: 68%;
+      transform: translate(-50%, -50%);
+      border: 3px solid #141522;
+      background: var(--gold);
+      color: #2b1d25;
+      box-shadow: 5px 5px 0 #000;
+      padding: 12px 20px;
+      font: 900 1rem "Trebuchet MS", sans-serif;
+      letter-spacing: .12em;
+      cursor: pointer;
+      touch-action: manipulation;
+      z-index: 4;
+    }
+
+    #startButton:active { transform: translate(calc(-50% + 3px), calc(-50% + 3px)); box-shadow: 2px 2px 0 #000; }
+    #startButton.hidden { display: none; }
+    #startButton[disabled] { opacity: .45; cursor: default; }
+
+    .emulator-base {
+      min-height: 42px;
+      padding: 11px 3px 0;
+      color: #7c83a4;
+      font-size: .6rem;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .emulator-base strong { color: #fff0b5; }
+
+    .emu-lamp {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-right: 5px;
+      border-radius: 50%;
+      background: #ff6b8b;
+      box-shadow: 0 0 7px #ff6b8b;
+      vertical-align: middle;
+    }
+
+    .emu-model {
+      color: #555c7d;
+      font-size: .56rem;
+    }
+
+    #controls {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      padding: 0 2px;
+      color: #8f96b8;
+      font-size: .75rem;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .control-copy { line-height: 1.5; padding: 0 2px; }
+    .control-copy strong { color: var(--cream); }
+
+    .controller-deck {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      background: linear-gradient(180deg, #3a3e5b, #252945 70%, #1b1e31);
+      border: 3px solid #090a12;
+      border-radius: 8px;
+      box-shadow: 4px 5px 0 #000, inset 0 1px 0 rgba(255,255,255,.12);
+    }
+
+    .deck-mark {
+      color: #fff0b5;
+      font-size: .58rem;
+      font-weight: 900;
+      letter-spacing: .12em;
+      white-space: nowrap;
+    }
+
+    .touch-controls {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      flex-shrink: 0;
+    }
+
+    .dpad-group,
+    .face-group,
+    .deck-system {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dpad-group,
+    .face-group {
+      align-items: center;
+    }
+
+    .dpad-cluster {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(38px, 1fr));
+      grid-template-rows: repeat(3, minmax(38px, 1fr));
+      gap: 7px;
+    }
+
+    .dpad-cluster [data-action="up"] { grid-column: 2; grid-row: 1; }
+    .dpad-cluster [data-action="left"] { grid-column: 1; grid-row: 2; }
+    .dpad-cluster .dpad-center { grid-column: 2; grid-row: 2; }
+    .dpad-cluster [data-action="right"] { grid-column: 3; grid-row: 2; }
+    .dpad-cluster [data-action="down"] { grid-column: 2; grid-row: 3; }
+
+    .dpad-center {
+      display: block;
+      min-width: 38px;
+      min-height: 38px;
+      border: 2px solid #070811;
+      border-radius: 4px;
+      background: #15182a;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.05);
+    }
+
+    .face-group {
+      flex-direction: column;
+    }
+
+    .face-buttons {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .deck-label {
+      color: #7c83a4;
+      font-size: .5rem;
+      font-weight: 900;
+      letter-spacing: .08em;
+    }
+
+    .touch-button {
+      min-width: 58px;
+      min-height: 50px;
+      padding: 8px 10px;
+      border: 2px solid #070811;
+      background: var(--panel-2);
+      color: var(--cream);
+      box-shadow: 3px 3px 0 #000;
+      font: 900 .72rem "Trebuchet MS", sans-serif;
+      letter-spacing: .05em;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .touch-button:focus-visible,
+    #startButton:focus-visible,
+    #crtToggle:focus-visible {
+      outline: 3px solid var(--acid);
+      outline-offset: 2px;
+    }
+
+    .dpad-cluster .touch-button { min-width: 45px; min-height: 45px; padding: 5px; }
+    .touch-button[data-action="jump"] { background: #4e3d78; }
+    .touch-button[data-action="bash"] { background: #79405b; }
+    .face-button {
+      min-width: 64px;
+      min-height: 64px;
+      border-radius: 50%;
+      padding: 7px 9px;
+      line-height: 1;
+    }
+
+    .face-button small {
+      display: block;
+      margin-top: 4px;
+      color: #fff0b5;
+      font-size: .48rem;
+      letter-spacing: .03em;
+    }
+
+    .touch-button.pressed, .touch-button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; filter: brightness(1.25); }
+
+    #arcadeReturn,
+    #gamepadStatus {
+      min-height: 29px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 7px;
+      border: 1px solid #0b0c14;
+      background: #272b46;
+      color: #ffc857;
+      font: 900 .52rem "Trebuchet MS", sans-serif;
+      letter-spacing: .07em;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    #arcadeReturn:hover,
+    #arcadeReturn:focus-visible { color: #b8f25a; outline: 2px solid #b8f25a; outline-offset: 1px; }
+    #gamepadStatus { color: #7c83a4; }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 2px 4px;
+      color: #626987;
+      font-size: .68rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 8px; }
+      header { align-items: start; }
+      .badge { font-size: .6rem; padding: 5px 6px; }
+      .emulator-shell { padding: 10px 10px 12px; border-width: 3px; box-shadow: 0 0 0 2px #4c5170, 6px 8px 0 #000, inset 0 2px 0 rgba(255,255,255,.12); }
+      .emulator-topbar { padding-bottom: 7px; font-size: .54rem; }
+      .emulator-name small { display: none; }
+      #crtToggle { font-size: .52rem; padding: 3px 5px; }
+      .emulator-screen-frame { padding: 6px; }
+      .emulator-base { min-height: 31px; padding-top: 8px; font-size: .5rem; }
+      #controls { align-items: stretch; }
+      .controller-deck {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+        gap: 13px;
+        padding: 11px 9px 12px;
+      }
+      .deck-mark { width: 100%; text-align: center; }
+      .touch-controls {
+        width: 100%;
+        justify-content: center;
+        gap: clamp(24px, 8vw, 38px);
+      }
+      .dpad-group, .face-group { gap: 7px; }
+      .dpad-cluster { gap: clamp(7px, 2vw, 10px); }
+      .deck-label { display: none; }
+      .control-copy { font-size: .63rem; }
+      .touch-button { min-width: 48px; min-height: 48px; padding: 7px; font-size: .68rem; }
+      .dpad-cluster { grid-template-columns: repeat(3, clamp(44px, 13vw, 52px)); grid-template-rows: repeat(3, clamp(44px, 13vw, 52px)); }
+      .dpad-cluster .touch-button, .dpad-center { min-width: clamp(44px, 13vw, 52px); min-height: clamp(44px, 13vw, 52px); }
+      .face-buttons { gap: clamp(10px, 3vw, 14px); }
+      .face-button { min-width: clamp(52px, 15.5vw, 66px); min-height: clamp(52px, 15.5vw, 66px); }
+      .face-button small { font-size: .46rem; }
+      .deck-system { width: 100%; justify-content: center; gap: 10px; }
+      #arcadeReturn, #gamepadStatus { min-height: 34px; padding: 6px 9px; font-size: .5rem; }
+      footer { font-size: .58rem; }
+    }
+
+    @media (max-width: 360px) {
+      .controller-deck { padding-left: 6px; padding-right: 6px; }
+      .touch-controls { gap: 24px; }
+      .dpad-group, .face-group { gap: 5px; }
+      .face-buttons { gap: 8px; }
+      .face-button { min-width: 50px; min-height: 50px; }
+      #arcadeReturn, #gamepadStatus { padding-left: 7px; padding-right: 7px; }
+    }
+  </style>
+</head>
+<body>
+  <main id="app">
+    <header>
+      <div class="title-lockup">
+        <h1>CHAOS GOBLIN</h1>
+        <p>The Big Shiny — Six-Level Mischief Run</p>
+      </div>
+      <div class="badge">PLAYABLE PROOF // v0.4.1</div>
+    </header>
+
+    <div class="emulator-shell" aria-label="Arcade emulator shell">
+      <div class="emulator-topbar">
+        <div class="emulator-name"><span class="status-led"></span> SKAB ARCADE EMULATOR <small>EMU-02 / CART-001</small></div>
+        <div class="emulator-status"><span id="emulatorState" aria-live="polite">READY</span><button id="crtToggle" type="button" aria-pressed="true">CRT ON</button></div>
+      </div>
+      <div class="emulator-screen-frame">
+        <section id="screen" aria-label="Chaos Goblin playable level">
+          <canvas id="game" width="960" height="600" aria-describedby="gameInstructions">Your browser needs canvas support to play Chaos Goblin.</canvas>
+          <button id="startButton" type="button" aria-label="Start Chaos Goblin">START THE MISCHIEF</button>
+        </section>
+      </div>
+      <div class="emulator-base">
+        <span><span class="emu-lamp"></span><strong>CHAOS GOBLIN / THE BIG SHINY</strong></span>
+        <span class="emu-model">DISPLAY FILTER: ARCADE GLASS · INPUT: KEYBOARD / TOUCH / GAMEPAD</span>
+      </div>
+    </div>
+
+    <section id="controls" aria-label="Game controls">
+      <div class="controller-deck" aria-label="Integrated emulator controller">
+        <span class="deck-mark">CONTROLLER DECK // ARCADE INPUT</span>
+        <div class="touch-controls">
+          <div class="dpad-group" aria-label="Movement controls">
+            <span class="deck-label">MOVE</span>
+            <div class="dpad-cluster" role="group" aria-label="Directional pad">
+              <button class="touch-button" data-action="up" type="button" aria-label="Move up or jump">▲</button>
+              <button class="touch-button" data-action="left" type="button" aria-label="Move left">◀</button>
+              <span class="dpad-center" aria-hidden="true"></span>
+              <button class="touch-button" data-action="right" type="button" aria-label="Move right">▶</button>
+              <button class="touch-button" data-action="down" type="button" aria-label="Move down; not used in this game">▼</button>
+            </div>
+          </div>
+          <div class="face-group" aria-label="Action controls">
+            <span class="deck-label">ACTION</span>
+            <div class="face-buttons">
+              <button class="touch-button face-button" data-action="bash" type="button" aria-label="A button: bash">A<small>BASH</small></button>
+              <button class="touch-button face-button" data-action="jump" type="button" aria-label="B button: jump">B<small>JUMP</small></button>
+            </div>
+          </div>
+        </div>
+        <div class="deck-system">
+          <a id="arcadeReturn" href="https://skabkleveta-creator.github.io/skab-digital-reality-arcade/" aria-label="Return to the SKAB Digital Reality Arcade">ARCADE</a>
+          <span id="gamepadStatus" aria-live="polite">PAD: OPTIONAL</span>
+        </div>
+      </div>
+      <div class="control-copy">
+        <span id="gameInstructions"><strong>Keyboard:</strong> arrows or A/D move · Space, W, or Up jump · X, C, or Shift bash · R restarts the run · Enter confirms. <strong>Pad:</strong> B jumps, A bashes.</span>
+      </div>
+    </section>
+
+    <footer>
+      <span>Objective: clear six distinct stages and recover the Big Shiny</span>
+      <span>No music · SFX only</span>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var canvas = document.getElementById("game");
+      var ctx = canvas.getContext("2d");
+      var startButton = document.getElementById("startButton");
+      var screen = document.getElementById("screen");
+      var crtToggle = document.getElementById("crtToggle");
+      var emulatorState = document.getElementById("emulatorState");
+      var gamepadStatus = document.getElementById("gamepadStatus");
+      var W = 960;
+      var H = 600;
+      var DPR = 1;
+      var state = "title";
+      var lastTime = 0;
+      var accumulator = 0;
+      var fixedStep = 1 / 60;
+      var cameraX = 0;
+      var screenShake = 0;
+      var levelTime = 0;
+      var score = 0;
+      var lives = 3;
+      var MAX_LIVES = 5;
+      var shinyCount = 0;
+      var totalShinies = 0;
+      var message = "THE ORDERLINGS STOLE YOUR BIG SHINY.";
+      var messageTimer = 0;
+      var stateLockout = 0;
+      var jumpQueued = false;
+      var bashQueued = false;
+      var keys = Object.create(null);
+      var touchState = { up: false, down: false, left: false, right: false, jump: false, bash: false };
+      var gamepadState = { left: false, right: false, jump: false, bash: false, start: false };
+      var particles = [];
+      var floatTexts = [];
+      var audioContext = null;
+
+      var LEVEL_DEFS = [
+        {
+          number: "01", name: "THE TIDY RUN", theme: "tidy", width: 3720,
+          goalX: 3310, goalY: 432, goalLabel: "TIDY SHINY", goalAccent: "#ffc857",
+          tagline: "A clean start. A loud finish.", spawn: { x: 90, y: 450 },
+          signs: [
+            { x: 62, y: 464, label: "NO GOBLINS" }, { x: 760, y: 464, label: "TIDY GAP" },
+            { x: 2250, y: 464, label: "STAY ORDERLY" }, { x: 3180, y: 374, label: "STAGE SHINY →" }
+          ],
+          platforms: [
+            { x: 0, y: 520, w: 760, h: 80, kind: "ground" }, { x: 880, y: 520, w: 610, h: 80, kind: "ground" },
+            { x: 1630, y: 520, w: 590, h: 80, kind: "ground" }, { x: 2360, y: 520, w: 1360, h: 80, kind: "ground" },
+            { x: 220, y: 420, w: 190, h: 18, kind: "ledge" }, { x: 475, y: 350, w: 210, h: 18, kind: "ledge" },
+            { x: 965, y: 418, w: 205, h: 18, kind: "ledge" }, { x: 1220, y: 342, w: 220, h: 18, kind: "ledge" },
+            { x: 1715, y: 420, w: 230, h: 18, kind: "ledge" }, { x: 2010, y: 352, w: 220, h: 18, kind: "ledge" },
+            { x: 2505, y: 420, w: 220, h: 18, kind: "ledge" }, { x: 2785, y: 350, w: 250, h: 18, kind: "ledge" },
+            { x: 3110, y: 430, w: 330, h: 18, kind: "ledge" }
+          ],
+          crates: [
+            { x: 365, y: 484, w: 38, h: 36, alive: true }, { x: 600, y: 484, w: 38, h: 36, alive: true },
+            { x: 1030, y: 382, w: 36, h: 36, alive: true }, { x: 1325, y: 306, w: 36, h: 36, alive: true },
+            { x: 1780, y: 384, w: 36, h: 36, alive: true }, { x: 2115, y: 316, w: 36, h: 36, alive: true },
+            { x: 2580, y: 384, w: 36, h: 36, alive: true }, { x: 2910, y: 314, w: 36, h: 36, alive: true },
+            { x: 3225, y: 394, w: 36, h: 36, alive: true }
+          ],
+          enemies: [
+            { x: 520, y: 474, w: 38, h: 46, min: 430, max: 700, speed: 72, dir: -1, alive: true, tint: "#ff6b8b" },
+            { x: 1070, y: 472, w: 38, h: 48, min: 920, max: 1390, speed: 84, dir: 1, alive: true, tint: "#6ed7ff" },
+            { x: 1820, y: 472, w: 38, h: 48, min: 1660, max: 2140, speed: 96, dir: -1, alive: true, tint: "#b8f25a" },
+            { x: 2490, y: 472, w: 38, h: 48, min: 2380, max: 2680, speed: 110, dir: 1, alive: true, tint: "#ffbd69" },
+            { x: 3035, y: 472, w: 38, h: 48, min: 2900, max: 3320, speed: 118, dir: -1, alive: true, tint: "#ff6b8b" }
+          ],
+          rollers: [
+            { x: 660, y: 472, r: 24, min: 560, max: 730, speed: 100, dir: -1, alive: true },
+            { x: 1440, y: 472, r: 24, min: 1260, max: 1460, speed: 125, dir: 1, alive: true },
+            { x: 2170, y: 472, r: 24, min: 1980, max: 2190, speed: 145, dir: -1, alive: true },
+            { x: 2770, y: 472, r: 24, min: 2660, max: 2860, speed: 165, dir: 1, alive: true }
+          ],
+          shinies: [
+            { x: 300, y: 382, collected: false }, { x: 570, y: 312, collected: false }, { x: 1040, y: 380, collected: false },
+            { x: 1295, y: 304, collected: false }, { x: 1800, y: 382, collected: false }, { x: 2575, y: 382, collected: false },
+            { x: 2860, y: 312, collected: false }
+          ]
+        },
+        {
+          number: "02", name: "ROOFTOP SHUFFLE", theme: "rooftop", width: 3380,
+          goalX: 3050, goalY: 320, goalLabel: "ROOFTOP SHINY", goalAccent: "#6ed7ff",
+          tagline: "Up the fire escapes. Over the tidy people.", spawn: { x: 75, y: 450 },
+          signs: [
+            { x: 70, y: 464, label: "ROOF ACCESS" }, { x: 690, y: 464, label: "MIND THE DROP" },
+            { x: 1710, y: 464, label: "KEEP CLIMBING" }, { x: 2850, y: 374, label: "ROOF SHINY →" }
+          ],
+          platforms: [
+            { x: 0, y: 520, w: 510, h: 80, kind: "ground" }, { x: 640, y: 520, w: 420, h: 80, kind: "ground" },
+            { x: 1180, y: 520, w: 420, h: 80, kind: "ground" }, { x: 1720, y: 520, w: 460, h: 80, kind: "ground" },
+            { x: 2300, y: 520, w: 420, h: 80, kind: "ground" }, { x: 2830, y: 520, w: 550, h: 80, kind: "ground" },
+            { x: 150, y: 430, w: 190, h: 18, kind: "ledge" }, { x: 390, y: 350, w: 200, h: 18, kind: "ledge" },
+            { x: 760, y: 410, w: 190, h: 18, kind: "ledge" }, { x: 1040, y: 330, w: 190, h: 18, kind: "ledge" },
+            { x: 1330, y: 400, w: 190, h: 18, kind: "ledge" }, { x: 1570, y: 320, w: 210, h: 18, kind: "ledge" },
+            { x: 1880, y: 400, w: 190, h: 18, kind: "ledge" }, { x: 2160, y: 335, w: 210, h: 18, kind: "ledge" },
+            { x: 2450, y: 415, w: 180, h: 18, kind: "ledge" }, { x: 2740, y: 345, w: 210, h: 18, kind: "ledge" },
+            { x: 2840, y: 420, w: 130, h: 18, kind: "ledge" }, { x: 2980, y: 350, w: 180, h: 18, kind: "ledge" }
+          ],
+          crates: [
+            { x: 250, y: 394, w: 36, h: 36, alive: true }, { x: 455, y: 314, w: 36, h: 36, alive: true },
+            { x: 805, y: 374, w: 36, h: 36, alive: true }, { x: 1090, y: 294, w: 36, h: 36, alive: true },
+            { x: 1380, y: 364, w: 36, h: 36, alive: true }, { x: 1630, y: 284, w: 36, h: 36, alive: true },
+            { x: 1940, y: 364, w: 36, h: 36, alive: true }, { x: 2220, y: 299, w: 36, h: 36, alive: true },
+            { x: 2510, y: 379, w: 36, h: 36, alive: true }, { x: 2800, y: 309, w: 36, h: 36, alive: true },
+            { x: 2980, y: 314, w: 36, h: 36, alive: true }
+          ],
+          enemies: [
+            { x: 430, y: 304, w: 38, h: 46, min: 395, max: 550, speed: 62, dir: 1, alive: true, tint: "#ffbd69" },
+            { x: 805, y: 472, w: 38, h: 48, min: 680, max: 980, speed: 82, dir: -1, alive: true, tint: "#ff6b8b" },
+            { x: 1350, y: 354, w: 38, h: 46, min: 1330, max: 1480, speed: 72, dir: 1, alive: true, tint: "#b8f25a" },
+            { x: 1900, y: 354, w: 38, h: 46, min: 1880, max: 2030, speed: 86, dir: -1, alive: true, tint: "#6ed7ff" },
+            { x: 2480, y: 472, w: 38, h: 48, min: 2330, max: 2670, speed: 108, dir: 1, alive: true, tint: "#ff6b8b" },
+            { x: 3010, y: 304, w: 38, h: 46, min: 2990, max: 3120, speed: 76, dir: -1, alive: true, tint: "#ffbd69" }
+          ],
+          rollers: [
+            { x: 350, y: 472, r: 24, min: 260, max: 470, speed: 95, dir: 1, alive: true },
+            { x: 1010, y: 472, r: 24, min: 700, max: 1030, speed: 125, dir: -1, alive: true },
+            { x: 1800, y: 472, r: 24, min: 1750, max: 2150, speed: 145, dir: 1, alive: true },
+            { x: 2640, y: 472, r: 24, min: 2360, max: 2680, speed: 165, dir: -1, alive: true }
+          ],
+          shinies: [
+            { x: 245, y: 392, collected: false }, { x: 490, y: 312, collected: false }, { x: 825, y: 372, collected: false },
+            { x: 1080, y: 292, collected: false }, { x: 1385, y: 362, collected: false }, { x: 1645, y: 282, collected: false },
+            { x: 1950, y: 362, collected: false }, { x: 2230, y: 297, collected: false }, { x: 2820, y: 307, collected: false }
+          ]
+        },
+        {
+          number: "03", name: "ROLLER ALLEY", theme: "warehouse", width: 3600,
+          goalX: 3400, goalY: 432, goalLabel: "WAREHOUSE SHINY", goalAccent: "#b8f25a",
+          tagline: "The floor moves. The goblin moves louder.", spawn: { x: 75, y: 450 },
+          signs: [
+            { x: 55, y: 464, label: "LOADING BAY" }, { x: 1080, y: 464, label: "ROLL WITH IT" },
+            { x: 2050, y: 464, label: "NO BRAKES" }, { x: 3220, y: 464, label: "SHINY →" }
+          ],
+          platforms: [
+            { x: 0, y: 520, w: 420, h: 80, kind: "ground" }, { x: 520, y: 520, w: 460, h: 80, kind: "ground" },
+            { x: 1100, y: 520, w: 450, h: 80, kind: "ground" }, { x: 1660, y: 520, w: 450, h: 80, kind: "ground" },
+            { x: 2220, y: 520, w: 540, h: 80, kind: "ground" }, { x: 2870, y: 520, w: 730, h: 80, kind: "ground" },
+            { x: 270, y: 430, w: 160, h: 18, kind: "ledge" }, { x: 700, y: 390, w: 190, h: 18, kind: "ledge" },
+            { x: 1240, y: 430, w: 180, h: 18, kind: "ledge" }, { x: 1780, y: 390, w: 200, h: 18, kind: "ledge" },
+            { x: 2380, y: 430, w: 190, h: 18, kind: "ledge" }, { x: 3000, y: 390, w: 220, h: 18, kind: "ledge" },
+            { x: 3280, y: 430, w: 260, h: 18, kind: "ledge" }
+          ],
+          crates: [
+            { x: 305, y: 394, w: 36, h: 36, alive: true }, { x: 750, y: 354, w: 36, h: 36, alive: true },
+            { x: 1310, y: 394, w: 36, h: 36, alive: true }, { x: 1850, y: 354, w: 36, h: 36, alive: true },
+            { x: 2450, y: 394, w: 36, h: 36, alive: true }, { x: 3070, y: 354, w: 36, h: 36, alive: true },
+            { x: 3230, y: 484, w: 38, h: 36, alive: true }
+          ],
+          enemies: [
+            { x: 610, y: 472, w: 38, h: 48, min: 540, max: 900, speed: 100, dir: 1, alive: true, tint: "#6ed7ff" },
+            { x: 1170, y: 472, w: 38, h: 48, min: 1120, max: 1480, speed: 112, dir: -1, alive: true, tint: "#ff6b8b" },
+            { x: 1740, y: 472, w: 38, h: 48, min: 1680, max: 2040, speed: 126, dir: 1, alive: true, tint: "#ffbd69" },
+            { x: 2310, y: 472, w: 38, h: 48, min: 2250, max: 2670, speed: 138, dir: -1, alive: true, tint: "#b8f25a" },
+            { x: 2920, y: 472, w: 38, h: 48, min: 2890, max: 3350, speed: 148, dir: 1, alive: true, tint: "#ff6b8b" },
+            { x: 1840, y: 344, w: 38, h: 46, min: 1780, max: 1930, speed: 72, dir: -1, alive: true, tint: "#6ed7ff" }
+          ],
+          rollers: [
+            { x: 210, y: 472, r: 24, min: 100, max: 390, speed: 120, dir: 1, alive: true },
+            { x: 650, y: 472, r: 24, min: 545, max: 930, speed: 150, dir: -1, alive: true },
+            { x: 920, y: 472, r: 24, min: 620, max: 950, speed: 180, dir: 1, alive: true },
+            { x: 1220, y: 472, r: 24, min: 1130, max: 1510, speed: 165, dir: -1, alive: true },
+            { x: 1760, y: 472, r: 24, min: 1690, max: 2070, speed: 190, dir: 1, alive: true },
+            { x: 2320, y: 472, r: 24, min: 2250, max: 2730, speed: 210, dir: -1, alive: true },
+            { x: 3010, y: 472, r: 24, min: 2900, max: 3500, speed: 220, dir: 1, alive: true }
+          ],
+          shinies: [
+            { x: 315, y: 392, collected: false }, { x: 790, y: 352, collected: false }, { x: 1330, y: 392, collected: false },
+            { x: 1870, y: 352, collected: false }, { x: 2470, y: 392, collected: false }, { x: 3090, y: 352, collected: false },
+            { x: 3300, y: 432, collected: false }
+          ]
+        },
+        {
+          number: "04", name: "CRATE CANYON", theme: "canyon", width: 3550,
+          goalX: 3280, goalY: 300, goalLabel: "CANYON SHINY", goalAccent: "#ffbd69",
+          tagline: "Every gap is an argument with gravity.", spawn: { x: 70, y: 450 },
+          signs: [
+            { x: 45, y: 464, label: "CANYON ENTRY" }, { x: 920, y: 464, label: "STACK HIGH" },
+            { x: 1880, y: 464, label: "MIND THE GAP" }, { x: 3030, y: 374, label: "CANYON SHINY →" }
+          ],
+          platforms: [
+            { x: 0, y: 520, w: 360, h: 80, kind: "ground" }, { x: 500, y: 520, w: 320, h: 80, kind: "ground" },
+            { x: 980, y: 520, w: 270, h: 80, kind: "ground" }, { x: 1410, y: 520, w: 280, h: 80, kind: "ground" },
+            { x: 1850, y: 520, w: 280, h: 80, kind: "ground" }, { x: 2290, y: 520, w: 340, h: 80, kind: "ground" },
+            { x: 2790, y: 520, w: 760, h: 80, kind: "ground" },
+            { x: 150, y: 420, w: 170, h: 18, kind: "ledge" }, { x: 370, y: 340, w: 190, h: 18, kind: "ledge" },
+            { x: 610, y: 420, w: 170, h: 18, kind: "ledge" }, { x: 840, y: 350, w: 190, h: 18, kind: "ledge" },
+            { x: 1110, y: 410, w: 180, h: 18, kind: "ledge" }, { x: 1290, y: 320, w: 190, h: 18, kind: "ledge" },
+            { x: 1550, y: 400, w: 180, h: 18, kind: "ledge" }, { x: 1760, y: 330, w: 190, h: 18, kind: "ledge" },
+            { x: 2030, y: 420, w: 180, h: 18, kind: "ledge" }, { x: 2220, y: 350, w: 200, h: 18, kind: "ledge" },
+            { x: 2470, y: 400, w: 180, h: 18, kind: "ledge" }, { x: 2660, y: 320, w: 190, h: 18, kind: "ledge" },
+            { x: 2940, y: 410, w: 180, h: 18, kind: "ledge" }, { x: 3140, y: 330, w: 220, h: 18, kind: "ledge" }
+          ],
+          crates: [
+            { x: 205, y: 384, w: 36, h: 36, alive: true }, { x: 425, y: 304, w: 36, h: 36, alive: true },
+            { x: 660, y: 384, w: 36, h: 36, alive: true }, { x: 890, y: 314, w: 36, h: 36, alive: true },
+            { x: 1160, y: 374, w: 36, h: 36, alive: true }, { x: 1340, y: 284, w: 36, h: 36, alive: true },
+            { x: 1600, y: 364, w: 36, h: 36, alive: true }, { x: 1810, y: 294, w: 36, h: 36, alive: true },
+            { x: 2080, y: 384, w: 36, h: 36, alive: true }, { x: 2280, y: 314, w: 36, h: 36, alive: true },
+            { x: 2520, y: 364, w: 36, h: 36, alive: true }, { x: 2720, y: 284, w: 36, h: 36, alive: true },
+            { x: 3000, y: 374, w: 36, h: 36, alive: true }, { x: 3150, y: 294, w: 36, h: 36, alive: true }
+          ],
+          enemies: [
+            { x: 535, y: 472, w: 38, h: 48, min: 510, max: 780, speed: 86, dir: 1, alive: true, tint: "#ff6b8b" },
+            { x: 995, y: 472, w: 38, h: 48, min: 990, max: 1210, speed: 96, dir: -1, alive: true, tint: "#6ed7ff" },
+            { x: 1320, y: 274, w: 38, h: 46, min: 1290, max: 1430, speed: 64, dir: 1, alive: true, tint: "#ffbd69" },
+            { x: 1880, y: 472, w: 38, h: 48, min: 1870, max: 2090, speed: 102, dir: -1, alive: true, tint: "#b8f25a" },
+            { x: 2260, y: 304, w: 38, h: 46, min: 2220, max: 2370, speed: 76, dir: -1, alive: true, tint: "#ff6b8b" },
+            { x: 2350, y: 472, w: 38, h: 48, min: 2310, max: 2580, speed: 114, dir: 1, alive: true, tint: "#6ed7ff" },
+            { x: 3180, y: 284, w: 38, h: 46, min: 3150, max: 3310, speed: 80, dir: 1, alive: true, tint: "#ffbd69" }
+          ],
+          rollers: [
+            { x: 270, y: 472, r: 24, min: 80, max: 330, speed: 105, dir: -1, alive: true },
+            { x: 730, y: 472, r: 24, min: 550, max: 790, speed: 130, dir: 1, alive: true },
+            { x: 1180, y: 472, r: 24, min: 1020, max: 1220, speed: 145, dir: -1, alive: true },
+            { x: 2030, y: 472, r: 24, min: 1900, max: 2100, speed: 165, dir: 1, alive: true },
+            { x: 2520, y: 472, r: 24, min: 2330, max: 2590, speed: 180, dir: -1, alive: true }
+          ],
+          shinies: [
+            { x: 225, y: 382, collected: false }, { x: 445, y: 302, collected: false }, { x: 680, y: 382, collected: false },
+            { x: 910, y: 312, collected: false }, { x: 1180, y: 372, collected: false }, { x: 1360, y: 282, collected: false },
+            { x: 1620, y: 362, collected: false }, { x: 1830, y: 292, collected: false }, { x: 2100, y: 382, collected: false },
+            { x: 2300, y: 312, collected: false }, { x: 2540, y: 362, collected: false }, { x: 2740, y: 282, collected: false },
+            { x: 3260, y: 292, collected: false }
+          ]
+        },
+        {
+          number: "05", name: "ORDERLY YARD", theme: "yard", width: 3800,
+          goalX: 3520, goalY: 432, goalLabel: "YARD SHINY", goalAccent: "#ff6b8b",
+          tagline: "They built a checkpoint. He brought a shoulder check.", spawn: { x: 80, y: 450 },
+          signs: [
+            { x: 55, y: 464, label: "AUTHORIZED" }, { x: 830, y: 464, label: "CHECKPOINT" },
+            { x: 1990, y: 464, label: "YARD DUTY" }, { x: 3280, y: 464, label: "LAST FENCE" }
+          ],
+          platforms: [
+            { x: 0, y: 520, w: 700, h: 80, kind: "ground" }, { x: 820, y: 520, w: 530, h: 80, kind: "ground" },
+            { x: 1480, y: 520, w: 400, h: 80, kind: "ground" }, { x: 2010, y: 520, w: 460, h: 80, kind: "ground" },
+            { x: 2600, y: 520, w: 500, h: 80, kind: "ground" }, { x: 3230, y: 520, w: 570, h: 80, kind: "ground" },
+            { x: 220, y: 420, w: 190, h: 18, kind: "ledge" }, { x: 520, y: 350, w: 220, h: 18, kind: "ledge" },
+            { x: 930, y: 420, w: 190, h: 18, kind: "ledge" }, { x: 1160, y: 330, w: 220, h: 18, kind: "ledge" },
+            { x: 1540, y: 390, w: 190, h: 18, kind: "ledge" }, { x: 1790, y: 300, w: 220, h: 18, kind: "ledge" },
+            { x: 2100, y: 420, w: 200, h: 18, kind: "ledge" }, { x: 2350, y: 340, w: 220, h: 18, kind: "ledge" },
+            { x: 2720, y: 410, w: 190, h: 18, kind: "ledge" }, { x: 2940, y: 330, w: 210, h: 18, kind: "ledge" },
+            { x: 3350, y: 400, w: 220, h: 18, kind: "ledge" }
+          ],
+          crates: [
+            { x: 280, y: 384, w: 36, h: 36, alive: true }, { x: 580, y: 314, w: 36, h: 36, alive: true },
+            { x: 980, y: 384, w: 36, h: 36, alive: true }, { x: 1210, y: 294, w: 36, h: 36, alive: true },
+            { x: 1590, y: 354, w: 36, h: 36, alive: true }, { x: 1840, y: 264, w: 36, h: 36, alive: true },
+            { x: 2160, y: 384, w: 36, h: 36, alive: true }, { x: 2410, y: 304, w: 36, h: 36, alive: true },
+            { x: 2780, y: 374, w: 36, h: 36, alive: true }, { x: 3010, y: 294, w: 36, h: 36, alive: true },
+            { x: 3430, y: 364, w: 36, h: 36, alive: true }, { x: 3300, y: 484, w: 38, h: 36, alive: true }
+          ],
+          enemies: [
+            { x: 410, y: 472, w: 38, h: 48, min: 220, max: 660, speed: 96, dir: 1, alive: true, tint: "#ff6b8b" },
+            { x: 880, y: 472, w: 38, h: 48, min: 850, max: 1290, speed: 106, dir: -1, alive: true, tint: "#6ed7ff" },
+            { x: 1220, y: 284, w: 38, h: 46, min: 1160, max: 1340, speed: 74, dir: 1, alive: true, tint: "#ffbd69" },
+            { x: 1510, y: 472, w: 38, h: 48, min: 1500, max: 1840, speed: 118, dir: 1, alive: true, tint: "#b8f25a" },
+            { x: 1830, y: 254, w: 38, h: 46, min: 1790, max: 1960, speed: 82, dir: -1, alive: true, tint: "#ff6b8b" },
+            { x: 2070, y: 472, w: 38, h: 48, min: 2050, max: 2430, speed: 128, dir: -1, alive: true, tint: "#6ed7ff" },
+            { x: 2770, y: 472, w: 38, h: 48, min: 2640, max: 3040, speed: 142, dir: 1, alive: true, tint: "#ffbd69" },
+            { x: 2980, y: 284, w: 38, h: 46, min: 2940, max: 3110, speed: 88, dir: -1, alive: true, tint: "#b8f25a" },
+            { x: 3370, y: 354, w: 38, h: 46, min: 3350, max: 3530, speed: 96, dir: 1, alive: true, tint: "#ff6b8b" }
+          ],
+          rollers: [
+            { x: 620, y: 472, r: 24, min: 480, max: 670, speed: 120, dir: -1, alive: true },
+            { x: 1040, y: 472, r: 24, min: 860, max: 1280, speed: 150, dir: 1, alive: true },
+            { x: 1690, y: 472, r: 24, min: 1530, max: 1820, speed: 170, dir: -1, alive: true },
+            { x: 2260, y: 472, r: 24, min: 2070, max: 2410, speed: 185, dir: 1, alive: true },
+            { x: 2890, y: 472, r: 24, min: 2650, max: 3040, speed: 200, dir: -1, alive: true },
+            { x: 3450, y: 472, r: 24, min: 3270, max: 3740, speed: 215, dir: 1, alive: true }
+          ],
+          shinies: [
+            { x: 300, y: 382, collected: false }, { x: 600, y: 312, collected: false }, { x: 1000, y: 382, collected: false },
+            { x: 1230, y: 292, collected: false }, { x: 1610, y: 352, collected: false }, { x: 1860, y: 262, collected: false },
+            { x: 2180, y: 382, collected: false }, { x: 2430, y: 302, collected: false }, { x: 2800, y: 372, collected: false },
+            { x: 3030, y: 292, collected: false }, { x: 3470, y: 362, collected: false }
+          ]
+        },
+        {
+          number: "06", name: "VAULT OF SHINY", theme: "vault", width: 3900,
+          goalX: 3580, goalY: 270, goalLabel: "THE BIG SHINY", goalAccent: "#ffc857",
+          tagline: "Six rooms. One goblin. Zero permission.", spawn: { x: 75, y: 450 },
+          signs: [
+            { x: 50, y: 464, label: "VAULT OUTER" }, { x: 980, y: 464, label: "KEEP GOING" },
+            { x: 2050, y: 464, label: "INNER LOCK" }, { x: 3300, y: 374, label: "FINAL SHINY →" }
+          ],
+          platforms: [
+            { x: 0, y: 520, w: 430, h: 80, kind: "ground" }, { x: 560, y: 520, w: 340, h: 80, kind: "ground" },
+            { x: 1030, y: 520, w: 340, h: 80, kind: "ground" }, { x: 1500, y: 520, w: 340, h: 80, kind: "ground" },
+            { x: 1970, y: 520, w: 350, h: 80, kind: "ground" }, { x: 2450, y: 520, w: 400, h: 80, kind: "ground" },
+            { x: 2980, y: 520, w: 320, h: 80, kind: "ground" }, { x: 3420, y: 520, w: 480, h: 80, kind: "ground" },
+            { x: 180, y: 430, w: 170, h: 18, kind: "ledge" }, { x: 380, y: 350, w: 180, h: 18, kind: "ledge" },
+            { x: 640, y: 410, w: 180, h: 18, kind: "ledge" }, { x: 850, y: 320, w: 190, h: 18, kind: "ledge" },
+            { x: 1110, y: 400, w: 180, h: 18, kind: "ledge" }, { x: 1300, y: 300, w: 190, h: 18, kind: "ledge" },
+            { x: 1550, y: 390, w: 180, h: 18, kind: "ledge" }, { x: 1760, y: 310, w: 200, h: 18, kind: "ledge" },
+            { x: 2070, y: 400, w: 190, h: 18, kind: "ledge" }, { x: 2290, y: 330, w: 200, h: 18, kind: "ledge" },
+            { x: 2530, y: 410, w: 190, h: 18, kind: "ledge" }, { x: 2780, y: 300, w: 210, h: 18, kind: "ledge" },
+            { x: 3040, y: 390, w: 190, h: 18, kind: "ledge" }, { x: 3260, y: 320, w: 210, h: 18, kind: "ledge" },
+            { x: 3310, y: 400, w: 120, h: 18, kind: "ledge" }, { x: 3480, y: 300, w: 220, h: 18, kind: "ledge" }
+          ],
+          crates: [
+            { x: 225, y: 394, w: 36, h: 36, alive: true }, { x: 420, y: 314, w: 36, h: 36, alive: true },
+            { x: 680, y: 374, w: 36, h: 36, alive: true }, { x: 890, y: 284, w: 36, h: 36, alive: true },
+            { x: 1150, y: 364, w: 36, h: 36, alive: true }, { x: 1340, y: 264, w: 36, h: 36, alive: true },
+            { x: 1580, y: 354, w: 36, h: 36, alive: true }, { x: 1810, y: 274, w: 36, h: 36, alive: true },
+            { x: 2100, y: 364, w: 36, h: 36, alive: true }, { x: 2330, y: 294, w: 36, h: 36, alive: true },
+            { x: 2560, y: 374, w: 36, h: 36, alive: true }, { x: 2850, y: 264, w: 36, h: 36, alive: true },
+            { x: 3070, y: 354, w: 36, h: 36, alive: true }, { x: 3330, y: 284, w: 36, h: 36, alive: true },
+            { x: 3490, y: 264, w: 36, h: 36, alive: true }
+          ],
+          enemies: [
+            { x: 590, y: 472, w: 38, h: 48, min: 570, max: 860, speed: 105, dir: 1, alive: true, tint: "#ff6b8b" },
+            { x: 1080, y: 472, w: 38, h: 48, min: 1040, max: 1330, speed: 118, dir: -1, alive: true, tint: "#6ed7ff" },
+            { x: 1320, y: 254, w: 38, h: 46, min: 1300, max: 1440, speed: 78, dir: 1, alive: true, tint: "#ffbd69" },
+            { x: 1540, y: 472, w: 38, h: 48, min: 1520, max: 1800, speed: 130, dir: 1, alive: true, tint: "#b8f25a" },
+            { x: 1800, y: 264, w: 38, h: 46, min: 1760, max: 1920, speed: 84, dir: -1, alive: true, tint: "#ff6b8b" },
+            { x: 2010, y: 472, w: 38, h: 48, min: 1990, max: 2280, speed: 142, dir: -1, alive: true, tint: "#6ed7ff" },
+            { x: 2580, y: 364, w: 38, h: 46, min: 2530, max: 2670, speed: 92, dir: 1, alive: true, tint: "#ffbd69" },
+            { x: 2800, y: 254, w: 38, h: 46, min: 2780, max: 2940, speed: 94, dir: -1, alive: true, tint: "#b8f25a" },
+            { x: 3070, y: 344, w: 38, h: 46, min: 3040, max: 3190, speed: 102, dir: 1, alive: true, tint: "#ff6b8b" },
+            { x: 3510, y: 254, w: 38, h: 46, min: 3480, max: 3650, speed: 110, dir: -1, alive: true, tint: "#ffc857" }
+          ],
+          rollers: [
+            { x: 270, y: 472, r: 24, min: 90, max: 390, speed: 120, dir: 1, alive: true },
+            { x: 760, y: 472, r: 24, min: 600, max: 850, speed: 155, dir: -1, alive: true },
+            { x: 1260, y: 472, r: 24, min: 1070, max: 1330, speed: 180, dir: 1, alive: true },
+            { x: 1720, y: 472, r: 24, min: 1530, max: 1800, speed: 190, dir: -1, alive: true },
+            { x: 2180, y: 472, r: 24, min: 2010, max: 2280, speed: 205, dir: 1, alive: true },
+            { x: 2740, y: 472, r: 24, min: 2500, max: 2810, speed: 220, dir: -1, alive: true },
+            { x: 3150, y: 472, r: 24, min: 3005, max: 3275, speed: 230, dir: 1, alive: true },
+            { x: 3690, y: 472, r: 24, min: 3470, max: 3870, speed: 240, dir: -1, alive: true }
+          ],
+          shinies: [
+            { x: 245, y: 392, collected: false }, { x: 445, y: 312, collected: false }, { x: 705, y: 372, collected: false },
+            { x: 915, y: 282, collected: false }, { x: 1175, y: 362, collected: false }, { x: 1365, y: 262, collected: false },
+            { x: 1605, y: 352, collected: false }, { x: 1835, y: 272, collected: false }, { x: 2125, y: 362, collected: false },
+            { x: 2355, y: 292, collected: false }, { x: 2590, y: 372, collected: false }, { x: 2875, y: 262, collected: false },
+            { x: 3095, y: 352, collected: false }, { x: 3355, y: 282, collected: false }, { x: 3575, y: 262, collected: false }
+          ]
+        }
+      ];
+
+      var PLAYER_W = 38;
+      var PLAYER_H = 58;
+      var JUMP_VELOCITY = 690;
+      var GRAVITY = 1700;
+      var STOMP_VELOCITY = 330;
+
+      // ---------------------------------------------------------------------
+      // Verification suite. Pure function of the level table so it can run in
+      // a browser console or a headless harness. Three assertion classes were
+      // added in v0.4.1: goal-box reachability from a standing surface, patrol
+      // range containment inside the carrying platform, and mounted-entity
+      // y-alignment against that platform's top edge.
+      // ---------------------------------------------------------------------
+      function verifyLevels(defs) {
+        var failures = [];
+        var checks = 0;
+
+        function assert(ok, label) {
+          checks += 1;
+          if (!ok) failures.push(label);
+        }
+
+        function surfaceUnder(def, left, right, bottom) {
+          // The platform an entity rests on: spans it horizontally, and its
+          // top edge is the closest one at or below the entity's feet.
+          var best = null;
+          def.platforms.forEach(function (platform) {
+            if (left < platform.x || right > platform.x + platform.w) return;
+            if (platform.y < bottom - 1) return;
+            if (!best || platform.y < best.y) best = platform;
+          });
+          return best;
+        }
+
+        defs.forEach(function (def, levelNo) {
+          var tag = "L" + def.number;
+
+          assert(def.width > W, tag + " width must exceed viewport");
+          def.platforms.forEach(function (platform, index) {
+            assert(platform.x >= 0 && platform.x + platform.w <= def.width,
+              tag + " platform[" + index + "] outside level bounds");
+          });
+
+          // --- Assertion class A: goal box overlaps a standing surface ------
+          var goalTop = def.goalY - 42;
+          var goalBottom = def.goalY + 28;
+          var standable = def.platforms.some(function (platform) {
+            var footTop = platform.y - PLAYER_H;
+            var verticalOverlap = footTop < goalBottom && platform.y > goalTop;
+            var xOverlap = platform.x < def.goalX + 30 && platform.x + platform.w > def.goalX - 30 - PLAYER_W;
+            return verticalOverlap && xOverlap;
+          });
+          assert(standable, tag + " goal box unreachable from any standing surface");
+
+          // --- Assertion class B: patrol ranges stay on their platform -----
+          def.enemies.forEach(function (enemy, index) {
+            var surface = surfaceUnder(def, enemy.x, enemy.x + enemy.w, enemy.y + enemy.h);
+            assert(!!surface, tag + " enemy[" + index + "] has no carrying platform");
+            if (!surface) return;
+            assert(enemy.min >= surface.x && enemy.max + enemy.w <= surface.x + surface.w,
+              tag + " enemy[" + index + "] patrol leaves platform (" +
+              enemy.min + "–" + (enemy.max + enemy.w) + " vs " + surface.x + "–" + (surface.x + surface.w) + ")");
+            assert(enemy.x >= enemy.min && enemy.x <= enemy.max,
+              tag + " enemy[" + index + "] spawns outside its own patrol range");
+
+            // --- Assertion class C: mounted-entity alignment ---------------
+            assert(enemy.y + enemy.h === surface.y,
+              tag + " enemy[" + index + "] floats/sinks " + (surface.y - enemy.y - enemy.h) + "px");
+          });
+
+          def.rollers.forEach(function (roller, index) {
+            var surface = surfaceUnder(def, roller.x - roller.r, roller.x + roller.r, roller.y + roller.r * 2);
+            assert(!!surface, tag + " roller[" + index + "] has no carrying platform");
+            if (!surface) return;
+            assert(roller.min - roller.r >= surface.x && roller.max + roller.r <= surface.x + surface.w,
+              tag + " roller[" + index + "] patrol leaves platform (" +
+              (roller.min - roller.r) + "–" + (roller.max + roller.r) + " vs " + surface.x + "–" + (surface.x + surface.w) + ")");
+            assert(roller.x >= roller.min && roller.x <= roller.max,
+              tag + " roller[" + index + "] spawns outside its own patrol range");
+            assert(roller.y + roller.r * 2 === surface.y,
+              tag + " roller[" + index + "] floats/sinks " + (surface.y - roller.y - roller.r * 2) + "px");
+          });
+
+          def.crates.forEach(function (crate, index) {
+            var surface = surfaceUnder(def, crate.x, crate.x + crate.w, crate.y + crate.h);
+            assert(!!surface, tag + " crate[" + index + "] has no carrying platform");
+            if (!surface) return;
+            assert(crate.y + crate.h === surface.y,
+              tag + " crate[" + index + "] floats/sinks " + (surface.y - crate.y - crate.h) + "px");
+            assert(crate.x + crate.w <= def.goalX - 30 || crate.x >= def.goalX + 30,
+              tag + " crate[" + index + "] sits inside the goal box");
+          });
+
+          // Content past the goal can never be reached: crossing the box ends
+          // the stage. Flag it rather than shipping dead pickups.
+          def.shinies.forEach(function (shiny, index) {
+            assert(shiny.x <= def.goalX + 30,
+              tag + " shiny[" + index + "] is past the goal and unreachable");
+          });
+
+          var spawnSurface = surfaceUnder(def, def.spawn.x, def.spawn.x + PLAYER_W, def.spawn.y + PLAYER_H);
+          assert(!!spawnSurface, tag + " spawn has no ground beneath it");
+          assert(def.spawn.y + PLAYER_H <= (spawnSurface ? spawnSurface.y : 0),
+            tag + " spawn starts inside geometry");
+
+          assert(!!def.tagline && !!def.goalLabel && !!def.name, tag + " missing display copy");
+          assert(def.number === String(levelNo + 1).padStart(2, "0"), tag + " number out of sequence");
+        });
+
+        var themes = defs.map(function (def) { return def.theme; });
+        assert(new Set(themes).size === defs.length, "themes are not distinct per stage");
+
+        return { checks: checks, failures: failures, pass: failures.length === 0 };
+      }
+
+      if (typeof window !== "undefined") window.chaosGoblinVerify = function () { return verifyLevels(LEVEL_DEFS); };
+
+      totalShinies = LEVEL_DEFS.reduce(function (sum, definition) {
+        return sum + definition.shinies.length;
+      }, 0);
+      var levelIndex = 0;
+      var level = null;
+
+      var player = {
+        x: 0,
+        y: 0,
+        w: PLAYER_W,
+        h: PLAYER_H,
+        vx: 0,
+        vy: 0,
+        facing: 1,
+        onGround: false,
+        coyote: 0,
+        jumpBuffer: 0,
+        bashTimer: 0,
+        bashCooldown: 0,
+        bashHitIds: Object.create(null),
+        invuln: 0,
+        hurtTimer: 0,
+        anim: 0,
+        spawnX: 0,
+        spawnY: 0
+      };
+
+      function resizeCanvas() {
+        DPR = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(W * DPR);
+        canvas.height = Math.floor(H * DPR);
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      }
+
+      function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+      function lerp(a, b, t) { return a + (b - a) * t; }
+      function rectsOverlap(a, b) {
+        return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+      }
+      function circleRectOverlap(circle, rect) {
+        var closestX = clamp(circle.x, rect.x, rect.x + rect.w);
+        var closestY = clamp(circle.y, rect.y, rect.y + rect.h);
+        var dx = circle.x - closestX;
+        var dy = circle.y - closestY;
+        return dx * dx + dy * dy < circle.r * circle.r;
+      }
+
+      function clearInputState() {
+        keys = Object.create(null);
+        touchState = { up: false, down: false, left: false, right: false, jump: false, bash: false };
+        gamepadState = { left: false, right: false, jump: false, bash: false, start: false };
+        jumpQueued = false;
+        bashQueued = false;
+        document.querySelectorAll(".touch-button.pressed").forEach(function (button) {
+          button.classList.remove("pressed");
+        });
+      }
+
+      function ensureAudio() {
+        if (!audioContext) {
+          var AudioCtor = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtor) audioContext = new AudioCtor();
+        }
+        if (audioContext && audioContext.state === "suspended") audioContext.resume();
+      }
+
+      function sfx(kind) {
+        ensureAudio();
+        if (!audioContext) return;
+        var now = audioContext.currentTime;
+        var osc = audioContext.createOscillator();
+        var gain = audioContext.createGain();
+        var freq = 180;
+        var endFreq = 90;
+        var duration = .09;
+        if (kind === "jump") { freq = 280; endFreq = 520; duration = .12; }
+        if (kind === "bash") { freq = 120; endFreq = 52; duration = .13; }
+        if (kind === "shiny") { freq = 640; endFreq = 1020; duration = .16; }
+        if (kind === "checkpoint") { freq = 420; endFreq = 700; duration = .22; }
+        if (kind === "hurt") { freq = 95; endFreq = 55; duration = .2; }
+        if (kind === "win") { freq = 380; endFreq = 760; duration = .38; }
+        osc.type = kind === "shiny" || kind === "win" || kind === "checkpoint" ? "square" : "sawtooth";
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+        gain.gain.setValueAtTime(.0001, now);
+        gain.gain.exponentialRampToValueAtTime(.08, now + .008);
+        gain.gain.exponentialRampToValueAtTime(.0001, now + duration);
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.start(now);
+        osc.stop(now + duration + .02);
+      }
+
+      function cloneLevel(definition) {
+        return JSON.parse(JSON.stringify(definition));
+      }
+
+      function loadLevel(index) {
+        levelIndex = clamp(index, 0, LEVEL_DEFS.length - 1);
+        level = cloneLevel(LEVEL_DEFS[levelIndex]);
+        level.checkpointX = Math.floor(level.width * .5);
+        level.checkpointTaken = false;
+        levelTime = 0;
+        cameraX = 0;
+        particles = [];
+        floatTexts = [];
+        jumpQueued = false;
+        bashQueued = false;
+        message = level.tagline;
+        messageTimer = 2.8;
+        player.x = level.spawn.x;
+        player.y = level.spawn.y;
+        player.vx = 0;
+        player.vy = 0;
+        player.facing = 1;
+        player.onGround = false;
+        player.coyote = 0;
+        player.jumpBuffer = 0;
+        player.bashTimer = 0;
+        player.bashCooldown = 0;
+        player.bashHitIds = Object.create(null);
+        player.invuln = 0;
+        player.hurtTimer = 0;
+        player.spawnX = level.spawn.x;
+        player.spawnY = level.spawn.y;
+      }
+
+      function resetRun() {
+        score = 0;
+        lives = 3;
+        shinyCount = 0;
+        levelIndex = 0;
+        loadLevel(levelIndex);
+      }
+
+      function beginPlay() {
+        clearInputState();
+        state = "play";
+        stateLockout = 0;
+        emulatorState.textContent = "RUNNING";
+        startButton.classList.add("hidden");
+        startButton.removeAttribute("disabled");
+      }
+
+      function startGame() {
+        ensureAudio();
+        resetRun();
+        beginPlay();
+        sfx("jump");
+      }
+
+      function restartGame() {
+        ensureAudio();
+        resetRun();
+        beginPlay();
+        startButton.textContent = "START THE MISCHIEF";
+      }
+
+      function advanceLevel() {
+        if (state !== "levelclear") return;
+        if (levelIndex >= LEVEL_DEFS.length - 1) return;
+        levelIndex += 1;
+        loadLevel(levelIndex);
+        beginPlay();
+        sfx("jump");
+      }
+
+      // Hold the clear/over screen briefly so held or repeating input cannot
+      // skip it in the same frame the state changes.
+      function holdState(seconds, label) {
+        stateLockout = seconds;
+        startButton.classList.remove("hidden");
+        startButton.textContent = label;
+        startButton.setAttribute("disabled", "disabled");
+      }
+
+      function winGame() {
+        if (state !== "play") return;
+        var collected = level.shinies.filter(function (shiny) { return shiny.collected; }).length;
+        score += Math.max(0, 1200 - Math.floor(levelTime * 12));
+        var perfect = collected === level.shinies.length;
+        if (perfect) score += 250;
+        clearInputState();
+        screenShake = .3;
+        burst(level.goalX, level.goalY + 10, level.goalAccent || "#ffc857", 42, 230);
+        sfx("win");
+        if (levelIndex < LEVEL_DEFS.length - 1) {
+          lives = Math.min(MAX_LIVES, lives + 1);
+          state = "levelclear";
+          emulatorState.textContent = "STAGE CLEAR";
+          holdState(.7, "NEXT STAGE");
+        } else {
+          state = "win";
+          emulatorState.textContent = "COMPLETE";
+          holdState(.7, "REPLAY THE RUN");
+        }
+      }
+
+      function gameOver() {
+        state = "gameover";
+        clearInputState();
+        emulatorState.textContent = "GAME OVER";
+        holdState(.7, "TRY THE MISCHIEF AGAIN");
+        sfx("hurt");
+      }
+
+      function confirmPressed() {
+        if (stateLockout > 0) return;
+        if (state === "title") startGame();
+        else if (state === "levelclear") advanceLevel();
+        else if (state === "win" || state === "gameover") restartGame();
+      }
+
+      function requestJump() {
+        if (state === "play") { jumpQueued = true; return; }
+        confirmPressed();
+      }
+
+      function requestBash() {
+        if (state === "play") { bashQueued = true; return; }
+        confirmPressed();
+      }
+
+      function requestStart() { confirmPressed(); }
+
+      function isLeft() { return !!(keys.ArrowLeft || keys.KeyA || touchState.left || gamepadState.left); }
+      function isRight() { return !!(keys.ArrowRight || keys.KeyD || touchState.right || gamepadState.right); }
+
+      function gamepadButtonPressed(gamepad, index) {
+        return !!(gamepad && gamepad.buttons && gamepad.buttons[index] && gamepad.buttons[index].pressed);
+      }
+
+      function pollGamepad() {
+        if (!navigator.getGamepads) {
+          gamepadStatus.textContent = "PAD: N/A";
+          gamepadState = { left: false, right: false, jump: false, bash: false, start: false };
+          return;
+        }
+
+        var pads;
+        try { pads = navigator.getGamepads() || []; } catch (error) { pads = []; }
+        var gamepad = null;
+        for (var index = 0; index < pads.length; index += 1) {
+          if (pads[index]) { gamepad = pads[index]; break; }
+        }
+
+        if (!gamepad) {
+          gamepadStatus.textContent = "PAD: OPTIONAL";
+          gamepadState = { left: false, right: false, jump: false, bash: false, start: false };
+          return;
+        }
+
+        var axisX = gamepad.axes && typeof gamepad.axes[0] === "number" ? gamepad.axes[0] : 0;
+        var axisY = gamepad.axes && typeof gamepad.axes[1] === "number" ? gamepad.axes[1] : 0;
+        var nextState = {
+          left: gamepadButtonPressed(gamepad, 14) || axisX < -.35,
+          right: gamepadButtonPressed(gamepad, 15) || axisX > .35,
+          jump: gamepadButtonPressed(gamepad, 1) || gamepadButtonPressed(gamepad, 12) || axisY < -.5,
+          bash: gamepadButtonPressed(gamepad, 0),
+          start: gamepadButtonPressed(gamepad, 9)
+        };
+
+        if (nextState.jump && !gamepadState.jump) requestJump();
+        if (nextState.bash && !gamepadState.bash) requestBash();
+        if (nextState.start && !gamepadState.start) requestStart();
+        gamepadState = nextState;
+        gamepadStatus.textContent = gamepad.mapping === "standard" ? "PAD: READY" : "PAD: ACTIVE";
+      }
+
+      function bindInputs() {
+        window.addEventListener("keydown", function (event) {
+          var code = event.code;
+          if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space", "KeyW", "KeyA", "KeyD"].indexOf(code) >= 0) event.preventDefault();
+          keys[code] = true;
+          // Auto-repeat must not re-arm the jump buffer: held keys would
+          // otherwise auto-hop on landing, which touch and pad cannot do.
+          if (event.repeat) return;
+          if (code === "Space" || code === "ArrowUp" || code === "KeyW") requestJump();
+          if (code === "KeyX" || code === "ShiftLeft" || code === "ShiftRight" || code === "KeyC") requestBash();
+          if (code === "KeyR") restartGame();
+          if (code === "Enter") requestStart();
+        }, { passive: false });
+        window.addEventListener("keyup", function (event) { keys[event.code] = false; });
+        window.addEventListener("blur", clearInputState);
+        document.addEventListener("visibilitychange", function () {
+          if (document.hidden) clearInputState();
+        });
+
+        window.addEventListener("gamepadconnected", function () { gamepadStatus.textContent = "PAD: READY"; });
+        window.addEventListener("gamepaddisconnected", function () { gamepadStatus.textContent = "PAD: OPTIONAL"; });
+
+        document.querySelectorAll(".touch-button").forEach(function (button) {
+          var action = button.dataset.action;
+          function press(event) {
+            event.preventDefault();
+            if (button.setPointerCapture && event.pointerId !== undefined) {
+              try { button.setPointerCapture(event.pointerId); } catch (error) {}
+            }
+            touchState[action] = true;
+            button.classList.add("pressed");
+            if (action === "jump" || action === "up") requestJump();
+            if (action === "bash") requestBash();
+          }
+          function release(event) {
+            if (event && event.preventDefault) event.preventDefault();
+            touchState[action] = false;
+            button.classList.remove("pressed");
+          }
+          button.addEventListener("pointerdown", press, { passive: false });
+          button.addEventListener("pointerup", release, { passive: false });
+          button.addEventListener("pointercancel", release, { passive: false });
+          button.addEventListener("lostpointercapture", release, { passive: false });
+        });
+
+        startButton.addEventListener("click", confirmPressed);
+
+        crtToggle.addEventListener("click", function () {
+          var enabled = screen.classList.toggle("crt-off") === false;
+          crtToggle.textContent = enabled ? "CRT ON" : "CLEAN";
+          crtToggle.setAttribute("aria-pressed", String(enabled));
+        });
+      }
+
+      function burst(x, y, color, amount, speed) {
+        for (var i = 0; i < amount; i += 1) {
+          var angle = Math.random() * Math.PI * 2;
+          var velocity = speed * (.35 + Math.random() * .65);
+          particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * velocity,
+            vy: Math.sin(angle) * velocity - 50,
+            life: .35 + Math.random() * .5,
+            maxLife: .85,
+            size: 3 + Math.random() * 6,
+            color: color,
+            gravity: 500
+          });
+        }
+      }
+
+      function addFloatText(text, x, y, color) {
+        floatTexts.push({ text: text, x: x, y: y, life: 1, color: color });
+      }
+
+      function updateParticles(dt) {
+        particles.forEach(function (particle) {
+          particle.life -= dt;
+          particle.vy += particle.gravity * dt;
+          particle.x += particle.vx * dt;
+          particle.y += particle.vy * dt;
+        });
+        particles = particles.filter(function (particle) { return particle.life > 0; });
+        floatTexts.forEach(function (item) { item.life -= dt; item.y -= 32 * dt; });
+        floatTexts = floatTexts.filter(function (item) { return item.life > 0; });
+      }
+
+      function playerRect() { return { x: player.x, y: player.y, w: player.w, h: player.h }; }
+
+      function bashRect() {
+        return {
+          x: player.facing > 0 ? player.x + player.w - 4 : player.x - 64,
+          y: player.y + 10,
+          w: 68,
+          h: player.h - 16
+        };
+      }
+
+      function hurtPlayer(reason) {
+        if (player.invuln > 0 || state !== "play") return;
+        lives -= 1;
+        player.invuln = 1.3;
+        player.hurtTimer = .5;
+        screenShake = .35;
+        sfx("hurt");
+        addFloatText(reason || "OUCH", player.x, player.y - 8, "#ff6b8b");
+        burst(player.x + player.w / 2, player.y + player.h / 2, "#ff6b8b", 16, 150);
+        if (lives <= 0) {
+          gameOver();
+          return;
+        }
+        player.x = player.spawnX;
+        player.y = player.spawnY;
+        player.vx = 0;
+        player.vy = 0;
+        cameraX = clamp(player.spawnX - 330, 0, level.width - W);
+        message = level.checkpointTaken ? "BACK TO THE CHECKPOINT." : "THE ORDERLINGS ARE VERY RUDE.";
+        messageTimer = 1.4;
+      }
+
+      function takeCheckpoint() {
+        if (level.checkpointTaken || !player.onGround) return;
+        if (player.x < level.checkpointX) return;
+        level.checkpointTaken = true;
+        player.spawnX = player.x;
+        player.spawnY = player.y;
+        addFloatText("CHECKPOINT", player.x - 16, player.y - 20, "#b8f25a");
+        burst(player.x + player.w / 2, player.y + player.h, "#b8f25a", 16, 130);
+        sfx("checkpoint");
+        message = "CHECKPOINT. THE GOBLIN REMEMBERS THIS SPOT.";
+        messageTimer = 1.6;
+      }
+
+      function updatePlayer(dt) {
+        var move = 0;
+        if (isLeft()) move -= 1;
+        if (isRight()) move += 1;
+        if (move !== 0) player.facing = move;
+
+        var maxSpeed = player.bashTimer > 0 ? 520 : 255;
+        var acceleration = player.onGround ? 1700 : 1050;
+        var desired = move * maxSpeed;
+        player.vx = lerp(player.vx, desired, clamp(acceleration * dt / Math.max(maxSpeed, 1), 0, 1));
+        if (move === 0 && player.bashTimer <= 0) player.vx = lerp(player.vx, 0, clamp(12 * dt, 0, 1));
+
+        if (player.onGround) player.coyote = .11;
+        else player.coyote -= dt;
+        player.jumpBuffer -= dt;
+        if (jumpQueued) {
+          player.jumpBuffer = .14;
+          jumpQueued = false;
+        }
+        if (player.jumpBuffer > 0 && player.coyote > 0) {
+          player.vy = -JUMP_VELOCITY;
+          player.onGround = false;
+          player.coyote = 0;
+          player.jumpBuffer = 0;
+          burst(player.x + player.w / 2, player.y + player.h, "#b8f25a", 8, 95);
+          sfx("jump");
+        }
+
+        if (bashQueued) {
+          bashQueued = false;
+          if (player.bashCooldown <= 0) {
+            player.bashTimer = .2;
+            player.bashCooldown = .55;
+            player.bashHitIds = Object.create(null);
+            player.vx = player.facing * 440;
+            screenShake = .12;
+            sfx("bash");
+          }
+        }
+
+        player.bashCooldown = Math.max(0, player.bashCooldown - dt);
+        player.bashTimer = Math.max(0, player.bashTimer - dt);
+        player.invuln = Math.max(0, player.invuln - dt);
+        player.hurtTimer = Math.max(0, player.hurtTimer - dt);
+        player.anim += dt * (4 + Math.abs(player.vx) * .035);
+
+        var oldY = player.y;
+        player.x += player.vx * dt;
+        player.x = clamp(player.x, 0, level.width - player.w);
+        player.vy += GRAVITY * dt;
+        player.y += player.vy * dt;
+        player.onGround = false;
+
+        if (player.vy >= 0) {
+          var previousBottom = oldY + player.h;
+          var currentBottom = player.y + player.h;
+          level.platforms.forEach(function (platform) {
+            var horizontal = player.x + player.w > platform.x + 2 && player.x < platform.x + platform.w - 2;
+            if (horizontal && previousBottom <= platform.y + 3 && currentBottom >= platform.y) {
+              player.y = platform.y - player.h;
+              player.vy = 0;
+              player.onGround = true;
+            }
+          });
+        }
+
+        if (player.y > H + 80) hurtPlayer("FELL!");
+        takeCheckpoint();
+        resolveInteractions();
+      }
+
+      function resolveInteractions() {
+        var pRect = playerRect();
+        var hitRect = player.bashTimer > 0 ? bashRect() : null;
+
+        level.crates.forEach(function (crate, index) {
+          if (!crate.alive || !hitRect || player.bashHitIds["crate" + index]) return;
+          if (rectsOverlap(hitRect, crate)) {
+            crate.alive = false;
+            player.bashHitIds["crate" + index] = true;
+            score += 35;
+            addFloatText("+35", crate.x, crate.y - 8, "#ffc857");
+            burst(crate.x + crate.w / 2, crate.y + crate.h / 2, "#ffc857", 13, 160);
+            screenShake = .12;
+          }
+        });
+
+        level.enemies.forEach(function (enemy, index) {
+          if (!enemy.alive) return;
+          if (hitRect && rectsOverlap(hitRect, enemy) && !player.bashHitIds["enemy" + index]) {
+            enemy.alive = false;
+            player.bashHitIds["enemy" + index] = true;
+            score += 125;
+            addFloatText("+125", enemy.x, enemy.y - 8, "#b8f25a");
+            burst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, enemy.tint, 22, 190);
+            screenShake = .18;
+            sfx("bash");
+            return;
+          }
+          if (!rectsOverlap(pRect, enemy) || player.invuln > 0) return;
+          // A committed fall, not a glancing step-off, counts as a stomp.
+          var fallingOnEnemy = player.vy > STOMP_VELOCITY && player.y + player.h - enemy.y < 26;
+          if (fallingOnEnemy) {
+            enemy.alive = false;
+            player.vy = -470;
+            score += 100;
+            addFloatText("+100", enemy.x, enemy.y - 8, "#b8f25a");
+            burst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, enemy.tint, 18, 170);
+            sfx("bash");
+          } else {
+            hurtPlayer("BONK!");
+          }
+        });
+
+        level.rollers.forEach(function (roller, index) {
+          if (!roller.alive) return;
+          var circle = { x: roller.x, y: roller.y + roller.r, r: roller.r };
+          if (hitRect && circleRectOverlap(circle, hitRect) && !player.bashHitIds["roller" + index]) {
+            player.bashHitIds["roller" + index] = true;
+            roller.dir *= -1;
+            roller.x = clamp(roller.x + player.facing * 34, roller.min, roller.max);
+            score += 50;
+            addFloatText("BOUNCE!", roller.x - 26, roller.y - 4, "#6ed7ff");
+            burst(roller.x, roller.y + roller.r, "#6ed7ff", 12, 150);
+            screenShake = .1;
+          } else if (circleRectOverlap(circle, pRect)) {
+            hurtPlayer("ROLL!");
+          }
+        });
+
+        level.shinies.forEach(function (shiny) {
+          if (shiny.collected) return;
+          var box = { x: shiny.x - 14, y: shiny.y - 14, w: 28, h: 28 };
+          if (rectsOverlap(pRect, box)) {
+            shiny.collected = true;
+            shinyCount += 1;
+            score += 75;
+            addFloatText("+75", shiny.x - 16, shiny.y - 22, "#ffc857");
+            burst(shiny.x, shiny.y, "#ffc857", 20, 180);
+            sfx("shiny");
+          }
+        });
+
+        var goalBox = { x: level.goalX - 30, y: level.goalY - 42, w: 60, h: 70 };
+        if (rectsOverlap(pRect, goalBox)) winGame();
+      }
+
+      function updateEnemies(dt) {
+        level.enemies.forEach(function (enemy) {
+          if (!enemy.alive) return;
+          enemy.x += enemy.dir * enemy.speed * dt;
+          if (enemy.x < enemy.min) { enemy.x = enemy.min; enemy.dir = 1; }
+          if (enemy.x > enemy.max) { enemy.x = enemy.max; enemy.dir = -1; }
+        });
+        level.rollers.forEach(function (roller) {
+          if (!roller.alive) return;
+          roller.x += roller.dir * roller.speed * dt;
+          if (roller.x < roller.min) { roller.x = roller.min; roller.dir = 1; }
+          if (roller.x > roller.max) { roller.x = roller.max; roller.dir = -1; }
+        });
+      }
+
+      function update(dt) {
+        updateParticles(dt);
+        screenShake = Math.max(0, screenShake - dt);
+        if (messageTimer > 0) messageTimer -= dt;
+        if (stateLockout > 0) {
+          stateLockout = Math.max(0, stateLockout - dt);
+          if (stateLockout === 0) startButton.removeAttribute("disabled");
+        }
+        if (state !== "play") return;
+        levelTime += dt;
+        updateEnemies(dt);
+        updatePlayer(dt);
+        var targetCamera = clamp(player.x - 330, 0, level.width - W);
+        cameraX = lerp(cameraX, targetCamera, clamp(dt * 7, 0, 1));
+      }
+
+      function roundRect(x, y, w, h, radius, fill, stroke, lineWidth) {
+        var r = Math.min(radius, w / 2, h / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+        if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+        if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lineWidth || 2; ctx.stroke(); }
+      }
+
+      function drawBackdrop() {
+        var palettes = {
+          tidy: { top: "#1b1d3b", mid: "#3d2f5b", bottom: "#1b1c2b", far: "#262442", near: "#312b4e", accent: "#ffc857" },
+          rooftop: { top: "#182b52", mid: "#bd5c68", bottom: "#252040", far: "#283554", near: "#3b426d", accent: "#6ed7ff" },
+          warehouse: { top: "#101827", mid: "#26364a", bottom: "#171a2a", far: "#1b2938", near: "#303b4d", accent: "#b8f25a" },
+          canyon: { top: "#291936", mid: "#814456", bottom: "#21172a", far: "#4a273f", near: "#70414c", accent: "#ffbd69" },
+          yard: { top: "#101b2b", mid: "#284052", bottom: "#171a27", far: "#1d2e3e", near: "#3c4a50", accent: "#ff6b8b" },
+          vault: { top: "#080d22", mid: "#171b42", bottom: "#0b0d1b", far: "#11183a", near: "#24285a", accent: "#ffc857" }
+        };
+        var palette = palettes[level.theme] || palettes.tidy;
+        var gradient = ctx.createLinearGradient(0, 0, 0, H);
+        gradient.addColorStop(0, palette.top);
+        gradient.addColorStop(.56, palette.mid);
+        gradient.addColorStop(1, palette.bottom);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.save();
+        ctx.translate(-cameraX * .22, 0);
+        if (level.theme === "tidy") {
+          ctx.globalAlpha = .8;
+          ctx.fillStyle = palette.accent;
+          ctx.beginPath(); ctx.arc(780, 100, 46, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = palette.top;
+          ctx.beginPath(); ctx.arc(798, 88, 43, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+          drawCloud(120 + cameraX * .1, 110, 1.1);
+          drawCloud(580 + cameraX * .14, 160, .75);
+          drawCloud(1000 + cameraX * .08, 82, .65);
+        } else if (level.theme === "rooftop") {
+          ctx.fillStyle = "#ffc857";
+          ctx.globalAlpha = .75;
+          ctx.beginPath(); ctx.arc(790, 110, 38, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+          for (var roof = -120; roof < level.width + 400; roof += 190) {
+            var roofHeight = 90 + ((roof * 13) % 115 + 115) % 115;
+            ctx.fillStyle = palette.far;
+            ctx.fillRect(roof, 520 - roofHeight, 145, roofHeight);
+            ctx.fillStyle = palette.near;
+            ctx.fillRect(roof + 18, 535 - roofHeight, 10, 15);
+            ctx.fillRect(roof + 46, 535 - roofHeight, 10, 15);
+            ctx.fillRect(roof + 74, 535 - roofHeight, 10, 15);
+            ctx.fillStyle = "#6ed7ff";
+            ctx.fillRect(roof + 24, 560 - roofHeight, 5, 8);
+            ctx.fillRect(roof + 52, 560 - roofHeight, 5, 8);
+          }
+        } else if (level.theme === "warehouse") {
+          ctx.fillStyle = palette.far;
+          for (var beam = -100; beam < level.width + 400; beam += 210) {
+            ctx.fillRect(beam, 80, 18, 440);
+            ctx.fillRect(beam + 74, 42, 12, 478);
+            ctx.fillStyle = palette.near;
+            ctx.fillRect(beam + 18, 122, 68, 9);
+            ctx.fillRect(beam + 18, 258, 68, 7);
+            ctx.fillStyle = palette.far;
+          }
+          for (var lamp = -60; lamp < level.width + 300; lamp += 260) {
+            ctx.fillStyle = palette.accent;
+            ctx.globalAlpha = .7;
+            ctx.fillRect(lamp, 92, 54, 5);
+            ctx.globalAlpha = .12;
+            ctx.fillRect(lamp - 20, 97, 94, 150);
+            ctx.globalAlpha = 1;
+          }
+        } else if (level.theme === "canyon") {
+          for (var mesa = -140; mesa < level.width + 420; mesa += 220) {
+            var mesaHeight = 120 + ((mesa * 19) % 130 + 130) % 130;
+            ctx.fillStyle = palette.far;
+            ctx.fillRect(mesa, 520 - mesaHeight, 170, mesaHeight);
+            ctx.fillStyle = palette.near;
+            ctx.fillRect(mesa + 25, 520 - mesaHeight + 26, 88, mesaHeight - 26);
+            ctx.fillStyle = "#c56c55";
+            ctx.fillRect(mesa + 8, 520 - mesaHeight, 150, 9);
+          }
+          ctx.globalAlpha = .22;
+          ctx.fillStyle = "#ffbd69";
+          for (var dust = -40; dust < level.width + 300; dust += 180) ctx.fillRect(dust, 215 + (dust % 70), 42, 3);
+          ctx.globalAlpha = 1;
+        } else if (level.theme === "yard") {
+          ctx.fillStyle = palette.far;
+          for (var tower = -100; tower < level.width + 400; tower += 175) {
+            var towerHeight = 80 + ((tower * 11) % 105 + 105) % 105;
+            ctx.fillRect(tower, 520 - towerHeight, 118, towerHeight);
+            ctx.fillStyle = palette.near;
+            ctx.fillRect(tower + 17, 535 - towerHeight, 8, 18);
+            ctx.fillRect(tower + 48, 535 - towerHeight, 8, 18);
+            ctx.fillStyle = palette.far;
+          }
+          ctx.strokeStyle = "rgba(255,200,87,.22)";
+          ctx.lineWidth = 2;
+          for (var fence = -100; fence < level.width + 400; fence += 70) {
+            ctx.beginPath(); ctx.moveTo(fence, 468); ctx.lineTo(fence + 24, 520); ctx.stroke();
+          }
+        } else {
+          ctx.fillStyle = palette.far;
+          for (var vault = -100; vault < level.width + 400; vault += 210) {
+            ctx.fillRect(vault, 80, 118, 440);
+            ctx.fillStyle = palette.near;
+            ctx.fillRect(vault + 18, 118, 82, 4);
+            ctx.fillRect(vault + 18, 248, 82, 4);
+            ctx.fillStyle = palette.far;
+          }
+          ctx.strokeStyle = "rgba(110,215,255,.2)";
+          ctx.lineWidth = 1;
+          for (var grid = -200; grid < level.width + 500; grid += 80) {
+            ctx.beginPath(); ctx.moveTo(grid, 500); ctx.lineTo(grid + 160, 70); ctx.stroke();
+          }
+        }
+        ctx.restore();
+
+        ctx.fillStyle = "rgba(16,17,27,.42)";
+        ctx.fillRect(0, 470, W, 130);
+      }
+
+      function drawCloud(x, y, scale) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+        ctx.fillStyle = "rgba(151, 160, 207, .18)";
+        ctx.beginPath();
+        ctx.arc(0, 12, 18, 0, Math.PI * 2);
+        ctx.arc(22, 0, 25, 0, Math.PI * 2);
+        ctx.arc(52, 14, 17, 0, Math.PI * 2);
+        ctx.rect(-18, 12, 86, 20);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawPlatforms() {
+        var platformPalettes = {
+          tidy: { ground: "#272844", top: "#b8f25a", edge: "#7e5a67", ledge: "#513d65", ledgeTop: "#ffc857", texture: "rgba(255,200,87,.16)" },
+          rooftop: { ground: "#27334f", top: "#6ed7ff", edge: "#bd5c68", ledge: "#3f4d73", ledgeTop: "#ffc857", texture: "rgba(110,215,255,.18)" },
+          warehouse: { ground: "#273443", top: "#b8f25a", edge: "#647b83", ledge: "#35465b", ledgeTop: "#6ed7ff", texture: "rgba(184,242,90,.14)" },
+          canyon: { ground: "#4c2d3f", top: "#ffbd69", edge: "#9b5260", ledge: "#663b4d", ledgeTop: "#ffc857", texture: "rgba(255,189,105,.18)" },
+          yard: { ground: "#293842", top: "#ff6b8b", edge: "#65716f", ledge: "#3a4c54", ledgeTop: "#ffbd69", texture: "rgba(255,107,139,.16)" },
+          vault: { ground: "#1d2446", top: "#ffc857", edge: "#3d4e78", ledge: "#29315d", ledgeTop: "#6ed7ff", texture: "rgba(110,215,255,.16)" }
+        };
+        var palette = platformPalettes[level.theme] || platformPalettes.tidy;
+        level.platforms.forEach(function (platform) {
+          var sx = platform.x - cameraX;
+          if (sx + platform.w < -30 || sx > W + 30) return;
+          if (platform.kind === "ground") {
+            ctx.fillStyle = palette.ground;
+            ctx.fillRect(sx, platform.y, platform.w, platform.h);
+            ctx.fillStyle = palette.edge;
+            ctx.fillRect(sx, platform.y, platform.w, 10);
+            ctx.fillStyle = palette.top;
+            ctx.fillRect(sx, platform.y, platform.w, 4);
+            for (var gx = sx + 16; gx < sx + platform.w; gx += 42) {
+              ctx.fillStyle = palette.texture;
+              ctx.fillRect(gx, platform.y + 28, 18, 4);
+              ctx.fillRect(gx + 7, platform.y + 44, 24, 4);
+            }
+          } else {
+            ctx.fillStyle = palette.ledge;
+            ctx.fillRect(sx, platform.y, platform.w, platform.h);
+            ctx.fillStyle = palette.ledgeTop;
+            ctx.fillRect(sx, platform.y, platform.w, 5);
+            ctx.fillStyle = palette.edge;
+            for (var lx = sx + 14; lx < sx + platform.w - 10; lx += 35) ctx.fillRect(lx, platform.y + 8, 18, 5);
+          }
+        });
+
+        ctx.save();
+        ctx.translate(-cameraX, 0);
+        (level.signs || []).forEach(function (sign) { drawSign(sign.x, sign.y, sign.label); });
+        ctx.restore();
+      }
+
+      function drawSign(x, y, label) {
+        ctx.fillStyle = "#151627";
+        ctx.fillRect(x, y, 6, 56);
+        var signColor = level.theme === "rooftop" ? "#6ed7ff" : level.theme === "canyon" ? "#ffbd69" : level.theme === "vault" ? "#ffc857" : "#ff6b8b";
+        roundRect(x - 18, y - 28, 118, 30, 5, signColor, "#11121d", 3);
+        ctx.fillStyle = "#241724";
+        ctx.font = "900 10px Trebuchet MS, sans-serif";
+        ctx.fillText(label, x - 8, y - 9);
+      }
+
+      function drawCheckpointFlag() {
+        var x = level.checkpointX - cameraX;
+        if (x < -40 || x > W + 40) return;
+        var taken = level.checkpointTaken;
+        ctx.fillStyle = "#151627";
+        ctx.fillRect(x, 404, 5, 62);
+        ctx.fillStyle = taken ? "#b8f25a" : "rgba(174,180,209,.5)";
+        ctx.beginPath();
+        ctx.moveTo(x + 5, 404);
+        ctx.lineTo(x + 38, 415);
+        ctx.lineTo(x + 5, 428);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      function drawCrates() {
+        level.crates.forEach(function (crate, index) {
+          if (!crate.alive) return;
+          var x = crate.x - cameraX;
+          if (x < -50 || x > W + 50) return;
+          roundRect(x, crate.y, crate.w, crate.h, 4, "#c86b4b", "#241924", 3);
+          ctx.strokeStyle = "#ffd07a";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(x + 7, crate.y + 7); ctx.lineTo(x + crate.w - 7, crate.y + crate.h - 7);
+          ctx.moveTo(x + crate.w - 7, crate.y + 7); ctx.lineTo(x + 7, crate.y + crate.h - 7);
+          ctx.stroke();
+          ctx.fillStyle = "#241924";
+          ctx.font = "900 9px Trebuchet MS, sans-serif";
+          ctx.fillText("O", x + 13, crate.y + 24);
+        });
+      }
+
+      function drawEnemies() {
+        level.enemies.forEach(function (enemy) {
+          if (!enemy.alive) return;
+          var x = enemy.x - cameraX;
+          if (x < -60 || x > W + 60) return;
+          var bob = Math.sin(levelTime * 9 + enemy.x) * 2;
+          ctx.save();
+          ctx.translate(x, enemy.y + bob);
+          ctx.fillStyle = "#1a1729";
+          ctx.fillRect(5, 38, 9, 10);
+          ctx.fillRect(25, 38, 9, 10);
+          roundRect(0, 6, enemy.w, 35, 8, enemy.tint, "#12131e", 3);
+          ctx.fillStyle = "#12131e";
+          ctx.fillRect(8, 17, 7, 8);
+          ctx.fillRect(24, 17, 7, 8);
+          ctx.fillStyle = "#fff3cf";
+          ctx.fillRect(10, 18, 3, 4);
+          ctx.fillRect(26, 18, 3, 4);
+          ctx.fillStyle = "#12131e";
+          ctx.fillRect(14, 30, 12, 3);
+          ctx.fillStyle = "#f4c47b";
+          ctx.fillRect(8, 0, 22, 8);
+          ctx.fillStyle = "#6a4b78";
+          ctx.fillRect(12, -4, 5, 8);
+          ctx.fillRect(22, -4, 5, 8);
+          ctx.restore();
+        });
+      }
+
+      function drawRollers() {
+        level.rollers.forEach(function (roller) {
+          if (!roller.alive) return;
+          var x = roller.x - cameraX;
+          if (x < -60 || x > W + 60) return;
+          ctx.save();
+          ctx.translate(x, roller.y + roller.r);
+          ctx.rotate(levelTime * roller.dir * 3.5);
+          ctx.fillStyle = "#6ed7ff";
+          ctx.beginPath(); ctx.arc(0, 0, roller.r, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = "#151627"; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.moveTo(-14, -14); ctx.lineTo(14, 14); ctx.moveTo(14, -14); ctx.lineTo(-14, 14); ctx.stroke();
+          ctx.fillStyle = "#ffc857";
+          ctx.fillRect(-4, -4, 8, 8);
+          ctx.restore();
+        });
+      }
+
+      function drawShinies() {
+        level.shinies.forEach(function (shiny) {
+          if (shiny.collected) return;
+          var x = shiny.x - cameraX;
+          if (x < -40 || x > W + 40) return;
+          var bob = Math.sin(levelTime * 5 + shiny.x) * 5;
+          ctx.save();
+          ctx.translate(x, shiny.y + bob);
+          ctx.rotate(Math.PI / 4);
+          ctx.fillStyle = "#ffc857";
+          ctx.fillRect(-11, -11, 22, 22);
+          ctx.fillStyle = "#fff1a8";
+          ctx.fillRect(-6, -6, 8, 8);
+          ctx.restore();
+          ctx.fillStyle = "rgba(255,200,87,.18)";
+          ctx.beginPath(); ctx.arc(x, shiny.y + bob, 25, 0, Math.PI * 2); ctx.fill();
+        });
+      }
+
+      function drawGoal() {
+        var x = level.goalX - cameraX;
+        var y = level.goalY;
+        if (x < -100 || x > W + 100) return;
+        var pulse = 1 + Math.sin(levelTime * 6) * .06;
+        var accent = level.goalAccent || "#ffc857";
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(pulse, pulse);
+        ctx.globalAlpha = .18;
+        ctx.fillStyle = accent;
+        ctx.beginPath(); ctx.arc(0, 0, 62, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.rotate(Math.PI / 4);
+        ctx.fillStyle = accent;
+        ctx.fillRect(-29, -29, 58, 58);
+        ctx.fillStyle = "#fff2a4";
+        ctx.fillRect(-16, -16, 20, 20);
+        ctx.restore();
+        ctx.fillStyle = "#fff0b5";
+        ctx.font = "900 14px Trebuchet MS, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(level.goalLabel || "THE BIG SHINY", x, y - 52);
+        ctx.textAlign = "left";
+      }
+
+      // originX/originY override the camera-relative placement so the title
+      // screen can pose the goblin without moving the live player.
+      function drawPlayer(originX, originY) {
+        var x = originX === undefined ? player.x - cameraX : originX;
+        var y = originY === undefined ? player.y : originY;
+        var walking = originX === undefined && player.onGround && Math.abs(player.vx) > 25;
+        var step = walking ? Math.sin(player.anim * 1.7) * 5 : 0;
+        var squash = originX === undefined && player.bashTimer > 0 ? .82 : 1;
+        var flicker = originX === undefined && player.invuln > 0 && Math.floor(player.invuln * 16) % 2 === 0;
+        if (flicker) return;
+        ctx.save();
+        ctx.translate(x + player.w / 2, y + player.h);
+        ctx.scale(player.facing, 1);
+        ctx.scale(1, squash);
+
+        ctx.fillStyle = "#151323";
+        ctx.fillRect(-14, -11 + step, 11, 12);
+        ctx.fillRect(5, -11 - step, 11, 12);
+        ctx.fillStyle = "#20182e";
+        ctx.fillRect(-18, -5 + step, 18, 7);
+        ctx.fillRect(0, -5 - step, 18, 7);
+
+        ctx.fillStyle = "#b8f25a";
+        ctx.beginPath();
+        ctx.moveTo(-18, -48); ctx.quadraticCurveTo(-24, -36, -16, -16); ctx.quadraticCurveTo(0, -3, 19, -16); ctx.lineTo(22, -47); ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#11121c"; ctx.lineWidth = 3; ctx.stroke();
+
+        ctx.fillStyle = "#ffcf83";
+        ctx.beginPath(); ctx.moveTo(-18, -45); ctx.lineTo(-34, -58); ctx.lineTo(-26, -28); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(18, -45); ctx.lineTo(34, -58); ctx.lineTo(26, -28); ctx.closePath(); ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffcf83";
+        ctx.beginPath(); ctx.arc(0, -46, 20, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#11121c";
+        ctx.fillRect(4, -49, 8, 9);
+        ctx.fillStyle = "#fff3cf";
+        ctx.fillRect(6, -47, 4, 4);
+        ctx.fillStyle = "#11121c";
+        ctx.fillRect(16, -50, 7, 10);
+        ctx.fillStyle = "#ff6b8b";
+        ctx.fillRect(12, -34, 16, 5);
+        ctx.fillStyle = "#fff3cf";
+        ctx.fillRect(15, -35, 3, 5);
+        ctx.fillRect(22, -35, 3, 5);
+
+        ctx.fillStyle = "#ffbd69";
+        ctx.fillRect(-25, -37, 12, 7);
+        ctx.fillRect(14, -31, 12, 7);
+        if (originX === undefined && player.bashTimer > 0) {
+          ctx.fillStyle = "#ffc857";
+          ctx.beginPath(); ctx.moveTo(20, -32); ctx.lineTo(54, -44); ctx.lineTo(42, -26); ctx.lineTo(64, -20); ctx.lineTo(28, -17); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = "#11121c"; ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawParticles() {
+        particles.forEach(function (particle) {
+          var alpha = clamp(particle.life / particle.maxLife, 0, 1);
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = particle.color;
+          ctx.fillRect(particle.x - cameraX, particle.y, particle.size, particle.size);
+        });
+        ctx.globalAlpha = 1;
+        floatTexts.forEach(function (item) {
+          ctx.globalAlpha = clamp(item.life, 0, 1);
+          ctx.fillStyle = item.color;
+          ctx.font = "900 15px Trebuchet MS, sans-serif";
+          ctx.fillText(item.text, item.x - cameraX, item.y);
+        });
+        ctx.globalAlpha = 1;
+      }
+
+      function drawHud() {
+        ctx.fillStyle = "rgba(10,11,20,.82)";
+        ctx.fillRect(0, 0, W, 57);
+        ctx.fillStyle = level.goalAccent || "#ffc857";
+        ctx.font = "900 16px Trebuchet MS, sans-serif";
+        ctx.fillText("LEVEL " + level.number + "/" + String(LEVEL_DEFS.length).padStart(2, "0") + " // " + level.name, 18, 23);
+        ctx.fillStyle = "#aeb4d1";
+        ctx.font = "900 12px Trebuchet MS, sans-serif";
+        ctx.fillText("SHINY SCRAPS: " + shinyCount + "/" + totalShinies + " · " + level.tagline, 18, 43);
+        ctx.fillStyle = "#b8f25a";
+        ctx.fillText("SCORE " + String(score).padStart(5, "0"), 690, 23);
+        ctx.fillStyle = "#ff6b8b";
+        ctx.fillText("LIVES " + "♥ ".repeat(Math.max(0, lives)), 690, 43);
+        ctx.fillStyle = "#fff0b5";
+        ctx.textAlign = "right";
+        ctx.fillText("REACH THE " + (level.goalLabel || "BIG SHINY") + " →", 942, 43);
+        ctx.textAlign = "left";
+      }
+
+      function drawMessage() {
+        if (messageTimer <= 0 || state !== "play") return;
+        var alpha = clamp(Math.min(messageTimer * 2, 1), 0, 1);
+        ctx.globalAlpha = alpha;
+        roundRect(210, 72, 540, 43, 8, "rgba(15,16,27,.9)", "#ffc857", 2);
+        ctx.fillStyle = "#fff0b5";
+        ctx.font = "900 16px Trebuchet MS, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(message, 480, 99);
+        ctx.textAlign = "left";
+        ctx.globalAlpha = 1;
+      }
+
+      function drawOverlay(title, subtitle, accent) {
+        ctx.fillStyle = "rgba(9,10,18,.68)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.textAlign = "center";
+        ctx.fillStyle = accent || "#ffc857";
+        ctx.font = "900 47px Trebuchet MS, sans-serif";
+        ctx.fillText(title, W / 2, 230);
+        ctx.fillStyle = "#fff0b5";
+        ctx.font = "900 19px Trebuchet MS, sans-serif";
+        ctx.fillText(subtitle, W / 2, 273);
+        ctx.fillStyle = "#aeb4d1";
+        ctx.font = "700 15px Trebuchet MS, sans-serif";
+        ctx.fillText("Arrows or A/D move · Space, W, or Up jump · X, C, or Shift bash", W / 2, 320);
+        ctx.fillText("Touch controls are below the game. On a pad: B jumps, A bashes.", W / 2, 347);
+        ctx.textAlign = "left";
+      }
+
+      function drawTitle() {
+        drawBackdrop();
+        ctx.fillStyle = "rgba(9,10,18,.23)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.save();
+        ctx.scale(2.05, 2.05);
+        drawPlayer(112, 172);
+        ctx.restore();
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#ffc857";
+        ctx.font = "900 52px Trebuchet MS, sans-serif";
+        ctx.fillText("CHAOS GOBLIN", 590, 210);
+        ctx.fillStyle = "#b8f25a";
+        ctx.font = "900 25px Trebuchet MS, sans-serif";
+        ctx.fillText("THE BIG SHINY", 590, 252);
+        ctx.fillStyle = "#fff0b5";
+        ctx.font = "700 17px Trebuchet MS, sans-serif";
+        ctx.fillText("The Orderlings stole his favorite shiny.", 590, 302);
+        ctx.fillText("He is going to get it back the loud way.", 590, 328);
+        ctx.fillStyle = "#aeb4d1";
+        ctx.font = "700 14px Trebuchet MS, sans-serif";
+        ctx.fillText("Six stages · run, jump, bash, collect · recover the Big Shiny", 590, 383);
+        ctx.textAlign = "left";
+      }
+
+      function drawWorld() {
+        var shakeX = 0;
+        var shakeY = 0;
+        if (screenShake > 0) {
+          shakeX = (Math.random() - .5) * screenShake * 24;
+          shakeY = (Math.random() - .5) * screenShake * 18;
+        }
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+        drawBackdrop();
+        drawPlatforms();
+        drawCheckpointFlag();
+        drawGoal();
+        drawShinies();
+        drawCrates();
+        drawRollers();
+        drawEnemies();
+        drawPlayer();
+        drawParticles();
+        ctx.restore();
+        drawHud();
+        drawMessage();
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, W, H);
+        if (state === "title") {
+          drawTitle();
+          return;
+        }
+        drawWorld();
+        if (state === "levelclear") {
+          drawOverlay("STAGE " + level.number + " CLEAR!",
+            "Next: " + LEVEL_DEFS[levelIndex + 1].name + " · Score " + score + " · Lives " + lives,
+            level.goalAccent || "#b8f25a");
+        } else if (state === "win") {
+          drawOverlay("BIG SHINY SECURED!",
+            "Six stages cleared · Score " + score + " · Shiny scraps " + shinyCount + "/" + totalShinies,
+            "#b8f25a");
+        } else if (state === "gameover") {
+          drawOverlay("THE ORDERLINGS WIN",
+            "Stage " + level.number + " · Score " + score + " · The shiny is still theirs.",
+            "#ff6b8b");
+        }
+      }
+
+      function frame(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        var delta = Math.min(.1, (timestamp - lastTime) / 1000);
+        lastTime = timestamp;
+        accumulator += delta;
+        pollGamepad();
+        while (accumulator >= fixedStep) {
+          update(fixedStep);
+          accumulator -= fixedStep;
+        }
+        render();
+        requestAnimationFrame(frame);
+      }
+
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+      loadLevel(0);
+      bindInputs();
+      requestAnimationFrame(frame);
+
+      // Test seam for the headless harness. Not used by gameplay.
+      if (typeof window !== "undefined") {
+        window.__CHAOS_GOBLIN_TEST__ = {
+          LEVEL_DEFS: LEVEL_DEFS,
+          verify: function () { return verifyLevels(LEVEL_DEFS); },
+          getState: function () {
+            return {
+              state: state, levelIndex: levelIndex, lives: lives, score: score,
+              shinyCount: shinyCount, stateLockout: stateLockout,
+              checkpointTaken: level ? level.checkpointTaken : false,
+              playerX: player.x, playerY: player.y, spawnX: player.spawnX
+            };
+          },
+          startGame: startGame,
+          advanceLevel: advanceLevel,
+          requestJump: requestJump,
+          confirmPressed: confirmPressed,
+          teleport: function (x, y) { player.x = x; player.y = y; player.vy = 0; },
+          setOnGround: function () { player.onGround = true; },
+          step: function (n) { for (var i = 0; i < (n || 1); i += 1) update(fixedStep); },
+          render: render,
+          hurt: function () { player.invuln = 0; hurtPlayer("TEST"); }
+        };
+      }
+    }());
+  </script>
+</body>
+</html>
