@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 576" role="img" aria-labelledby="title desc">
+  <title id="title">Rhino Circuit cabinet art</title>
+  <desc id="desc">A blue-hour carrier deck with a generic stylized naval aircraft silhouette and the Rhino Circuit title.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#07141d"/><stop offset=".64" stop-color="#174251"/><stop offset="1" stop-color="#061117"/></linearGradient>
+    <linearGradient id="deck" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#132b34"/><stop offset="1" stop-color="#050b10"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#a9f6ff" stop-opacity=".9"/><stop offset=".34" stop-color="#48c9dc" stop-opacity=".4"/><stop offset="1" stop-color="#48c9dc" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="768" height="576" fill="url(#sky)"/>
+  <path d="M0 290H768V576H0Z" fill="url(#deck)"/>
+  <g opacity=".36" stroke="#6de7f2" stroke-width="2"><path d="M0 424L384 290L768 424"/><path d="M384 290V576"/><path d="M115 576L384 290L653 576"/></g>
+  <ellipse cx="525" cy="305" rx="210" ry="115" fill="url(#glow)"/>
+  <g fill="#9af3fa"><circle cx="55" cy="288" r="4"/><circle cx="108" cy="282" r="3"/><circle cx="655" cy="277" r="3"/><circle cx="715" cy="270" r="4"/></g>
+  <path d="M391 145L422 260L566 310L566 345L431 332L411 383L440 432L413 447L384 398L355 447L328 432L357 383L337 332L202 345L202 310L346 260L377 145Z" fill="#09151c" stroke="#75d6e2" stroke-opacity=".35" stroke-width="3"/>
+  <path d="M377 145H391L408 250L384 286L360 250Z" fill="#285361"/>
+  <path d="M346 260L365 284L337 332L202 345V310Z" fill="#112b36"/><path d="M422 260L403 284L431 332L566 345V310Z" fill="#112b36"/>
+  <text x="42" y="70" fill="#d5fbff" font-family="system-ui, sans-serif" font-size="20" font-weight="800" letter-spacing="5">RHINO CIRCUIT</text>
+  <text x="44" y="102" fill="#79c8d3" font-family="system-ui, sans-serif" font-size="12" font-weight="700" letter-spacing="3">SUELLE'S F/A-18 FIELD GUIDE</text>
+  <rect x="42" y="495" width="188" height="4" rx="2" fill="#f2b45c"/><text x="42" y="532" fill="#b7e7ee" font-family="system-ui, sans-serif" font-size="16" font-weight="700">PUBLIC BIG-PICTURE CONTEXT</text>
+</svg>
