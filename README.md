@@ -10,7 +10,7 @@ https://skabkleveta-creator.github.io/skab-digital-reality-arcade/
 
 Current arcade site version:
 
-`2026.06.27.002`
+
 
 ---
 
@@ -122,9 +122,23 @@ Live playable prototype
 
 ---
 
+## RHINO CIRCUIT — SUELLE’S F/A-18 FIELD GUIDE
+
+A mobile-first, public-information-only visual field guide for Suelle: F/A-18 family context, carrier culture, AE big-picture systems thinking, maintainer humor, and the line between shop culture and cutting corners. It is deliberately not Navy courseware or maintenance guidance.
+
+Open:
+
+https://skabkleveta-creator.github.io/skab-digital-reality-arcade/games/rhino-circuit/
+
+Status:
+
+Live field guide
+
+---
+
 ## LIVE DEMOS
 
-These demos run live from this arcade repository under the `games/` folder.
+These demos run live from this arcade repository under the  folder.
 
 ### SIGNAL SWEEPER
 
@@ -233,35 +247,14 @@ GitHub Issues are not the public feedback path for the arcade.
 
 Expected structure:
 
-```text
-/
-├─ index.html
-├─ 404.html
-├─ README.md
-├─ site-version.json
-└─ games/
-   ├─ signal_sweeper/
-   │  └─ index.html
-   ├─ relay-rush/
-   │  └─ index.html
-   ├─ node-blaster/
-   │  └─ index.html
-   └─ breach-drop/
-      └─ index.html
-```
+
 
 External playable prototypes currently linked from the arcade:
 
-```text
-https://skabkleveta-creator.github.io/FPS-002/
-https://skabkleveta-creator.github.io/BLACKBOX_SQUADRON_Public_Game/
-https://skabkleveta-creator.github.io/ANCHOR_RUN_Public_Game/
-https://skabkleveta-creator.github.io/Reintegration_Core_HTML/
-https://skabkleveta-creator.github.io/Human-in-the-Loop/
-```
+
 
 ---
 
 ## FRESH VERSION SYSTEM
 
-The homepage uses `site-version.json` to help visitors receive the newest version without needing to manually clear browser cache.
+The homepage uses  to help visitors receive the newest version without needing to manually clear browser cache.
