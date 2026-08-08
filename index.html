@@ -33,7 +33,7 @@
       <p class="marquee-copy">Pick a cabinet, look at the cover, flip it for the quick rundown, and run the thing. Some are solid. Some are still being figured out. That is the point.</p>
     </section>
     <aside class="operator-panel" aria-label="Arcade status">
-      <div class="operator-screen"><span class="live-dot">22 CABINETS LOADED</span><strong>SELECT A GAME</strong><span>Tap the cover to see the back.</span><span>Run Game / Run Demo lives down there.</span></div>
+      <div class="operator-screen"><span class="live-dot">23 CABINETS LOADED</span><strong>SELECT A GAME</strong><span>Tap the cover to see the back.</span><span>Run Game / Run Demo lives down there.</span></div>
       <div class="coin-row"><span>PLAYER 1</span><span>NO COINS REQUIRED</span></div>
     </aside>
   </header>
@@ -75,6 +75,7 @@
     {id:'relay-rush',section:'live-demos-candidate-systems',format:'Live Demo',status:'Candidate',evidence:'Pressure',kicker:'Routing / Speed Pressure',title:'Relay Rush',description:'Route signals under timing pressure while obstacles grow and mobile control flow is tested.',howTo:'Route the signal before the window closes, then learn which obstacle made you late.',href:'./games/relay-rush/',cover:'./assets/arcade-covers/cards/15-relay-rush.jpg'},
     {id:'node-blaster',section:'live-demos-candidate-systems',format:'Live Demo',status:'Candidate',evidence:'Pressure',kicker:'Nodes / Action Loop',title:'Node Blaster',description:'A continuous side-scrolling node-clearing action proof for prioritization and digital tunnel readability.',howTo:'Clear the nodes, prioritize the threat, and keep moving through the digital tunnel.',href:'./games/node-blaster/',cover:'./assets/arcade-covers/cards/16-node-blaster.jpg'},
     {id:'breach-drop',section:'live-demos-candidate-systems',format:'Live Demo',status:'Candidate',evidence:'Recovery',kicker:'Descent / Route Flow',title:'Breach Drop',description:'A downward route-breach demo testing recoverable pressure and no-dead-end escape design.',howTo:'Descend under pressure, read the route, and find the recovery path before the breach closes.',href:'./games/breach-drop/',cover:'./assets/arcade-covers/cards/17-breach-drop.jpg'},
+    {id:'rhino-circuit',section:'live-demos-candidate-systems',format:'Field Guide',actionLabel:'Open Field Guide',status:'Live Now',evidence:'Aviation',kicker:'Suelle’s F/A-18 Field Guide',title:'Rhino Circuit',description:'A visual, public-information-only field guide built for Suelle: F/A-18 family context, carrier culture, maintainer humor, and no homework.',howTo:'Open it on a phone, flip the cards, follow the big-picture system path, and tap into the nerd corners. No login or download.',href:'./games/rhino-circuit/',cover:'./assets/arcade-covers/cards/23-rhino-circuit.svg'},
     {id:'connection-trace',section:'design-review-under-review',format:'Design Review',status:'Under Review',evidence:'Validation',kicker:'Connectivity Puzzle Under Review',title:'Connection Trace',description:'A visible concept for diagnosing the one broken relationship that prevents a system from validating truth.',howTo:'Scan the network, identify the critical bad connection, stabilize it, and validate the restored route.',href:'./games/connection-trace/',cover:'./assets/arcade-covers/cards/18-connection-trace.jpg'}
   ];
   const demoFormats = new Set(['Proof Board','Tabletop Trial','Live Demo','Design Review']);
@@ -97,7 +98,7 @@
     const howTo=make('div','info-block'); howTo.append(make('strong','','How to play'),make('span','',game.howTo));
     const badges=make('div','badge-row'); addBadge(badges,'format',game.format); addBadge(badges,'status'+(hasLiveLink?'':' coming-soon'),hasLiveLink?game.status:'Coming Soon'); addBadge(badges,'evidence',game.evidence);
     const actions=make('div','back-actions');
-    if(hasLiveLink){const run=make('a','run-link',demoFormats.has(game.format)?'Run Demo':'Run Game');run.href=game.href;run.setAttribute('aria-label',run.textContent+': '+game.title);actions.append(run);}else actions.append(make('span','coming-soon-action','Coming Soon'));
+    if(hasLiveLink){const run=make('a','run-link',game.actionLabel||(demoFormats.has(game.format)?'Run Demo':'Run Game'));run.href=game.href;run.setAttribute('aria-label',run.textContent+': '+game.title);actions.append(run);}else actions.append(make('span','coming-soon-action','Coming Soon'));
     const flipAgain=make('button','flip-again','Flip back'); flipAgain.type='button'; actions.append(flipAgain);
     content.append(make('p','back-kicker',game.kicker),backTitle,make('p','back-description',game.description),howTo,badges,actions); back.append(backHead,content); shell.append(front,back); card.append(shell);
     const setFace=(isBack)=>{front.hidden=isBack;back.hidden=!isBack;front.setAttribute('aria-expanded',String(isBack));card.classList.toggle('is-open',isBack);(isBack?back:front).focus({preventScroll:true});};
