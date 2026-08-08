@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Blue-hour carrier deck with a stylized naval aircraft silhouette</title>
+  <desc id="desc">Original non-technical field-guide artwork: a dark carrier deck, teal horizon lights, and a generic twin-engine fighter silhouette.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#07141d"/>
+      <stop offset=".58" stop-color="#103443"/>
+      <stop offset="1" stop-color="#061117"/>
+    </linearGradient>
+    <linearGradient id="deck" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#162c35"/>
+      <stop offset="1" stop-color="#050d12"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop stop-color="#a9f6ff" stop-opacity=".9"/>
+      <stop offset=".25" stop-color="#48c9dc" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#48c9dc" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>
+    <filter id="shadow"><feDropShadow dx="0" dy="24" stdDeviation="18" flood-color="#000" flood-opacity=".72"/></filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#sky)"/>
+  <path d="M0 520H1600V1000H0Z" fill="url(#deck)"/>
+  <path d="M0 550C300 510 620 530 800 550C1040 576 1320 530 1600 500V1000H0Z" fill="#07141a" opacity=".76"/>
+  <g opacity=".36" stroke="#5ee8f2" stroke-width="3">
+    <path d="M0 670L800 532L1600 670"/>
+    <path d="M0 850L800 532L1600 850"/>
+    <path d="M800 532V1000"/>
+    <path d="M330 1000L800 532L1270 1000"/>
+  </g>
+  <g filter="url(#soft)">
+    <ellipse cx="1080" cy="485" rx="300" ry="160" fill="url(#glow)"/>
+    <ellipse cx="470" cy="535" rx="170" ry="90" fill="url(#glow)" opacity=".5"/>
+  </g>
+  <g fill="#8feaf1">
+    <circle cx="120" cy="522" r="7"/><circle cx="215" cy="515" r="5"/><circle cx="305" cy="508" r="7"/>
+    <circle cx="1295" cy="500" r="6"/><circle cx="1385" cy="494" r="5"/><circle cx="1490" cy="488" r="7"/>
+  </g>
+  <g filter="url(#shadow)">
+    <path d="M805 290L870 478L1125 565L1125 625L877 602L839 670L890 761L841 788L784 697L725 788L675 761L728 670L690 602L442 625L442 565L697 478L762 290Z" fill="#0a151c" stroke="#70d3df" stroke-opacity=".28" stroke-width="5"/>
+    <path d="M762 290L805 290L830 460L784 520L738 460Z" fill="#244b58"/>
+    <path d="M715 574L784 618L853 574L839 670L784 697L728 670Z" fill="#183842"/>
+    <path d="M697 478L730 518L690 602L442 625L442 565Z" fill="#122a34"/>
+    <path d="M870 478L838 518L877 602L1125 625L1125 565Z" fill="#122a34"/>
+  </g>
+  <g opacity=".8">
+    <rect x="110" y="825" width="240" height="4" rx="2" fill="#f2b45c"/>
+    <rect x="1250" y="825" width="240" height="4" rx="2" fill="#f2b45c"/>
+    <rect x="665" y="920" width="270" height="5" rx="2.5" fill="#62d7e8"/>
+  </g>
+  <text x="82" y="116" fill="#b8f8ff" font-family="system-ui, sans-serif" font-size="30" font-weight="700" letter-spacing="8">RHINO CIRCUIT</text>
+  <text x="84" y="160" fill="#75bbc5" font-family="system-ui, sans-serif" font-size="18" letter-spacing="4">PUBLIC-INFO FIELD GUIDE</text>
+</svg>
