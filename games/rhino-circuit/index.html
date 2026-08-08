@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07141d">
+  <!-- Rhino Circuit v0.3 — Graphic Field-Zine Pass · 07 Aug 2026 -->
+  <title>Rhino Circuit | Suelle’s F/A-18 Field Guide</title>
+  <style>
+    :root {
+      --ink: #e8f0f1;
+      --muted: #aabdc3;
+      --navy: #07141d;
+      --panel: #10242e;
+      --panel-2: #0d1d26;
+      --line: rgba(162, 211, 221, .19);
+      --cyan: #62d7e8;
+      --teal: #42c9ad;
+      --amber: #f2b45c;
+      --red: #ec6b68;
+      --shadow: 0 18px 45px rgba(0, 0, 0, .28);
+      --hero-illustration: url("./rhino-circuit-night-deck.svg");
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 87% 4%, rgba(66, 201, 173, .14), transparent 24rem),
+        radial-gradient(circle at 14% 16%, rgba(98, 215, 232, .10), transparent 26rem),
+        linear-gradient(135deg, #07141d 0%, #0b1c25 46%, #071018 100%);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .19;
+      background-image: linear-gradient(rgba(173, 224, 230, .12) 1px, transparent 1px), linear-gradient(90deg, rgba(173, 224, 230, .12) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black, transparent 78%);
+    }
+
+    .shell { width: min(1120px, calc(100% - 32px)); margin: 0 auto; position: relative; }
+
+    header { padding: 32px 0 26px; }
+    .hero {
+      position: relative;
+      isolation: isolate;
+      min-height: 560px;
+      overflow: hidden;
+      display: flex;
+      align-items: end;
+      border: 1px solid rgba(162, 211, 221, .28);
+      border-radius: 24px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, .42);
+      background: #07141d;
+    }
+    .hero-art {
+      position: absolute;
+      z-index: -2;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(4, 16, 24, .96) 0%, rgba(4, 16, 24, .82) 30%, rgba(4, 16, 24, .30) 59%, rgba(4, 16, 24, .14) 100%),
+        linear-gradient(0deg, rgba(4, 13, 19, .72), transparent 47%),
+        var(--hero-illustration) 68% center / cover no-repeat;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 78% 62%, rgba(98, 215, 232, .16), transparent 17rem),
+        repeating-linear-gradient(120deg, transparent 0 20px, rgba(171, 220, 227, .035) 21px 22px);
+      mix-blend-mode: screen;
+      opacity: .7;
+    }
+    .hero-content {
+      width: min(710px, 100%);
+      padding: clamp(28px, 6vw, 66px);
+      position: relative;
+    }
+    .hero-kicker {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 12px;
+    }
+    .hero-kicker::before {
+      content: "";
+      display: block;
+      width: 34px;
+      height: 2px;
+      background: var(--teal);
+      box-shadow: 0 0 14px var(--teal);
+    }
+    .hero h1 { text-shadow: 0 3px 26px rgba(0, 0, 0, .62); }
+    .hero .lead { color: #d7e4e6; text-shadow: 0 2px 16px rgba(0, 0, 0, .65); }
+    .hero .safety-note {
+      margin-top: 20px;
+      background: rgba(8, 22, 31, .76);
+      backdrop-filter: blur(7px);
+    }
+    .hero-caption {
+      position: absolute;
+      right: 20px;
+      bottom: 17px;
+      color: rgba(232, 240, 241, .72);
+      font-size: .66rem;
+      font-weight: 760;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-align: right;
+    }
+    .eyebrow, .tag, .module-no, .mini-label {
+      color: var(--cyan);
+      font-size: .73rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      font-size: clamp(2.6rem, 8vw, 5.8rem);
+      line-height: .89;
+      letter-spacing: -.075em;
+      margin: 9px 0 17px;
+      max-width: 860px;
+    }
+    h1 span { color: var(--teal); }
+    .lead { max-width: 750px; font-size: clamp(1rem, 2.2vw, 1.22rem); line-height: 1.62; color: var(--muted); }
+
+    .safety-note {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 14px 16px;
+      max-width: 780px;
+      background: rgba(242, 180, 92, .09);
+      border: 1px solid rgba(242, 180, 92, .32);
+      border-radius: 12px;
+      color: #f6d4a3;
+      font-size: .9rem;
+      line-height: 1.45;
+    }
+    .safety-note strong { color: var(--amber); }
+
+    .status {
+      display: grid;
+      grid-template-columns: 1.35fr .8fr;
+      gap: 14px;
+      margin: 0 0 42px;
+    }
+    .status-card, .module, .quiz, .sources, .closing {
+      background: linear-gradient(145deg, rgba(17, 40, 50, .95), rgba(10, 27, 36, .95));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .status-card { padding: 17px 18px; }
+    .bar { height: 8px; border-radius: 999px; background: rgba(232, 240, 241, .11); overflow: hidden; margin-top: 11px; }
+    .bar > div { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--cyan), var(--teal)); transition: width .35s ease; }
+    .status-line { display: flex; justify-content: space-between; gap: 14px; align-items: baseline; }
+    #statusText { color: var(--muted); font-size: .88rem; }
+    #quizScore { color: var(--teal); font-size: 1.35rem; font-weight: 850; }
+
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin: 42px 0 15px; }
+    h2 { font-size: clamp(1.65rem, 4vw, 2.5rem); letter-spacing: -.045em; margin: 0; }
+    .section-heading p { max-width: 520px; margin: 0; color: var(--muted); line-height: 1.5; text-align: right; font-size: .94rem; }
+
+    .module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .module { padding: 20px; min-height: 284px; display: flex; flex-direction: column; }
+    .module:nth-child(1) { --mark: var(--cyan); border-top: 3px solid var(--mark); }
+    .module:nth-child(2) { --mark: var(--teal); border-top: 3px solid var(--mark); }
+    .module:nth-child(3) { --mark: var(--amber); border-top: 3px solid var(--mark); }
+    .module:nth-child(4) { --mark: #ac93ef; border-top: 3px solid var(--mark); }
+    .module:nth-child(5) { --mark: #e482a1; border-top: 3px solid var(--mark); }
+    .module:nth-child(6) { --mark: #7cbde4; border-top: 3px solid var(--mark); }
+    .module-head { display: flex; gap: 12px; align-items: flex-start; }
+    .module-mark {
+      position: relative;
+      flex: 0 0 auto;
+      width: 35px;
+      height: 35px;
+      border: 1px solid color-mix(in srgb, var(--mark), transparent 45%);
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--mark), transparent 90%);
+      overflow: hidden;
+    }
+    .module-mark::before, .module-mark::after {
+      content: "";
+      position: absolute;
+      display: block;
+      border-color: var(--mark);
+    }
+    .module:nth-child(1) .module-mark::before { width: 22px; height: 9px; left: 5px; top: 13px; border: 2px solid var(--mark); border-radius: 48% 64% 47% 47%; transform: skewX(-20deg); }
+    .module:nth-child(1) .module-mark::after { width: 11px; height: 12px; left: 17px; top: 6px; border-left: 2px solid var(--mark); border-right: 2px solid var(--mark); transform: rotate(16deg); }
+    .module:nth-child(2) .module-mark::before { width: 2px; height: 24px; left: 16px; top: 5px; background: var(--mark); box-shadow: -8px 7px 0 -1px var(--mark), 8px -7px 0 -1px var(--mark); transform: rotate(33deg); }
+    .module:nth-child(2) .module-mark::after { width: 14px; height: 14px; left: 10px; top: 10px; border: 1px solid var(--mark); border-radius: 50%; }
+    .module:nth-child(3) .module-mark::before { width: 18px; height: 18px; left: 7px; top: 7px; border: 2px solid var(--mark); border-radius: 50%; box-shadow: 0 0 0 5px color-mix(in srgb, var(--mark), transparent 87%); }
+    .module:nth-child(3) .module-mark::after { width: 3px; height: 3px; left: 16px; top: 16px; background: var(--mark); border-radius: 50%; }
+    .module:nth-child(4) .module-mark::before { width: 4px; height: 23px; left: 11px; top: 5px; background: var(--mark); border-radius: 999px; box-shadow: 9px 0 0 var(--mark); }
+    .module:nth-child(4) .module-mark::after { width: 24px; height: 2px; left: 5px; top: 17px; background: var(--mark); }
+    .module:nth-child(5) .module-mark::before { width: 23px; height: 2px; left: 5px; top: 17px; background: var(--mark); box-shadow: 0 -7px 0 -1px var(--mark), 0 7px 0 -1px var(--mark); transform: rotate(-16deg); }
+    .module:nth-child(5) .module-mark::after { width: 5px; height: 5px; right: 5px; top: 7px; border: 1px solid var(--mark); border-radius: 50%; box-shadow: -17px 15px 0 -1px var(--mark); }
+    .module:nth-child(6) .module-mark::before { width: 17px; height: 17px; left: 8px; top: 8px; border: 2px solid var(--mark); border-radius: 4px; }
+    .module:nth-child(6) .module-mark::after { width: 6px; height: 6px; left: 14px; top: 14px; background: var(--mark); border-radius: 50%; box-shadow: -12px 0 0 -1px var(--mark), 12px 0 0 -1px var(--mark); }
+    .module h3 { font-size: 1.23rem; letter-spacing: -.025em; margin: 6px 0 10px; }
+    .module p { color: var(--muted); line-height: 1.52; font-size: .92rem; margin-bottom: 13px; }
+    .module ul { color: var(--muted); font-size: .88rem; line-height: 1.5; padding-left: 18px; margin: 0 0 14px; }
+    .module li + li { margin-top: 5px; }
+    .detail { margin-top: auto; }
+    .detail summary { cursor: pointer; color: var(--cyan); font-weight: 750; font-size: .88rem; list-style: none; }
+    .detail summary::after { content: " +"; }
+    .detail[open] summary::after { content: " −"; }
+    .detail p { margin: 10px 0 0; font-size: .85rem; color: #c5d2d6; }
+
+    .route { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; padding: 17px 0 9px; }
+    .route-step { position: relative; padding: 36px 11px 0 0; color: var(--muted); font-size: .8rem; line-height: 1.25; }
+    .route-step::before { content: ""; position: absolute; top: 12px; left: 0; width: 17px; height: 17px; border-radius: 50%; background: var(--navy); border: 3px solid var(--teal); z-index: 1; }
+    .route-step::after { content: ""; position: absolute; top: 19px; left: 17px; width: calc(100% - 17px); height: 2px; background: rgba(66, 201, 173, .48); }
+    .route-step:last-child::after { display: none; }
+    .route-step strong { display: block; color: var(--ink); margin-bottom: 4px; font-size: .84rem; }
+    .map-note { color: var(--muted); font-size: .85rem; line-height: 1.55; margin: 13px 0 0; }
+    .map-note b { color: var(--amber); }
+
+    .visual-brief {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 24px;
+      align-items: center;
+      overflow: hidden;
+      margin: 45px 0;
+      padding: 29px;
+      border: 1px solid rgba(98, 215, 232, .24);
+      border-radius: 20px;
+      background:
+        linear-gradient(112deg, rgba(12, 39, 53, .95), rgba(13, 25, 34, .94)),
+        #0b1c25;
+      box-shadow: var(--shadow);
+    }
+    .visual-brief::before {
+      content: "";
+      position: absolute;
+      width: 30rem;
+      height: 30rem;
+      border: 1px solid rgba(66, 201, 173, .18);
+      border-radius: 50%;
+      right: -13rem;
+      top: -16rem;
+      box-shadow: 0 0 0 4rem rgba(66, 201, 173, .025), 0 0 0 8rem rgba(66, 201, 173, .018);
+    }
+    .visual-copy { position: relative; z-index: 1; }
+    .visual-copy h2 { margin: 6px 0 11px; max-width: 460px; }
+    .visual-copy p { max-width: 510px; margin-bottom: 19px; color: var(--muted); line-height: 1.55; }
+    .visual-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .visual-tags span {
+      border: 1px solid rgba(98, 215, 232, .27);
+      border-radius: 999px;
+      padding: 7px 10px;
+      color: var(--cyan);
+      font-size: .69rem;
+      font-weight: 820;
+      letter-spacing: .11em;
+    }
+    .visual-art { position: relative; z-index: 1; min-height: 210px; }
+    .visual-art svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .visual-art .pathline { fill: none; stroke: rgba(98, 215, 232, .72); stroke-width: 2; stroke-dasharray: 5 6; }
+    .visual-art .pulse { fill: #42c9ad; filter: drop-shadow(0 0 6px #42c9ad); }
+    .visual-art .orb { fill: #0d2632; stroke: rgba(98, 215, 232, .8); stroke-width: 2; }
+    .visual-art .plane { fill: none; stroke: #f2b45c; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+    .visual-art .deck { stroke: rgba(232, 240, 241, .28); stroke-width: 1; }
+
+    .flash-wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .flash {
+      border: 1px solid var(--line);
+      background: rgba(9, 26, 35, .8);
+      color: var(--ink);
+      border-radius: 14px;
+      min-height: 140px;
+      padding: 17px;
+      text-align: left;
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .flash:hover, .flash:focus-visible { transform: translateY(-3px); border-color: var(--cyan); outline: none; }
+    .flash .front { display: block; font-weight: 830; font-size: 1.03rem; letter-spacing: -.02em; }
+    .flash .back { display: none; margin-top: 9px; color: var(--muted); font-size: .83rem; line-height: 1.45; }
+    .flash.revealed { background: rgba(66, 201, 173, .08); border-color: rgba(66, 201, 173, .58); }
+    .flash.revealed .back { display: block; }
+
+    .banter {
+      padding: 22px;
+      margin-top: 14px;
+      background: linear-gradient(145deg, rgba(27, 43, 48, .96), rgba(12, 27, 36, .96));
+      border: 1px solid rgba(242, 180, 92, .28);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .banter > p { color: var(--muted); line-height: 1.52; margin-bottom: 16px; }
+    .banter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .banter-card { padding: 14px; border-radius: 12px; background: rgba(4, 13, 19, .44); border: 1px solid rgba(242, 180, 92, .17); }
+    .banter-card h3 { color: var(--amber); font-size: .91rem; margin: 0 0 6px; }
+    .banter-card p { color: var(--muted); font-size: .84rem; line-height: 1.45; margin: 0; }
+    .banter-note { margin: 15px 0 0 !important; font-size: .83rem; }
+    .banter-note strong { color: var(--teal); }
+
+    .quiz { padding: 24px; margin-top: 14px; }
+    .quiz-intro { color: var(--muted); line-height: 1.5; max-width: 680px; }
+    .question { padding: 19px 0; border-top: 1px solid var(--line); }
+    .question:first-of-type { border-top: 0; }
+    .question h3 { font-size: 1rem; line-height: 1.4; margin-bottom: 12px; }
+    .answers { display: grid; gap: 8px; }
+    .answer {
+      width: 100%;
+      color: var(--ink);
+      background: rgba(4, 13, 19, .52);
+      border: 1px solid rgba(164, 208, 218, .2);
+      border-radius: 10px;
+      padding: 11px 13px;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+      font-size: .9rem;
+      transition: background .15s, border-color .15s;
+    }
+    .answer:hover, .answer:focus-visible { border-color: var(--cyan); outline: none; }
+    .answer.correct { background: rgba(66, 201, 173, .14); border-color: var(--teal); }
+    .answer.incorrect { background: rgba(236, 107, 104, .13); border-color: var(--red); }
+    .answer:disabled { cursor: default; }
+    .feedback { display: none; margin: 10px 0 0; color: var(--muted); line-height: 1.45; font-size: .86rem; }
+    .feedback.show { display: block; }
+    .reset { margin-top: 15px; border: 1px solid rgba(98, 215, 232, .45); background: transparent; color: var(--cyan); border-radius: 999px; padding: 10px 15px; font: inherit; font-weight: 750; cursor: pointer; }
+    .reset:hover { background: rgba(98, 215, 232, .1); }
+
+    .sources { padding: 23px; margin: 42px 0 18px; }
+    .sources p, .sources li, footer { color: var(--muted); line-height: 1.55; font-size: .88rem; }
+    .sources ul { margin: 12px 0 0; padding-left: 19px; }
+    .sources li + li { margin-top: 7px; }
+    a { color: var(--cyan); }
+    .closing { padding: 23px; margin: 18px 0 30px; border-color: rgba(66, 201, 173, .42); }
+    .closing p { color: var(--muted); line-height: 1.55; margin: 9px 0 0; }
+    footer { padding: 0 0 45px; }
+
+    @media (max-width: 840px) {
+      .module-grid { grid-template-columns: repeat(2, 1fr); }
+      .flash-wrap { grid-template-columns: repeat(2, 1fr); }
+      .banter-grid { grid-template-columns: repeat(2, 1fr); }
+      .visual-brief { grid-template-columns: 1fr; }
+      .visual-art { max-width: 520px; width: 100%; margin: 0 auto; }
+      .route { grid-template-columns: repeat(3, 1fr); row-gap: 12px; }
+      .route-step:nth-child(3)::after { display: none; }
+      .route-step:nth-child(4)::before, .route-step:nth-child(5)::before, .route-step:nth-child(6)::before { top: 12px; }
+    }
+    @media (max-width: 600px) {
+      header { padding-top: 18px; }
+      .shell { width: min(100% - 22px, 1120px); }
+      .status, .module-grid { grid-template-columns: 1fr; }
+      .banter-grid { grid-template-columns: 1fr; }
+      .section-heading { display: block; }
+      .section-heading p { text-align: left; margin-top: 8px; }
+      .module { min-height: 0; }
+      .hero { min-height: 570px; align-items: start; }
+      .hero-art {
+        background:
+          linear-gradient(180deg, rgba(4, 16, 24, .95) 0%, rgba(4, 16, 24, .72) 38%, rgba(4, 16, 24, .20) 68%, rgba(4, 13, 19, .55) 100%),
+          var(--hero-illustration) 66% center / cover no-repeat;
+      }
+      .hero-content { padding: 29px 22px; }
+      .hero-caption { right: 14px; bottom: 13px; max-width: 175px; font-size: .59rem; }
+      .visual-brief { margin: 32px 0; padding: 23px; }
+      .visual-art { min-height: 165px; }
+      .route { grid-template-columns: repeat(2, 1fr); }
+      .route-step:nth-child(2)::after, .route-step:nth-child(4)::after { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="hero">
+        <div class="hero-art" aria-hidden="true"></div>
+        <div class="hero-content">
+          <div class="hero-kicker eyebrow">Public-information field guide · v0.3 · 07 Aug 2026</div>
+          <h1>RHINO<br><span>CIRCUIT.</span></h1>
+          <p class="lead">A geeky F/A-18 field guide for <strong>Suelle</strong>. Public big-picture context, honest maintainer laughs, and zero homework—just enough to make the schoolhouse material feel like it has a real place to land.</p>
+          <div class="safety-note">
+            <strong>BOUNDARY</strong>
+            <span>This is not Navy course material, a maintenance guide, or a substitute for authorized publications. It deliberately excludes procedures, technical orders, schematics, wiring locations, troubleshooting steps, and operating limits.</span>
+          </div>
+        </div>
+        <div class="hero-caption">Original public-context artwork<br>not technical data</div>
+      </div>
+    </header>
+
+    <section class="status" aria-label="Learning status">
+      <div class="status-card">
+        <div class="status-line"><span class="mini-label">Browse log</span><span id="statusText">0 / 8 cards opened</span></div>
+        <div class="bar" aria-hidden="true"><div id="progressFill"></div></div>
+      </div>
+      <div class="status-card">
+        <div class="mini-label">Field-guide status</div>
+        <div id="quizScore">Not a test</div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <h2>What A-school gives you.<br>What the fleet makes memorable.</h2>
+        <p>A-school teaches the rating foundation. This adds big-picture vocabulary and the sort of harmless shop humor that makes people remember why the work matters—without teaching something that belongs in Navy technical training.</p>
+      </div>
+      <div class="module-grid">
+        <article class="module">
+          <div class="module-head"><div class="module-mark" aria-hidden="true"></div><div><div class="module-no">01 · Know the family</div><h3>“F/A-18” is a family name, not one airplane.</h3></div></div>
+          <p>The original <strong>Hornet</strong> is the A–D series. The Navy’s carrier-air-wing workhorse is the larger <strong>F/A-18E/F Super Hornet</strong>. E is single-seat; F is two-seat.</p>
+          <details class="detail"><summary>Why it matters to an AE</summary><p>Platform names hide major differences. “F/A-18” alone does not tell you which configuration, age, or systems baseline you are discussing. Start every conversation by getting the exact model and configuration.</p></details>
+        </article>
+        <article class="module">
+          <div class="module-head"><div class="module-mark" aria-hidden="true"></div><div><div class="module-no">02 · Power is a system</div><h3>Think path, not part.</h3></div></div>
+          <p>An electrical function is never just a box. At the broadest level, it depends on generation, control, conversion, distribution, protection, the load, and a way to show the crew what is happening.</p>
+          <details class="detail"><summary>The big AE habit</summary><p>When a function fails, disciplined maintainers ask what part of the system is actually being observed—not which component they hope is bad. The authorized publication determines the actual action. <em>Maintainer translation: “it only does it sometimes” is a description, not a diagnosis.</em></p></details>
+        </article>
+        <article class="module">
+          <div class="module-head"><div class="module-mark" aria-hidden="true"></div><div><div class="module-no">03 · Block III changes the question</div><h3>More capability means more integration.</h3></div></div>
+          <p>Public Navy reporting describes Block III upgrades as adding a modernized cockpit, enhanced networking, avionics upgrades, and electrical modernization to support them.</p>
+          <details class="detail"><summary>Plain-English translation</summary><p>The aircraft is not frozen in time. When computing, displays, data, and sensors change, they change the supporting system story too. Integration is a readiness issue, not just an engineering word.</p></details>
+        </article>
+        <article class="module">
+          <div class="module-head"><div class="module-mark" aria-hidden="true"></div><div><div class="module-no">04 · Two engines, one mission</div><h3>The Super Hornet is a carrier-suitable twin-engine strike fighter.</h3></div></div>
+          <p>Its job is deliberately broad: fighter escort, fleet air defense, strike, reconnaissance, close air support, and aerial refueling are among its publicly described mission sets.</p>
+          <details class="detail"><summary>Geek fact</summary><p>Public NAVAIR specifications list two F414-GE-400 turbofan engines, each rated at 22,000 pounds of static thrust. The point is not the number—it is that electrical capability supports a jet built to do more than one job.</p></details>
+        </article>
+        <article class="module">
+          <div class="module-head"><div class="module-mark" aria-hidden="true"></div><div><div class="module-no">05 · Carrier reality</div><h3>Naval aviation is a team sport in a brutal environment.</h3></div></div>
+          <p>Salt air, vibration, heat cycles, time pressure, limited space, corrosion risk, and shift handoffs all shape readiness. A clean handoff and accurate documentation protect the next maintainer and the crew.</p>
+          <details class="detail"><summary>What “professional” looks like</summary><p>Knowing the system matters. Knowing where the authorized process starts, what was observed, and how to communicate it clearly matters just as much. That is how individual work becomes safe aircraft availability. <em>A good handoff is a kindness to the next maintainer—and a strong defense against a mystery growing legs overnight.</em></p></details>
+        </article>
+        <article class="module">
+          <div class="module-head"><div class="module-mark" aria-hidden="true"></div><div><div class="module-no">06 · AE has a wide lane</div><h3>Electricity touches almost every aircraft story.</h3></div></div>
+          <p>The Navy’s AE occupational standard publicly includes power generation, conversion and distribution; batteries; lighting; and electrical control of systems including landing gear, flight controls, warnings, and more.</p>
+          <details class="detail"><summary>Important distinction</summary><p>That does not mean one person “owns the jet.” It means AEs must see how their work connects to airframe, propulsion, instruments, avionics, quality assurance, and maintenance control.</p></details>
+        </article>
+      </div>
+    </section>
+
+    <section class="visual-brief" aria-label="The visible and invisible parts of Naval Aviation">
+      <div class="visual-copy">
+        <div class="mini-label">Field note · built by a system</div>
+        <h2>A jet in the sky is the visible part.</h2>
+        <p>Underneath it: people, timing, tools, data, and the person willing to say “hold up.” Less cinematic. Much more impressive.</p>
+        <div class="visual-tags" aria-label="What supports aircraft trust">
+          <span>People</span><span>Process</span><span>Proof</span>
+        </div>
+      </div>
+      <div class="visual-art">
+        <svg viewBox="0 0 420 250" role="img" aria-label="Abstract visual of a carrier aircraft supported by three connected system nodes">
+          <path class="deck" d="M25 211H396M42 225H378"/>
+          <path class="pathline" d="M91 170 C127 132, 165 131, 210 157 S286 185, 329 116"/>
+          <path class="pathline" d="M91 170 C145 196, 229 198, 329 116"/>
+          <circle class="orb" cx="91" cy="170" r="27"/>
+          <circle class="orb" cx="210" cy="157" r="27"/>
+          <circle class="orb" cx="329" cy="116" r="27"/>
+          <circle class="pulse" cx="91" cy="170" r="6"/>
+          <circle class="pulse" cx="210" cy="157" r="6"/>
+          <circle class="pulse" cx="329" cy="116" r="6"/>
+          <path class="plane" d="M122 73 L215 104 L299 89 L315 98 L237 116 L218 142 L203 142 L208 119 L157 103 L139 117 L125 117 L138 96 L109 89 L108 80 Z"/>
+          <path class="plane" d="M214 104 L232 77 L245 76 L237 116"/>
+        </svg>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <h2>The mental model</h2>
+        <p>Generic aircraft-electricity logic only—no F/A-18 configuration data, values, locations, or procedures.</p>
+      </div>
+      <div class="route" aria-label="Conceptual electrical system flow">
+        <div class="route-step"><strong>Source</strong>Where energy begins</div>
+        <div class="route-step"><strong>Control</strong>How it is managed</div>
+        <div class="route-step"><strong>Convert</strong>Make it usable</div>
+        <div class="route-step"><strong>Distribute</strong>Carry it where needed</div>
+        <div class="route-step"><strong>Protect</strong>Prevent unsafe conditions</div>
+        <div class="route-step"><strong>Load + Indicate</strong>Do the work; show the result</div>
+      </div>
+      <p class="map-note"><b>Field truth:</b> a symptom at the end of the chain does not tell you where the cause is. This model helps frame better questions; the Navy’s authorized maintenance data provides the answers and action.</p>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <h2>Maintainer translation</h2>
+        <p>The jokes are optional. The standards, authorized data, and the people beside you are not.</p>
+      </div>
+      <div class="banter">
+        <p>The funniest parts of maintenance are usually the same things that teach good habits: no invisible gremlins, no magical shortcuts, and no such thing as “probably good enough” when a crew will trust the work.</p>
+        <div class="banter-grid">
+          <article class="banter-card"><h3>“It worked yesterday.”</h3><p>Yesterday is a witness, not a maintenance record.</p></article>
+          <article class="banter-card"><h3>“Quick fix.”</h3><p>Two words that never reduce the requirement to use the right data, tools, and documentation.</p></article>
+          <article class="banter-card"><h3>“Intermittent.”</h3><p>The jet behaved perfectly for the inspection, naturally. It has excellent timing.</p></article>
+          <article class="banter-card"><h3>FOD</h3><p>Tiny objects with wildly outsized career ambitions. Respect the walkdown.</p></article>
+          <article class="banter-card"><h3>Corrosion</h3><p>The ocean’s patient, personal argument with every piece of metal nearby.</p></article>
+          <article class="banter-card"><h3>The handoff</h3><p>Leave the next maintainer a clear story, not a season finale.</p></article>
+        </div>
+        <p class="banter-note"><strong>The actual joke:</strong> the fleet will have its nicknames and stories. The people worth learning from never make a joke out of safety, technical integrity, or a new Sailor trying to learn.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <h2>Tap-to-reveal: deck-plate vocabulary</h2>
+        <p>Eight terms worth knowing before a platform-specific syllabus starts.</p>
+      </div>
+      <div class="flash-wrap" id="flashCards">
+        <button class="flash" type="button"><span class="front">Legacy Hornet</span><span class="back">F/A-18 A–D family. Still an important Marine Corps platform; not interchangeable with the E/F Super Hornet.</span></button>
+        <button class="flash" type="button"><span class="front">Super Hornet</span><span class="back">F/A-18E/F: the larger, carrier-air-wing strike fighter; E is one seat, F is two.</span></button>
+        <button class="flash" type="button"><span class="front">Growler</span><span class="back">EA-18G: an electronic-warfare aircraft built from the F/A-18F Super Hornet platform.</span></button>
+        <button class="flash" type="button"><span class="front">PMA-265</span><span class="back">The Navy program office responsible for F/A-18 and EA-18G acquisition and sustainment.</span></button>
+        <button class="flash" type="button"><span class="front">Block III</span><span class="back">A Super Hornet modernization effort adding publicized cockpit, networking, avionics, and electrical modernization improvements.</span></button>
+        <button class="flash" type="button"><span class="front">Readiness</span><span class="back">Not merely “the jet flew.” It is the disciplined condition of people, process, parts, data, and aircraft capability coming together.</span></button>
+        <button class="flash" type="button"><span class="front">NAMP</span><span class="back">The Naval Aviation Maintenance Program: the governing maintenance framework used by aviation work centers.</span></button>
+        <button class="flash" type="button"><span class="front">Authorized data</span><span class="back">The only source for technical maintenance action. A public primer can build context; it must never replace official maintenance publications.</span></button>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <h2>Hangar-bay challenge: six questions</h2>
+        <p>Optional, ungraded, and safe to close halfway through. Pick an answer, see why it is right, then explain the good part to Dad if you feel like showing off.</p>
+      </div>
+      <div class="quiz" id="quiz">
+        <p class="quiz-intro">This is public, big-picture material only—not a qualification, not a check ride, and not a test of whether she belongs in the shop. Official training and authorized data control technical action.</p>
+        <div class="question" data-answer="b">
+          <h3>1. What is the cleanest public description of the F/A-18E/F Super Hornet?</h3>
+          <div class="answers"><button class="answer" data-choice="a">A simple software update to the older Hornet</button><button class="answer" data-choice="b">A larger carrier-suitable, twin-engine, multi-mission strike fighter in the Hornet family</button><button class="answer" data-choice="c">A single-role interceptor with no strike mission</button></div>
+          <p class="feedback">Correct. The E/F is a major aircraft-model evolution, not just an updated legacy Hornet.</p>
+        </div>
+        <div class="question" data-answer="c">
+          <h3>2. Which statement about E and F variants is correct?</h3>
+          <div class="answers"><button class="answer" data-choice="a">E is two-seat and F is one-seat</button><button class="answer" data-choice="b">Both are single-seat</button><button class="answer" data-choice="c">E is single-seat and F is two-seat</button></div>
+          <p class="feedback">Correct. The public Navy fact file identifies the E as one-seat and F as two-seat.</p>
+        </div>
+        <div class="question" data-answer="a">
+          <h3>3. Why should an AE care about the public Block III modernization story?</h3>
+          <div class="answers"><button class="answer" data-choice="a">New avionics, networking, displays, and computing create a broader integration story that includes electrical modernization</button><button class="answer" data-choice="b">It makes authorized technical data unnecessary</button><button class="answer" data-choice="c">It turns maintenance into a one-person job</button></div>
+          <p class="feedback">Correct. The Navy publicly describes Block III as a modernization effort that includes electrical upgrades supporting the new systems.</p>
+        </div>
+        <div class="question" data-answer="b">
+          <h3>4. What is the best big-picture response to an electrical symptom?</h3>
+          <div class="answers"><button class="answer" data-choice="a">Assume the end component is bad</button><button class="answer" data-choice="b">Think through the whole power path, then follow the authorized maintenance data</button><button class="answer" data-choice="c">Take a guess based on the most common story</button></div>
+          <p class="feedback">Correct. Good troubleshooting begins with system thinking; only authorized technical data directs the actual work.</p>
+        </div>
+        <div class="question" data-answer="c">
+          <h3>5. Which job is publicly in the AE lane?</h3>
+          <div class="answers"><button class="answer" data-choice="a">Only cabin lighting, nothing else</button><button class="answer" data-choice="b">Only computers and radar</button><button class="answer" data-choice="c">Electrical power generation, conversion, distribution, batteries, and electrical controls across aircraft systems</button></div>
+          <p class="feedback">Correct. The official AE occupational standard describes a broad aircraft electrical and instrument scope.</p>
+        </div>
+        <div class="question" data-answer="a">
+          <h3>6. What makes a public primer valuable but limited?</h3>
+          <div class="answers"><button class="answer" data-choice="a">It can provide platform context and vocabulary, but official training and authorized data control technical action</button><button class="answer" data-choice="b">It replaces the need for Navy schools</button><button class="answer" data-choice="c">It gives every configuration-specific answer</button></div>
+          <p class="feedback">Correct. Context makes the schoolhouse material stick; it does not replace it.</p>
+        </div>
+        <button class="reset" type="button" id="resetQuiz">Reset the hangar-bay challenge</button>
+      </div>
+    </section>
+
+    <section class="sources">
+      <div class="mini-label">Public sources used · accessed 07 Aug 2026</div>
+      <h2>Where the facts came from</h2>
+      <p>All platform facts here come from public Navy sources. The source list is intentionally short and trustworthy—not a pile of random aviation blogs.</p>
+      <ul>
+        <li><a href="https://www.navair.navy.mil/product/FA-18EF-Super-Hornet" target="_blank" rel="noreferrer">NAVAIR — F/A-18E/F Super Hornet</a>: model role, engines, Block II/III context, and general specifications.</li>
+        <li><a href="https://www.navy.mil/Resources/Fact-Files/Display-FactFiles/Article/2383479/fa-18a-d-hornet-and-fa-18ef-super-hornet-strike-fighter/" target="_blank" rel="noreferrer">U.S. Navy — F/A-18 Hornet and Super Hornet Fact File</a>: family distinctions, mission roles, and E/F crew configuration.</li>
+        <li><a href="https://www.mynavyhr.navy.mil/Portals/55/Reference/NEOCS/Vol1/AE_occs_CH_102_Apr25_508.pdf" target="_blank" rel="noreferrer">MyNavy HR — Aviation Electrician’s Mate Occupational Standard (Apr. 2025)</a>: public AE role and scope.</li>
+        <li><a href="https://www.navair.navy.mil/news/FRCSW-Produces-First-Organic-Super-Hornet-Undergo-Block-III-Modifications/Tue-04212026-0643" target="_blank" rel="noreferrer">NAVAIR — Block III modernization at Fleet Readiness Center Southwest (Apr. 2026)</a>: electrical modernization and the cross-functional sustainment picture.</li>
+        <li><a href="https://www.netc.navy.mil/CNATT/" target="_blank" rel="noreferrer">CNATT</a>: the Navy organization responsible for aviation technical-training curriculum and tools.</li>
+      </ul>
+    </section>
+
+    <section class="closing">
+      <div class="mini-label">The point of the thing</div>
+      <h2>She is not “the person who fixes a wire.”</h2>
+      <p>She is learning how a carrier aircraft stays trustworthy when the mission, the environment, the configuration, and the clock all refuse to make it easy. That is pretty damn geeky—and it matters. Also: apparently the aircraft will have opinions about the timing.</p>
+    </section>
+
+    <footer>RHINO CIRCUIT is an unofficial public-information field guide created for Suelle. Technical action belongs only to official Navy training and authorized maintenance data.</footer>
+  </main>
+
+  <script>
+    (() => {
+      const cards = [...document.querySelectorAll('.flash')];
+      const statusText = document.getElementById('statusText');
+      const progressFill = document.getElementById('progressFill');
+      const explored = new Set();
+      cards.forEach((card, index) => {
+        card.addEventListener('click', () => {
+          card.classList.toggle('revealed');
+          if (card.classList.contains('revealed')) explored.add(index);
+          const count = explored.size;
+          statusText.textContent = `${count} / ${cards.length} cards opened`;
+          progressFill.style.width = `${(count / cards.length) * 100}%`;
+        });
+      });
+
+      const questions = [...document.querySelectorAll('.question')];
+      const scoreEl = document.getElementById('quizScore');
+      questions.forEach(question => {
+        question.querySelectorAll('.answer').forEach(answer => {
+          answer.addEventListener('click', () => {
+            if (question.dataset.answered) return;
+            question.dataset.answered = 'true';
+            const isCorrect = answer.dataset.choice === question.dataset.answer;
+            question.querySelectorAll('.answer').forEach(button => {
+              button.disabled = true;
+              if (button.dataset.choice === question.dataset.answer) button.classList.add('correct');
+            });
+            if (!isCorrect) answer.classList.add('incorrect');
+            question.querySelector('.feedback').classList.add('show');
+            scoreEl.textContent = 'No grades issued';
+          });
+        });
+      });
+
+      document.getElementById('resetQuiz').addEventListener('click', () => {
+        scoreEl.textContent = 'Not a test';
+        questions.forEach(question => {
+          delete question.dataset.answered;
+          question.querySelector('.feedback').classList.remove('show');
+          question.querySelectorAll('.answer').forEach(button => {
+            button.disabled = false;
+            button.classList.remove('correct', 'incorrect');
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
