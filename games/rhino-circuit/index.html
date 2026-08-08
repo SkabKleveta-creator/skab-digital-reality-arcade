@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#07141d">
-  <!-- Rhino Circuit v0.3 — Graphic Field-Zine Pass · 07 Aug 2026 -->
+  <!-- Rhino Circuit v0.4 — The Intermittent: 75-Second Shift · 08 Aug 2026 -->
   <title>Rhino Circuit | Suelle’s F/A-18 Field Guide</title>
   <style>
     :root {
@@ -343,6 +343,95 @@
     .reset { margin-top: 15px; border: 1px solid rgba(98, 215, 232, .45); background: transparent; color: var(--cyan); border-radius: 999px; padding: 10px 15px; font: inherit; font-weight: 750; cursor: pointer; }
     .reset:hover { background: rgba(98, 215, 232, .1); }
 
+    .shift-game {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      margin-top: 14px;
+      border: 1px solid rgba(66, 201, 173, .4);
+      border-radius: 20px;
+      background:
+        radial-gradient(circle at 82% 12%, rgba(242, 180, 92, .16), transparent 16rem),
+        linear-gradient(145deg, rgba(8, 28, 39, .98), rgba(7, 17, 25, .98));
+      box-shadow: var(--shadow);
+    }
+    .shift-game::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      opacity: .22;
+      background-image: linear-gradient(rgba(98, 215, 232, .11) 1px, transparent 1px), linear-gradient(90deg, rgba(98, 215, 232, .11) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: linear-gradient(to bottom, black, transparent 96%);
+    }
+    .shift-topline { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 20px 21px 0; }
+    .shift-topline h3 { margin: 4px 0 0; font-size: clamp(1.45rem, 4vw, 2rem); letter-spacing: -.045em; }
+    .shift-best { color: var(--amber); font-size: .76rem; font-weight: 850; letter-spacing: .1em; text-align: right; text-transform: uppercase; }
+    .shift-copy { max-width: 690px; margin: 10px 21px 16px; color: var(--muted); font-size: .92rem; line-height: 1.52; }
+    .shift-hud { display: grid; grid-template-columns: 1.25fr .75fr .75fr; gap: 8px; padding: 0 21px 14px; }
+    .shift-readout { min-width: 0; padding: 10px 11px; border: 1px solid rgba(162, 211, 221, .18); border-radius: 11px; background: rgba(2, 12, 18, .54); }
+    .shift-readout span { display: block; color: var(--muted); font-size: .65rem; font-weight: 820; letter-spacing: .12em; text-transform: uppercase; }
+    .shift-readout strong { display: block; margin-top: 4px; color: var(--cyan); font-size: 1.18rem; letter-spacing: -.03em; }
+    .shift-readout:nth-child(2) strong { color: var(--teal); }
+    .shift-readout:nth-child(3) strong { color: var(--amber); }
+    .shift-stage {
+      position: relative;
+      min-height: 310px;
+      overflow: hidden;
+      border-top: 1px solid rgba(162, 211, 221, .17);
+      border-bottom: 1px solid rgba(162, 211, 221, .17);
+      background:
+        linear-gradient(0deg, rgba(1, 10, 15, .68), transparent 58%),
+        radial-gradient(circle at 50% 110%, rgba(66, 201, 173, .14), transparent 13rem);
+    }
+    .shift-stage::before { content: ""; position: absolute; left: -6%; right: -6%; bottom: 28px; height: 3px; background: repeating-linear-gradient(90deg, rgba(98, 215, 232, .7) 0 20px, transparent 20px 32px); opacity: .65; transform: perspective(100px) rotateX(62deg); transform-origin: bottom; }
+    .shift-stage::after { content: "UNOFFICIAL GAME · NO TECH DATA · YES, THE COFFEE IS WATCHING"; position: absolute; left: 16px; bottom: 14px; color: rgba(232, 240, 241, .32); font-size: .58rem; font-weight: 800; letter-spacing: .11em; }
+    .shift-start-panel { position: absolute; inset: 0; display: grid; place-items: center; padding: 22px; text-align: center; }
+    .shift-start-panel[hidden] { display: none; }
+    .shift-start-panel > div { max-width: 350px; }
+    .shift-start-panel p { margin: 0 0 14px; color: var(--muted); line-height: 1.5; }
+    .shift-start { border: 0; border-radius: 999px; padding: 14px 19px; color: #06211f; background: linear-gradient(135deg, var(--teal), var(--cyan)); box-shadow: 0 9px 26px rgba(66, 201, 173, .24); cursor: pointer; font: inherit; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; touch-action: manipulation; }
+    .shift-start:hover, .shift-start:focus-visible { filter: brightness(1.1); outline: 3px solid rgba(98, 215, 232, .55); outline-offset: 3px; }
+    .shift-target {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: clamp(112px, 32vw, 160px);
+      min-height: 92px;
+      padding: 12px 10px;
+      border: 2px solid var(--target-color, var(--amber));
+      border-radius: 16px;
+      color: var(--ink);
+      background: rgba(7, 22, 30, .96);
+      box-shadow: 0 0 0 5px color-mix(in srgb, var(--target-color, var(--amber)), transparent 90%), 0 14px 26px rgba(0, 0, 0, .34);
+      cursor: pointer;
+      font: inherit;
+      font-size: clamp(.77rem, 2.6vw, .93rem);
+      font-weight: 820;
+      line-height: 1.14;
+      text-align: center;
+      transform: translate(-50%, -50%) scale(.82);
+      animation: target-in .13s ease-out forwards, target-pulse 1s ease-in-out infinite;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    .shift-target::before { content: ""; position: absolute; inset: -9px; border: 1px solid var(--target-color, var(--amber)); border-radius: 20px; opacity: .55; animation: target-ring 1.15s linear forwards; pointer-events: none; }
+    .shift-target.good { --target-color: var(--teal); }
+    .shift-target.decoy { --target-color: #8cbfc8; }
+    .shift-target.good .shift-target-mark { color: var(--amber); }
+    .shift-target.decoy .shift-target-mark { color: var(--teal); }
+    .shift-target-mark { display: block; margin-bottom: 5px; font-size: .62rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+    .shift-target.caught { pointer-events: none; animation: target-caught .22s ease-out forwards; }
+    .shift-target.missed { pointer-events: none; opacity: .32; transform: translate(-50%, -50%) scale(.72); transition: opacity .22s, transform .22s; }
+    @keyframes target-in { to { transform: translate(-50%, -50%) scale(1); } }
+    @keyframes target-pulse { 50% { filter: brightness(1.13); } }
+    @keyframes target-ring { from { transform: scale(.65); opacity: .86; } to { transform: scale(1.13); opacity: 0; } }
+    @keyframes target-caught { to { opacity: 0; transform: translate(-50%, -50%) scale(1.34) rotate(4deg); } }
+    .shift-toast { min-height: 45px; padding: 12px 21px 18px; color: var(--muted); font-size: .86rem; font-weight: 690; line-height: 1.42; }
+    .shift-toast strong { color: var(--teal); }
+    .shift-toast .oops { color: var(--amber); }
+
     .sources { padding: 23px; margin: 42px 0 18px; }
     .sources p, .sources li, footer { color: var(--muted); line-height: 1.55; font-size: .88rem; }
     .sources ul { margin: 12px 0 0; padding-left: 19px; }
@@ -382,6 +471,10 @@
       .visual-art { min-height: 165px; }
       .route { grid-template-columns: repeat(2, 1fr); }
       .route-step:nth-child(2)::after, .route-step:nth-child(4)::after { display: none; }
+      .shift-topline { align-items: flex-start; }
+      .shift-hud { grid-template-columns: 1fr 1fr; }
+      .shift-readout:first-child { grid-column: 1 / -1; }
+      .shift-stage { min-height: 340px; }
     }
   </style>
 </head>
@@ -391,7 +484,7 @@
       <div class="hero">
         <div class="hero-art" aria-hidden="true"></div>
         <div class="hero-content">
-          <div class="hero-kicker eyebrow">Public-information field guide · v0.3 · 07 Aug 2026</div>
+          <div class="hero-kicker eyebrow">Public-information field guide · v0.4 · 08 Aug 2026</div>
           <h1>RHINO<br><span>CIRCUIT.</span></h1>
           <p class="lead">A geeky F/A-18 field guide for <strong>Suelle</strong>. Public big-picture context, honest maintainer laughs, and zero homework—just enough to make the schoolhouse material feel like it has a real place to land.</p>
           <div class="safety-note">
@@ -531,6 +624,29 @@
       </div>
     </section>
 
+    <section aria-labelledby="intermittent-title">
+      <div class="section-heading">
+        <h2 id="intermittent-title">The Intermittent: 75-Second Shift</h2>
+        <p>One quick score run. Tap the weirdness before it turns into a much longer story.</p>
+      </div>
+      <div class="shift-game" id="shiftGame">
+        <div class="shift-topline">
+          <div><div class="mini-label">Optional arcade break · zero technical instruction</div><h3>Catch the red flag. Ignore the normal.</h3></div>
+          <div class="shift-best" id="shiftBest">Best shift: —</div>
+        </div>
+        <p class="shift-copy">This is just a reaction game about the shared absurdity of maintenance life: bad handoffs, mystery wrappers, and the phrase “quick fix.” It teaches no maintenance action. Official training and authorized data own the real work.</p>
+        <div class="shift-hud" aria-live="polite">
+          <div class="shift-readout"><span>Current call</span><strong id="shiftCall">Stand by</strong></div>
+          <div class="shift-readout"><span>Score</span><strong id="shiftScore">0000</strong></div>
+          <div class="shift-readout"><span>Time</span><strong id="shiftTime">1:15</strong></div>
+        </div>
+        <div class="shift-stage" id="shiftStage" aria-label="The Intermittent game area">
+          <div class="shift-start-panel" id="shiftStartPanel"><div><p><strong>Score points for spotting the obvious “hold up” moment.</strong><br>Fast taps build a streak. Tapping normal good stuff is how the coffee wins.</p><button class="shift-start" id="shiftStart" type="button">Start the 75-second shift</button></div></div>
+        </div>
+        <div class="shift-toast" id="shiftToast" aria-live="polite">No grades. No gotchas. Just the night shift trying to become a story.</div>
+      </div>
+    </section>
+
     <section>
       <div class="section-heading">
         <h2>Hangar-bay challenge: six questions</h2>
@@ -640,6 +756,149 @@
           });
         });
       });
+
+      const stage = document.getElementById('shiftStage');
+      const startPanel = document.getElementById('shiftStartPanel');
+      const startButton = document.getElementById('shiftStart');
+      const scoreNode = document.getElementById('shiftScore');
+      const timeNode = document.getElementById('shiftTime');
+      const callNode = document.getElementById('shiftCall');
+      const bestNode = document.getElementById('shiftBest');
+      const toastNode = document.getElementById('shiftToast');
+      const runLength = 75;
+      const flags = [
+        '“Quick fix” sticky note',
+        'Handoff with no notes',
+        'Mystery snack wrapper',
+        '“Probably good” energy',
+        'Coffee parked on the turnover',
+        'The word “later” doing heavy lifting',
+        'A season-finale handoff',
+        'The intermittent acting innocent'
+      ];
+      const decoys = [
+        'Clean handoff',
+        'Authorized data',
+        'Someone brought donuts',
+        'Good notes, somehow',
+        'Toolbox zen',
+        'Hydrate and carry on',
+        'A normal Tuesday',
+        'The coffee behaving'
+      ];
+      const caughtLines = [
+        'Caught it before it grew legs.',
+        'Good eye. The AAR can stay bored.',
+        'Clean catch. Gremlins denied attention.',
+        'That one was absolutely going to become a story.'
+      ];
+      const decoyLines = [
+        'That was normal. The coffee is pleased.',
+        'False alarm. Let the good thing live.',
+        'That one was behaving. A rare sighting.',
+        'Nope—leave competence alone.'
+      ];
+      let shiftTimer = null;
+      let spawnTimer = null;
+      let activeTarget = null;
+      let startedAt = 0;
+      let score = 0;
+      let streak = 0;
+      let isRunning = false;
+      let lastLabel = '';
+      const bestKey = 'rhinoCircuitIntermittentBest';
+      let best = Number(window.localStorage.getItem(bestKey) || 0);
+      const randomOf = list => list[Math.floor(Math.random() * list.length)];
+      const showBest = () => { bestNode.textContent = `Best shift: ${best ? best.toString().padStart(4, '0') : '—'}`; };
+      const updateHud = () => { scoreNode.textContent = score.toString().padStart(4, '0'); callNode.textContent = streak > 1 ? `${streak}x streak` : isRunning ? 'Watch the board' : 'Stand by'; };
+      const showToast = (message, className = '') => { toastNode.innerHTML = `<strong class="${className}">${message}</strong>`; };
+      const clearTarget = () => { if (activeTarget) { activeTarget.remove(); activeTarget = null; } };
+      const finishShift = () => {
+        isRunning = false;
+        clearInterval(shiftTimer);
+        clearTimeout(spawnTimer);
+        clearTarget();
+        callNode.textContent = 'Shift complete';
+        timeNode.textContent = '0:00';
+        if (score > best) {
+          best = score;
+          window.localStorage.setItem(bestKey, String(best));
+          showBest();
+          showToast(`New best shift: ${score.toString().padStart(4, '0')}. The coffee has been informed.`, '');
+        } else {
+          showToast(`Shift complete: ${score.toString().padStart(4, '0')}. Run it again—intermittents love a rematch.`, '');
+        }
+        startButton.textContent = 'Run it again';
+        startPanel.hidden = false;
+      };
+      const spawnTarget = () => {
+        if (!isRunning) return;
+        clearTarget();
+        const isFlag = Math.random() < .7;
+        let label = randomOf(isFlag ? flags : decoys);
+        if (label === lastLabel) label = randomOf(isFlag ? flags : decoys);
+        lastLabel = label;
+        const target = document.createElement('button');
+        target.type = 'button';
+        target.className = `shift-target ${isFlag ? 'good' : 'decoy'}`;
+        target.innerHTML = `<span><span class="shift-target-mark">${isFlag ? 'Tap it' : 'Leave it'}</span>${label}</span>`;
+        const x = 20 + Math.random() * 60;
+        const y = 23 + Math.random() * 47;
+        target.style.left = `${x}%`;
+        target.style.top = `${y}%`;
+        activeTarget = target;
+        const vanish = () => {
+          if (activeTarget !== target) return;
+          target.classList.add('missed');
+          window.setTimeout(() => { if (activeTarget === target) { target.remove(); activeTarget = null; spawnTimer = window.setTimeout(spawnTarget, 240); } }, 220);
+        };
+        const hitTarget = event => {
+          if (event.type === 'pointerdown') event.preventDefault();
+          if (!isRunning || activeTarget !== target) return;
+          const reaction = Math.max(0, 1 - ((Date.now() - Number(target.dataset.spawned)) / 1150));
+          target.classList.add('caught');
+          activeTarget = null;
+          if (isFlag) {
+            streak += 1;
+            const points = 70 + Math.round(reaction * 130) + Math.min(streak, 8) * 10;
+            score += points;
+            showToast(`${randomOf(caughtLines)} +${points}${streak > 1 ? ` · ${streak}x streak` : ''}`);
+          } else {
+            score = Math.max(0, score - 60);
+            streak = 0;
+            showToast(`${randomOf(decoyLines)} −60`, 'oops');
+          }
+          updateHud();
+          window.setTimeout(() => { target.remove(); spawnTimer = window.setTimeout(spawnTarget, 150); }, 170);
+        };
+        target.addEventListener('pointerdown', hitTarget);
+        target.addEventListener('click', hitTarget);
+        target.dataset.spawned = String(Date.now());
+        stage.append(target);
+        spawnTimer = window.setTimeout(vanish, 1150);
+      };
+      const tick = () => {
+        const remaining = Math.max(0, runLength - Math.floor((Date.now() - startedAt) / 1000));
+        timeNode.textContent = `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
+        if (!remaining) finishShift();
+      };
+      const startShift = () => {
+        clearInterval(shiftTimer);
+        clearTimeout(spawnTimer);
+        clearTarget();
+        score = 0;
+        streak = 0;
+        isRunning = true;
+        startedAt = Date.now();
+        startPanel.hidden = true;
+        showToast('Shift is live. Tap the red flags. Let the normal stuff have one quiet moment.');
+        updateHud();
+        tick();
+        shiftTimer = window.setInterval(tick, 250);
+        spawnTimer = window.setTimeout(spawnTarget, 340);
+      };
+      showBest();
+      startButton.addEventListener('click', startShift);
     })();
   </script>
 </body>
