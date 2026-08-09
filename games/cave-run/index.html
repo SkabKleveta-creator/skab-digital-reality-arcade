@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>CAVE RUN — Level 1</title>
+<title>CAVE RUN — 10-Level Hunt</title>
 <!--
-  CAVE RUN — "The First Light" (Level 1)
+  CAVE RUN — 10-Level Hunt
   A side-scrolling caveman platformer, emulator-styled. Single self-contained
   file: no build step, no external assets, no network calls.
 
@@ -62,6 +62,8 @@
   .topbar{ display:flex; align-items:center; justify-content:space-between; padding:0 4px; flex:0 0 auto; }
   .brand{ color:var(--accent); font-weight:bold; letter-spacing:3px; font-size:13px; }
   .brand span{ color:var(--text-dim); font-weight:normal; letter-spacing:1px; }
+  .arcade-link{ color:var(--text-dim); font-size:10px; font-weight:bold; letter-spacing:1.4px; text-decoration:none; }
+  .arcade-link:hover,.arcade-link:focus-visible{ color:var(--accent); }
   .led{ width:8px; height:8px; border-radius:50%; background:#5fd15f; box-shadow:0 0 6px #5fd15f, 0 0 2px #cfffcf; }
 
   .screen-wrap{
@@ -121,6 +123,7 @@
   <div class="console">
     <div class="topbar">
       <div class="brand">CAVE·RUN <span>P1</span></div>
+      <a class="arcade-link" href="../../" aria-label="Return to SKAB Digital Arcade">ARCADE</a>
       <div class="led" id="led"></div>
     </div>
 
