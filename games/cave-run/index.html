@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>CAVE RUN — Level 1</title>
+<!--
+  CAVE RUN — "The First Light" (Level 1)
+  A side-scrolling caveman platformer, emulator-styled. Single self-contained
+  file: no build step, no external assets, no network calls.
+
+  HOW TO EXTEND (read this before touching anything below)
+  - New enemy species: add a stat block to ENEMY_TYPES, write a draw*()
+    function for it, and add a case to drawEnemy(). Movement behaviors
+    already wired up: 'patrol' (walks, turns at ledges/walls), 'chase'
+    (patrols, closes in when the player is near, boss-style), 'swoop'
+    (flies a lane with a sine bob), 'erratic' (jittery cave-bat flight).
+  - New pickups: add to ITEM_TYPES and a case in drawItem().
+  - New level: write a new segment list (see LEVEL_1 below) and point
+    LEVEL_DATA at it instead. Segment types: 'flat', 'gapflat' (a pit),
+    'platforms' (floating hop section), 'cave' (lowered ceiling + bats),
+    'goal' (the finish). Enemies/items attach to a segment by relative
+    column ("at").
+  - Feel (jump height, speed, damage, timers) all lives in the CONFIG
+    constants and the *_TYPES tables up top — tune there, not inline.
+-->
+<style>
+  :root{
+    --bezel:#17151a;
+    --shell:#2c2830;
+    --shell2:#231f26;
+    --accent:#e2793d;
+    --accent-dim:#a85a2e;
+    --btn-a:#e2793d;
+    --btn-b:#4a90a4;
+    --text:#f2e6d8;
+    --text-dim:#a99887;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; }
+  html,body{
+    height:100%; margin:0; background:#0a0908;
+    overscroll-behavior:none;
+  }
+  body{
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    height:100svh;
+    font-family:'Courier New', ui-monospace, monospace;
+    touch-action:none;
+  }
+  .console{
+    width:100%; max-width:420px;
+    height:100svh; max-height:900px;
+    background:
+      radial-gradient(120% 60% at 50% -10%, #3a3440 0%, transparent 60%),
+      linear-gradient(160deg, var(--shell), var(--shell2));
+    display:flex; flex-direction:column;
+    padding:calc(12px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+    gap:10px;
+    box-shadow: inset 0 0 50px rgba(0,0,0,.5);
+  }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:0 4px; flex:0 0 auto; }
+  .brand{ color:var(--accent); font-weight:bold; letter-spacing:3px; font-size:13px; }
+  .brand span{ color:var(--text-dim); font-weight:normal; letter-spacing:1px; }
+  .led{ width:8px; height:8px; border-radius:50%; background:#5fd15f; box-shadow:0 0 6px #5fd15f, 0 0 2px #cfffcf; }
+
+  .screen-wrap{
+    background:var(--bezel); border-radius:12px; padding:10px;
+    box-shadow: inset 0 0 0 2px #000, 0 6px 14px rgba(0,0,0,.4);
+    flex:0 0 auto;
+  }
+  .screen{
+    position:relative; width:100%; aspect-ratio:160/144;
+    background:#000; border-radius:4px; overflow:hidden;
+  }
+  canvas{ width:100%; height:100%; display:block; image-rendering:pixelated; image-rendering:crisp-edges; }
+  .scanlines{
+    position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.13) 3px);
+    mix-blend-mode:multiply;
+  }
+  .vignette{
+    position:absolute; inset:0; pointer-events:none;
+    box-shadow: inset 0 0 22px 6px rgba(0,0,0,.55);
+  }
+
+  .controls{ flex:1 1 auto; display:flex; flex-direction:column; justify-content:space-between; gap:10px; padding-top:4px; min-height:0; }
+  .pads-row{ display:flex; justify-content:space-between; align-items:center; }
+
+  .dpad{ position:relative; width:118px; height:118px; flex:0 0 auto; }
+  .dpad-btn{
+    position:absolute; width:40px; height:40px;
+    background:var(--shell2); border:none; border-radius:9px;
+    color:var(--text); font-size:16px; line-height:40px; text-align:center; padding:0;
+    box-shadow: 0 3px 0 #131114;
+  }
+  .dpad-btn.up{ top:0; left:39px; } .dpad-btn.down{ bottom:0; left:39px; }
+  .dpad-btn.left{ left:0; top:39px; } .dpad-btn.right{ right:0; top:39px; }
+  .dpad-btn:active, .dpad-btn.pressed{ transform:translateY(2px); box-shadow:none; background:var(--accent-dim); }
+
+  .ab-btns{ position:relative; width:128px; height:112px; flex:0 0 auto; }
+  .round-btn{
+    position:absolute; width:54px; height:54px; border-radius:50%; border:none;
+    font-weight:bold; font-size:19px; color:#1a1210;
+    box-shadow: 0 4px 0 rgba(0,0,0,.4);
+  }
+  .round-btn.b{ background:var(--btn-b); left:0; bottom:0; }
+  .round-btn.a{ background:var(--btn-a); right:0; top:0; }
+  .round-btn:active, .round-btn.pressed{ transform:translateY(3px); box-shadow:none; filter:brightness(1.18); }
+
+  .center-row{ display:flex; justify-content:center; gap:16px; flex:0 0 auto; }
+  .pill-btn{
+    padding:7px 16px; border-radius:16px; border:none;
+    background:var(--shell2); color:var(--text-dim); font-size:10px; letter-spacing:1.5px; font-weight:bold;
+    box-shadow: 0 3px 0 #131114;
+  }
+  .pill-btn:active, .pill-btn.pressed{ transform:translateY(2px); box-shadow:none; color:var(--text); }
+</style>
+</head>
+<body>
+  <div class="console">
+    <div class="topbar">
+      <div class="brand">CAVE·RUN <span>P1</span></div>
+      <div class="led" id="led"></div>
+    </div>
+
+    <div class="screen-wrap">
+      <div class="screen">
+        <canvas id="game"></canvas>
+        <div class="scanlines"></div>
+        <div class="vignette"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="pads-row">
+        <div class="dpad">
+          <button class="dpad-btn up" data-key="up" aria-label="Up">▲</button>
+          <button class="dpad-btn down" data-key="down" aria-label="Down">▼</button>
+          <button class="dpad-btn left" data-key="left" aria-label="Left">◀</button>
+          <button class="dpad-btn right" data-key="right" aria-label="Right">▶</button>
+        </div>
+        <div class="ab-btns">
+          <button class="round-btn b" data-key="b" aria-label="B - club">B</button>
+          <button class="round-btn a" data-key="a" aria-label="A - jump">A</button>
+        </div>
+      </div>
+      <div class="center-row">
+        <button class="pill-btn" data-key="select">SELECT</button>
+        <button class="pill-btn" data-key="start">START</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+'use strict';
+
+/* =========================================================================
+   CONFIG
+========================================================================= */
+const TILE = 16;
+const COLS_VISIBLE = 10;
+const ROWS = 9;
+const CANVAS_W = TILE * COLS_VISIBLE;   // 160
+const CANVAS_H = TILE * ROWS;           // 144
+const GROUND_ROW = 6;                   // tile row index of the ground surface
+
+const GRAVITY = 500;                    // px/s^2 (base, applied while rising with A held)
+const FALL_MULTIPLIER = 1.7;            // extra gravity while falling — snappy descent
+const LOW_JUMP_MULTIPLIER = 2.4;        // extra gravity if A is released early — short hop
+const MOVE_SPEED = 70;                  // px/s
+const JUMP_VELOCITY = -220;             // px/s (full-height jump if A is held)
+
+const STOMP_DAMAGE = 2;                 // damage dealt by landing on a stompable enemy
+const STOMP_BOUNCE = -140;              // upward pop after a stomp, for chaining
+const STOMP_TOLERANCE = 4;              // px of grace for "was above it" landing check
+
+// --- Input feel. These are the difference between "responsive" and "fighting it". ---
+const COYOTE_TIME = 0.09;               // you may still jump this long after leaving a ledge
+const JUMP_BUFFER = 0.11;               // an early A press is remembered this long and fires on landing
+const ACCEL = 620;                      // px/s^2 ramp-up toward MOVE_SPEED
+const FRICTION = 760;                   // px/s^2 slow-down when nothing is held
+const TURN_ACCEL = 1250;                // px/s^2 when reversing — makes direction changes bite
+const AIR_CONTROL = 0.72;               // fraction of ground accel available mid-air
+
+const PLAYER_W = 12, PLAYER_H = 16;
+const ATTACK_REACH = 14;
+const ATTACK_HB_H = 12;
+const ATTACK_DURATION = 0.28;
+const ATTACK_COOLDOWN_CLUB = 0.32;
+const ATTACK_COOLDOWN_FIST = 0.55;
+const INVULN_TIME = 1.0;
+
+const START_HP = 5, MAX_HP = 10;
+const START_CLUB = 10;
+const SQUASH_DURATION = 0.14;   // Mario-style takeoff/landing squash-and-stretch
+
+/* =========================================================================
+   PALETTE
+========================================================================= */
+const COLORS = {
+  sky:'#bfe3e8', skyLow:'#e8c98f', skyCave:'#150e1a',
+  grass:'#6fae3e', dirt:'#8a5a34', dirtDark:'#6e4527',
+  rock:'#9c9088', rockDark:'#736a63',
+  caveRock:'#3a2f45', caveRockDark:'#241b30', caveRock2:'#4a3c58',
+  skin:'#d99b6b', skinDark:'#b97b4d', hair:'#3a2418', hide:'#c9a769',
+  clubWood:'#7a5230', clubStone:'#8f8f8f',
+  raptor:'#4c7a3a', raptorDark:'#345228',
+  bat:'#4a3a5c', batDark:'#241b30',
+  ptero:'#7a4a8a', pteroDark:'#4a2f5c',
+  tiger:'#d9922f', tigerDark:'#8a5a1a', tigerStripe:'#5c3a17',
+  meat:'#c0392b', meatBone:'#eee0c0',
+  fire:'#ff9a3c', fireCore:'#ffe27a',
+  hud:'#fff', hpFull:'#e85b4a', hpEmpty:'#4a2c26',
+  gold:'#ffd166', cream:'#f2c879', paper:'#e8d9b0',
+
+  // --- depth tones (purely cosmetic; light reads from upper-left) ---
+  ink:'#1b1218',                 // shared dark outline
+  skinLit:'#f0bc8c', skinShade:'#9c6238',
+  hideLit:'#e6c78f', hideShade:'#9a7a45',
+  hairLit:'#5a3a26',
+  clubWoodLit:'#9c6c42', clubWoodShade:'#573619',
+  clubStoneLit:'#c4c4c4', clubStoneShade:'#5e5e5e',
+  raptorLit:'#6d9e52', raptorBelly:'#9cb06a',
+  tigerLit:'#f0b653', tigerBelly:'#f2ddb0',
+  pteroLit:'#a06db0', pteroBelly:'#c9a0d0',
+  batLit:'#6b5680',
+  shadow:'rgba(12,8,14,0.30)',
+};
+
+/* =========================================================================
+   ENEMY REGISTRY  — add new species here, nothing else needs restructuring
+========================================================================= */
+const ENEMY_TYPES = {
+  raptor:      { w:12, h:11, hp:2, dmg:1, speed:26, behavior:'patrol', flies:false },
+  pterodactyl: { w:16, h:10, hp:3, dmg:1, speed:34, behavior:'swoop',  flies:true  },
+  bat:         { w:9,  h:7,  hp:1, dmg:1, speed:40, behavior:'erratic',flies:true  },
+  // stompable:false = too big/fierce to jump on safely — always hurts on contact,
+  // spikes-and-such style. Every other species is stompable by default.
+  tiger:       { w:19, h:13, hp:9, dmg:2, speed:30, behavior:'chase',  flies:false, stompable:false },
+};
+
+/* =========================================================================
+   ITEM REGISTRY
+========================================================================= */
+const ITEM_TYPES = {
+  meat: { w:9,  h:8, heal:3 },
+  club: { w:10, h:9 },
+};
+
+/* =========================================================================
+   LEVEL 1 — "The First Light"
+   Segment types: flat, gapflat (pit), platforms (hop over a pit),
+   cave (lowered ceiling + darkness), goal (finish).
+========================================================================= */
+const LEVEL_1 = {
+  name: 'THE FIRST LIGHT',
+  segments: [
+    { type:'flat',      len:9 },
+    { type:'flat',      len:6,  enemies:[{type:'raptor', at:3}] },
+    { type:'gapflat',   len:2 },
+    { type:'flat',      len:8,  enemies:[{type:'raptor', at:2},{type:'raptor', at:6}] },
+    { type:'flat',      len:6,  items:[{type:'meat', at:3, row:4}] },
+    { type:'gapflat',   len:2 },
+    { type:'platforms', len:14, row:6, gapCols:[4,9,13], enemies:[{type:'pterodactyl', at:6}] },
+    { type:'flat',      len:8,  items:[{type:'club', at:4, row:4}], enemies:[{type:'raptor', at:6}] },
+    { type:'cave',      len:22, enemies:[{type:'bat', at:3},{type:'bat', at:8},{type:'bat', at:13},{type:'raptor', at:18}] },
+    { type:'flat',      len:10, items:[{type:'meat', at:5, row:4}], enemies:[{type:'pterodactyl', at:7}] },
+    { type:'gapflat',   len:2 },
+    { type:'flat',      len:6,  items:[{type:'club', at:3, row:4}] },
+    { type:'flat',      len:16, boss:{type:'tiger', at:9} },
+    { type:'goal',      len:8 },
+  ],
+};
+const LEVEL_2 = {
+  name: 'THE COLD CLIMB',
+  segments: [
+    { type:'flat',      len:6,  enemies:[{type:'raptor', at:3}] },
+    { type:'gapflat',   len:2 },
+    { type:'platforms', len:10, row:6, gapCols:[3,7], enemies:[{type:'pterodactyl', at:5}] },
+    { type:'flat',      len:5,  items:[{type:'meat', at:2, row:4}] },
+    { type:'gapflat',   len:2 },
+    { type:'flat',      len:3 },   // stepping-stone between the two pits (double-pit is unclearable otherwise)
+    { type:'gapflat',   len:2 },
+    { type:'platforms', len:12, row:6, gapCols:[4,9], enemies:[{type:'pterodactyl', at:5},{type:'pterodactyl', at:9}] },
+    { type:'flat',      len:6,  items:[{type:'club', at:3, row:4}], enemies:[{type:'raptor', at:5}] },
+    { type:'cave',      len:16, enemies:[{type:'bat', at:3},{type:'bat', at:7},{type:'bat', at:11}] },
+    { type:'flat',      len:8,  boss:{type:'tiger', at:5} },
+    { type:'goal',      len:6 },
+  ],
+};
+
+const LEVEL_3 = {
+  name: 'DEEP DARK',
+  segments: [
+    { type:'flat', len:5,  enemies:[{type:'raptor', at:3}] },
+    { type:'cave', len:14, enemies:[{type:'bat', at:2},{type:'bat', at:5},{type:'bat', at:8},{type:'bat', at:11}] },
+    { type:'flat', len:4,  items:[{type:'meat', at:2, row:4}] },
+    { type:'cave', len:20, enemies:[{type:'bat', at:2},{type:'bat', at:6},{type:'bat', at:10},{type:'bat', at:14},{type:'raptor', at:17}], items:[{type:'club', at:8, row:4}] },
+    { type:'gapflat', len:2 },
+    { type:'flat', len:6,  enemies:[{type:'raptor', at:4}] },
+    { type:'cave', len:12, enemies:[{type:'bat', at:2},{type:'bat', at:9}], boss:{type:'tiger', at:6} },
+    { type:'goal', len:6 },
+  ],
+};
+
+const LEVEL_4 = {
+  name: 'THE HIGH HUNT',
+  segments: [
+    { type:'flat',      len:5,  items:[{type:'club', at:2, row:4}] },
+    { type:'platforms', len:14, row:6, gapCols:[4,9,13], enemies:[{type:'pterodactyl', at:3},{type:'pterodactyl', at:7},{type:'pterodactyl', at:11}] },
+    { type:'flat',      len:4,  items:[{type:'meat', at:2, row:4}] },
+    { type:'platforms', len:16, row:6, gapCols:[4,9], enemies:[{type:'pterodactyl', at:10}] },
+    { type:'gapflat',   len:2 },
+    { type:'flat',      len:7,  enemies:[{type:'raptor', at:3},{type:'raptor', at:5}] },
+    { type:'flat',      len:8,  boss:{type:'tiger', at:5} },
+    { type:'goal',      len:6 },
+  ],
+};
+
+const LEVEL_5 = {
+  name: 'TWO TEETH',
+  segments: [
+    { type:'flat', len:6,  items:[{type:'club', at:3, row:4}] },
+    { type:'flat', len:6,  enemies:[{type:'raptor', at:2},{type:'raptor', at:4}], items:[{type:'meat', at:5, row:4}] },
+    { type:'cave', len:12, enemies:[{type:'bat', at:3},{type:'bat', at:7},{type:'bat', at:10}] },
+    { type:'flat', len:5,  items:[{type:'meat', at:2, row:4},{type:'club', at:4, row:4}] },
+    { type:'flat', len:16, boss:{type:'tiger', at:5}, enemies:[{type:'tiger', at:11}] },
+    { type:'goal', len:6 },
+  ],
+};
+
+// ---- Second half of the run: same four species, harder structure ----
+
+const LEVEL_6 = {
+  name: 'RIVER OF STONE',
+  segments: [
+    { type:'flat',      len:5,  items:[{type:'club', at:2, row:4}] },
+    { type:'gapflat',   len:2 },
+    { type:'flat',      len:3,  enemies:[{type:'raptor', at:1}] },
+    { type:'gapflat',   len:2 },
+    { type:'platforms', len:12, row:6, gapCols:[4,9], enemies:[{type:'pterodactyl', at:5}] },
+    { type:'flat',      len:4,  items:[{type:'meat', at:2, row:4}] },
+    { type:'gapflat',   len:2 },
+    { type:'flat',      len:3 },
+    { type:'gapflat',   len:2 },
+    { type:'flat',      len:4,  enemies:[{type:'raptor', at:2}] },
+    { type:'gapflat',   len:2 },
+    { type:'platforms', len:14, row:6, gapCols:[4,9,13], enemies:[{type:'pterodactyl', at:4},{type:'pterodactyl', at:10}] },
+    { type:'flat',      len:5,  items:[{type:'club', at:2, row:4},{type:'meat', at:4, row:4}] },
+    { type:'flat',      len:10, boss:{type:'tiger', at:6} },
+    { type:'goal',      len:6 },
+  ],
+};
+
+const LEVEL_7 = {
+  name: 'LONG NIGHT',
+  segments: [
+    { type:'flat', len:5,  items:[{type:'club', at:2, row:4}] },
+    { type:'cave', len:18, enemies:[{type:'bat', at:2},{type:'bat', at:5},{type:'bat', at:9},{type:'bat', at:13},{type:'raptor', at:16}] },
+    { type:'flat', len:4,  items:[{type:'meat', at:2, row:4}] },
+    { type:'cave', len:22, enemies:[{type:'bat', at:2},{type:'bat', at:6},{type:'bat', at:9},{type:'bat', at:13},{type:'bat', at:17},{type:'raptor', at:20}], items:[{type:'club', at:11, row:4}] },
+    { type:'gapflat', len:2 },
+    { type:'flat', len:4,  items:[{type:'meat', at:2, row:4}] },
+    { type:'cave', len:18, enemies:[{type:'bat', at:3},{type:'bat', at:8},{type:'bat', at:12},{type:'raptor', at:15}] },
+    { type:'flat', len:5,  items:[{type:'club', at:2, row:4}] },
+    { type:'cave', len:12, enemies:[{type:'bat', at:3}], boss:{type:'tiger', at:7} },
+    { type:'goal', len:6 },
+  ],
+};
+
+const LEVEL_8 = {
+  name: 'SKY TEETH',
+  segments: [
+    { type:'flat',      len:5,  items:[{type:'club', at:2, row:4}] },
+    { type:'gapflat',   len:2 },
+    { type:'platforms', len:15, row:6, gapCols:[4,9,13], enemies:[{type:'pterodactyl', at:6},{type:'pterodactyl', at:11}] },
+    { type:'flat',      len:4,  items:[{type:'meat', at:2, row:4}] },
+    { type:'gapflat',   len:2 },
+    { type:'platforms', len:16, row:6, gapCols:[4,9,14], enemies:[{type:'pterodactyl', at:6},{type:'pterodactyl', at:11}] },
+    { type:'flat',      len:5,  items:[{type:'club', at:2, row:4},{type:'meat', at:4, row:4}] },
+    { type:'gapflat',   len:2 },
+    { type:'platforms', len:13, row:6, gapCols:[4,9], enemies:[{type:'pterodactyl', at:6}] },
+    { type:'flat',      len:6,  enemies:[{type:'raptor', at:2},{type:'raptor', at:4}] },
+    { type:'flat',      len:12, boss:{type:'tiger', at:5}, enemies:[{type:'pterodactyl', at:9}] },
+    { type:'goal',      len:6 },
+  ],
+};
+
+const LEVEL_9 = {
+  name: 'THE NARROWS',
+  segments: [
+    { type:'flat',      len:5,  items:[{type:'club', at:2, row:4}] },
+    { type:'cave',      len:14, enemies:[{type:'bat', at:3},{type:'bat', at:7},{type:'bat', at:11}] },
+    { type:'flat',      len:4,  items:[{type:'meat', at:2, row:4}] },
+    { type:'gapflat',   len:2 },
+    { type:'platforms', len:12, row:6, gapCols:[4,9], enemies:[{type:'pterodactyl', at:5}] },
+    { type:'flat',      len:6,  enemies:[{type:'raptor', at:2},{type:'raptor', at:4}], items:[{type:'club', at:5, row:4}] },
+    { type:'cave',      len:16, enemies:[{type:'bat', at:3},{type:'bat', at:8},{type:'bat', at:12},{type:'raptor', at:14}] },
+    { type:'flat',      len:5,  items:[{type:'meat', at:2, row:4}] },
+    { type:'gapflat',   len:2 },
+    { type:'platforms', len:12, row:6, gapCols:[4,9], enemies:[{type:'pterodactyl', at:4},{type:'pterodactyl', at:9}] },
+    { type:'flat',      len:5,  items:[{type:'club', at:2, row:4},{type:'meat', at:4, row:4}] },
+    { type:'flat',      len:14, boss:{type:'tiger', at:5}, enemies:[{type:'tiger', at:10}] },
+    { type:'goal',      len:6 },
+  ],
+};
+
+const LEVEL_10 = {
+  name: 'GREAT BEAST',
+  segments: [
+    { type:'flat',      len:6,  items:[{type:'club', at:3, row:4}] },
+    { type:'gapflat',   len:2 },
+    { type:'platforms', len:12, row:6, gapCols:[4,9], enemies:[{type:'pterodactyl', at:5},{type:'pterodactyl', at:9}] },
+    { type:'flat',      len:5,  items:[{type:'meat', at:2, row:4}] },
+    { type:'cave',      len:16, enemies:[{type:'bat', at:3},{type:'bat', at:7},{type:'bat', at:11},{type:'raptor', at:14}] },
+    { type:'flat',      len:5,  items:[{type:'club', at:2, row:4},{type:'meat', at:4, row:4}] },
+    { type:'gapflat',   len:2 },
+    { type:'flat',      len:6,  enemies:[{type:'raptor', at:2},{type:'raptor', at:4}] },
+    { type:'flat',      len:6,  items:[{type:'meat', at:2, row:4},{type:'club', at:4, row:4}] },
+    // the last stand: three teeth
+    { type:'flat',      len:22, boss:{type:'tiger', at:5}, enemies:[{type:'tiger', at:12},{type:'tiger', at:18}] },
+    { type:'goal',      len:8 },
+  ],
+};
+
+// Level registry — content is data; the engine already runs any of these.
+const LEVELS = [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5,
+                LEVEL_6, LEVEL_7, LEVEL_8, LEVEL_9, LEVEL_10];
+let levelIndex = 0;
+let advanceCard = 0;   // seconds remaining on the "walk on" transition card
+
+/* =========================================================================
+   LEVEL BUILDER
+========================================================================= */
+function emptyColumn(){ return new Array(ROWS).fill(0); }
+
+function columnFlat(cave){
+  const col = emptyColumn();
+  col[GROUND_ROW]   = cave ? 4 : 1;
+  col[GROUND_ROW+1] = cave ? 4 : 2;
+  col[GROUND_ROW+2] = cave ? 4 : 2;
+  if (cave){ col[0] = 4; col[1] = 4; }
+  return col;
+}
+function columnGap(){ return emptyColumn(); }
+function columnPlatform(row){
+  const col = emptyColumn();
+  col[row] = 3;
+  return col;
+}
+
+function buildLevel(def){
+  const cols = [];
+  const caveFlags = [];
+  const rawEnemies = [];
+  const rawItems = [];
+  let cursor = 0;
+  let goalCol = null;
+
+  def.segments.forEach(seg => {
+    const start = cursor;
+    const isCave = seg.type === 'cave';
+
+    if (seg.type === 'flat' || seg.type === 'goal'){
+      for (let i=0;i<seg.len;i++){ cols[cursor+i] = columnFlat(false); caveFlags[cursor+i]=false; }
+    } else if (seg.type === 'cave'){
+      for (let i=0;i<seg.len;i++){ cols[cursor+i] = columnFlat(true); caveFlags[cursor+i]=true; }
+    } else if (seg.type === 'gapflat'){
+      for (let i=0;i<seg.len;i++){ cols[cursor+i] = columnGap(); caveFlags[cursor+i]=false; }
+    } else if (seg.type === 'platforms'){
+      const row = seg.row || 5;
+      const gapSet = new Set(seg.gapCols || []);
+      for (let i=0;i<seg.len;i++){
+        cols[cursor+i] = gapSet.has(i) ? columnGap() : columnPlatform(row);
+        caveFlags[cursor+i] = false;
+      }
+    }
+
+    (seg.enemies || []).forEach(spec => rawEnemies.push({ type:spec.type, col:start+spec.at }));
+    if (seg.boss) rawEnemies.push({ type:seg.boss.type, col:start+seg.boss.at, boss:true });
+    (seg.items || []).forEach(spec => rawItems.push({ type:spec.type, col:start+spec.at, row:spec.row }));
+    if (seg.type === 'goal') goalCol = start + Math.min(seg.len-1, 6);
+
+    cursor += seg.len;
+    void isCave;
+  });
+
+  return { cols, totalCols:cursor, caveFlags, rawEnemies, rawItems, goalCol };
+}
+
+function instantiateEnemies(rawList){
+  return rawList.map(spec => {
+    const cfg = ENEMY_TYPES[spec.type];
+    const x = spec.col * TILE;
+    const y = cfg.flies
+      ? (spec.type === 'bat' ? 3*TILE : 2*TILE) + Math.random()*16
+      : GROUND_ROW*TILE - cfg.h;
+    const range = spec.boss ? 64 : 40;
+    return {
+      type:spec.type, x, y, w:cfg.w, h:cfg.h,
+      vx:0, vy:0, onGround:false,
+      hp:cfg.hp, maxHp:cfg.hp, dmg:cfg.dmg,
+      alive:true, flash:0,
+      dir: Math.random()<0.5 ? -1 : 1,
+      minX: Math.max(0, x-range), maxX:x+range,
+      minY: y-20, maxY: y+20, baseY:y, t:Math.random()*10,
+      boss: !!spec.boss,
+    };
+  });
+}
+
+function instantiateItems(rawList){
+  return rawList.map(spec => {
+    const cfg = ITEM_TYPES[spec.type];
+    const row = (spec.row != null) ? spec.row : GROUND_ROW-1;
+    return { type:spec.type, x:spec.col*TILE+3, y:row*TILE, w:cfg.w, h:cfg.h, alive:true, bob:Math.random()*10 };
+  });
+}
+
+/* =========================================================================
+   STATE
+========================================================================= */
+let level = null;
+let camX = 0;
+let muted = false;
+let popups = [];
+let dust = [];
+
+const player = {
+  x:16, y:0, w:PLAYER_W, h:PLAYER_H, vx:0, vy:0, onGround:false, facing:1,
+  hp:START_HP, maxHp:MAX_HP, clubDurability:START_CLUB, clubMax:START_CLUB,
+  invuln:0, attackTimer:0, attackDuration:ATTACK_DURATION, attackCooldown:0,
+  swingResolved:false, state:'idle', animTime:0, dead:false, hitStun:0,
+  squashTimer:0, squashDir:1, coyote:0, jumpBuffer:0,
+};
+
+const game = { state:'title', overMsg:'' };
+
+const input = {
+  left:false, right:false, up:false, down:false, a:false, b:false, select:false, start:false,
+  aPrev:false, bPrev:false, selectPrev:false, startPrev:false,
+  aPressed:false, bPressed:false, selectPressed:false, startPressed:false,
+};
+
+/* =========================================================================
+   HELPERS
+========================================================================= */
+function clamp(v,min,max){ return v<min?min:(v>max?max:v); }
+function aabbOverlap(ax,ay,aw,ah,bx,by,bw,bh){
+  return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by;
+}
+function solidAt(col,row){
+  if (row<0 || row>=ROWS) return false;
+  if (col<0) return true;
+  if (!level || col>=level.totalCols) return false;
+  const colTiles = level.cols[col];
+  return !!(colTiles && colTiles[row]);
+}
+
+/* =========================================================================
+   COLLISION / PHYSICS (shared by player + grounded enemies)
+========================================================================= */
+function resolveHorizontal(e){
+  const dir = e.vx>0 ? 1 : (e.vx<0 ? -1 : 0);
+  if (dir===0) return;
+  const left  = Math.floor(e.x/TILE);
+  const right = Math.floor((e.x+e.w-1)/TILE);
+  const top   = Math.floor(e.y/TILE);
+  const bot   = Math.floor((e.y+e.h-1)/TILE);
+  for (let r=top;r<=bot;r++){
+    if (dir>0 && solidAt(right,r)){ e.x = right*TILE - e.w; e.vx = 0; break; }
+    if (dir<0 && solidAt(left,r)){ e.x = (left+1)*TILE; e.vx = 0; break; }
+  }
+}
+function resolveVertical(e){
+  const dir = e.vy>0 ? 1 : (e.vy<0 ? -1 : 0);
+  const left  = Math.floor(e.x/TILE);
+  const right = Math.floor((e.x+e.w-1)/TILE);
+
+  if (dir >= 0){
+    // Test the row the FEET occupy, not feet-minus-one. With feet resting
+    // exactly on a tile boundary (y+h == 96), the old `y+h-1` landed in the
+    // row ABOVE the floor, so onGround read false ~3 frames out of 4 and
+    // jump presses were silently dropped. Also run this at vy==0 so standing
+    // still keeps a stable ground contact.
+    const rowBelow = Math.floor((e.y+e.h)/TILE);
+    for (let c=left;c<=right;c++){
+      if (solidAt(c,rowBelow)){
+        e.y = rowBelow*TILE - e.h;
+        e.vy = 0;
+        e.onGround = true;
+        return;
+      }
+    }
+  }
+  if (dir < 0){
+    const top = Math.floor(e.y/TILE);
+    for (let c=left;c<=right;c++){
+      if (solidAt(c,top)){ e.y = (top+1)*TILE; e.vy = 0; return; }
+    }
+  }
+}
+function physicsStep(e, dt, gravityAccel = GRAVITY){
+  e.x += e.vx*dt;
+  resolveHorizontal(e);
+  e.vy += gravityAccel*dt;
+  e.y += e.vy*dt;
+  e.onGround = false;
+  resolveVertical(e);
+}
+function computePlayerGravity(p){
+  // Rising: light gravity while A is held (tall jump), heavy if released early (short hop).
+  // Falling: always heavier than rising — the classic Mario-feel snappy descent.
+  if (p.vy < 0) return input.a ? GRAVITY : GRAVITY * LOW_JUMP_MULTIPLIER;
+  return GRAVITY * FALL_MULTIPLIER;
+}
+
+/* =========================================================================
+   AUDIO — tiny WebAudio square-wave beeps, no files
+========================================================================= */
+let actx = null;
+function ensureAudio(){
+  if (!actx){
+    try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ actx = null; }
+  }
+  if (actx && actx.state === 'suspended') actx.resume();
+}
+function beep(freq, dur, type='square', vol=0.05){
+  if (!actx || muted) return;
+  const o = actx.createOscillator();
+  const g = actx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.value = vol;
+  o.connect(g); g.connect(actx.destination);
+  o.start();
+  g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+  o.stop(actx.currentTime + dur);
+}
+function sfx(name){
+  switch(name){
+    case 'jump':   beep(520,0.09,'square'); break;
+    case 'swing':  beep(220,0.06,'square'); break;
+    case 'hit':    beep(140,0.08,'square'); break;
+    case 'hurt':   beep(90,0.16,'sawtooth'); break;
+    case 'pickup': beep(700,0.1,'square'); setTimeout(()=>beep(950,0.09,'square'),60); break;
+    case 'break':  beep(80,0.26,'sawtooth'); break;
+    case 'death':  beep(60,0.4,'sawtooth'); break;
+    case 'win':    beep(660,0.12,'square'); setTimeout(()=>beep(880,0.18,'square'),120); break;
+  }
+}
+
+/* =========================================================================
+   PLAYER
+========================================================================= */
+function startAttack(){
+  const p = player;
+  p.attackTimer = ATTACK_DURATION;
+  p.swingResolved = false;
+  p.attackCooldown = p.clubDurability>0 ? ATTACK_COOLDOWN_CLUB : ATTACK_COOLDOWN_FIST;
+  sfx('swing');
+}
+
+function resolveAttackHit(){
+  const p = player;
+  const hbW = ATTACK_REACH, hbH = ATTACK_HB_H;
+  const hbX = p.facing>0 ? p.x+p.w : p.x-hbW;
+  const hbY = p.y + 2;
+  let hitAny = false;
+  for (const e of level.enemies){
+    if (!e.alive) continue;
+    if (aabbOverlap(hbX,hbY,hbW,hbH, e.x,e.y,e.w,e.h)){
+      const dmg = p.clubDurability>0 ? (1+Math.floor(Math.random()*3)) : 1;
+      e.hp -= dmg;
+      e.flash = 0.15;
+      hitAny = true;
+      popups.push({ x:e.x+e.w/2, y:e.y, text:String(dmg), life:0.5, vy:-20 });
+      if (e.hp <= 0) killEnemy(e);
+    }
+  }
+  if (hitAny){
+    sfx('hit');
+    if (p.clubDurability>0){
+      p.clubDurability -= 1;
+      if (p.clubDurability<=0) sfx('break');
+    }
+  }
+}
+
+function killEnemy(e){
+  e.alive = false;
+  if (e.boss){
+    player.clubDurability = player.clubMax;
+    player.hp = Math.min(player.maxHp, player.hp+2);
+    popups.push({ x:e.x+e.w/2, y:e.y-6, text:'GREAT KILL', life:1.3, vy:-10 });
+    sfx('win');
+  } else if (Math.random() < 0.15){
+    level.items.push({ type:'meat', x:e.x, y:e.y-4, w:ITEM_TYPES.meat.w, h:ITEM_TYPES.meat.h, alive:true, bob:0 });
+  }
+}
+
+function checkItemPickups(){
+  const p = player;
+  for (const it of level.items){
+    if (!it.alive) continue;
+    if (aabbOverlap(p.x,p.y,p.w,p.h, it.x,it.y,it.w,it.h)){
+      it.alive = false;
+      if (it.type === 'meat') player.hp = Math.min(player.maxHp, player.hp + ITEM_TYPES.meat.heal);
+      if (it.type === 'club') player.clubDurability = player.clubMax;
+      sfx('pickup');
+    }
+  }
+}
+
+function stompEnemy(e){
+  e.hp -= STOMP_DAMAGE;
+  e.flash = 0.15;
+  popups.push({ x:e.x+e.w/2, y:e.y, text:String(STOMP_DAMAGE), life:0.5, vy:-20 });
+  player.vy = STOMP_BOUNCE;
+  player.onGround = false;
+  spawnDust(player.x+player.w/2, player.y+player.h, 4);
+  sfx('hit');
+  if (e.hp <= 0) killEnemy(e);
+}
+
+function checkEnemyContact(prevBottom){
+  const p = player;
+  for (const e of level.enemies){
+    if (!e.alive) continue;
+    if (!aabbOverlap(p.x,p.y,p.w,p.h, e.x,e.y,e.w,e.h)) continue;
+
+    const cfg = ENEMY_TYPES[e.type];
+    const canStomp = cfg.stompable !== false && p.vy >= 0 && prevBottom <= e.y + STOMP_TOLERANCE;
+
+    if (canStomp){
+      stompEnemy(e);
+    } else if (p.invuln <= 0){
+      damagePlayer(e.dmg || 1);
+      p.vx = (p.x < e.x ? -1 : 1) * 40;
+      p.vy = -120;
+      p.hitStun = 0.18;
+    }
+    break;
+  }
+}
+
+function damagePlayer(amount){
+  const p = player;
+  p.hp -= amount;
+  p.invuln = INVULN_TIME;
+  sfx('hurt');
+  if (p.hp <= 0) killPlayer('beast');
+}
+
+function killPlayer(reason){
+  if (player.dead) return;
+  player.dead = true;
+  game.state = 'gameover';
+  game.overMsg = reason === 'fall' ? 'GROUND OPEN. GONE.' : 'BEAST WIN THIS DAY.';
+  sfx('death');
+}
+
+function winLevel(){
+  if (game.state === 'win' || game.state === 'levelclear') return;
+  sfx('win');
+  if (levelIndex < LEVELS.length - 1){
+    // Advance. Carry HP + club forward so the run feels like one journey.
+    levelIndex++;
+    resetLevel({ keepProgress:true });
+    advanceCard = 1.6;
+    game.state = 'levelclear';
+  } else {
+    game.state = 'win';   // whole run complete
+  }
+}
+
+function advanceLevel(){   // exposed for tests
+  if (levelIndex < LEVELS.length - 1){ levelIndex++; resetLevel({ keepProgress:true }); }
+}
+
+function updatePlayer(dt){
+  const p = player;
+  if (p.dead) return;
+  const wasGrounded = p.onGround;
+  const prevBottom = p.y + p.h;
+
+  let move = 0;
+  if (input.left) move -= 1;
+  if (input.right) move += 1;
+
+  if (p.hitStun > 0){
+    p.hitStun -= dt;
+  } else {
+    if (move !== 0) p.facing = move;
+    // Accelerate toward the target speed rather than snapping to it. Reversing
+    // uses a stronger accel so a direction change still feels immediate.
+    const target = move * MOVE_SPEED;
+    const reversing = move !== 0 && Math.sign(move) !== Math.sign(p.vx) && p.vx !== 0;
+    let rate = move === 0 ? FRICTION : (reversing ? TURN_ACCEL : ACCEL);
+    if (!p.onGround) rate *= AIR_CONTROL;
+    if (p.vx < target) p.vx = Math.min(target, p.vx + rate*dt);
+    else if (p.vx > target) p.vx = Math.max(target, p.vx - rate*dt);
+  }
+
+  // Coyote time: keep a jump available briefly after walking off an edge.
+  if (p.onGround) p.coyote = COYOTE_TIME;
+  else if (p.coyote > 0) p.coyote -= dt;
+
+  // Jump buffer: remember an early press and fire it the moment we touch down.
+  if (input.aPressed) p.jumpBuffer = JUMP_BUFFER;
+  else if (p.jumpBuffer > 0) p.jumpBuffer -= dt;
+
+  if (p.jumpBuffer > 0 && p.coyote > 0){
+    p.jumpBuffer = 0;
+    p.coyote = 0;
+    p.vy = JUMP_VELOCITY;
+    p.onGround = false;
+    sfx('jump');
+    spawnDust(p.x+p.w/2, p.y+p.h, 3);
+    p.squashTimer = SQUASH_DURATION;
+    p.squashDir = 1; // stretch tall on takeoff
+  }
+
+  if (p.attackCooldown > 0) p.attackCooldown -= dt;
+  if (input.bPressed && p.attackCooldown <= 0) startAttack();
+
+  if (p.attackTimer > 0){
+    p.attackTimer -= dt;
+    if (!p.swingResolved && p.attackTimer <= ATTACK_DURATION - 0.08){
+      resolveAttackHit();
+      p.swingResolved = true;
+    }
+  }
+
+  if (p.invuln > 0) p.invuln -= dt;
+
+  physicsStep(p, dt, computePlayerGravity(p));
+  p.x = Math.max(0, p.x);
+
+  if (!wasGrounded && p.onGround){
+    spawnDust(p.x+p.w/2, p.y+p.h, 5);
+    p.squashTimer = SQUASH_DURATION;
+    p.squashDir = -1; // squash flat on landing
+  }
+  if (p.squashTimer > 0) p.squashTimer = Math.max(0, p.squashTimer - dt);
+
+  checkItemPickups();
+  checkEnemyContact(prevBottom);
+
+  if (p.y > CANVAS_H + 40) killPlayer('fall');
+  if (game.state === 'playing' && level.goalCol != null && p.x >= level.goalCol*TILE) winLevel();
+
+  if (!p.onGround) p.state = 'jump';
+  else if (p.attackTimer > 0) p.state = 'attack';
+  else if (move !== 0) p.state = 'walk';
+  else p.state = 'idle';
+  p.animTime += dt;
+}
+
+/* =========================================================================
+   ENEMIES — behaviors
+========================================================================= */
+function updatePatrol(e, cfg){
+  if (e.vx === 0) e.vx = cfg.speed * (e.dir || 1);
+  const dir = e.vx > 0 ? 1 : -1;
+  const aheadCol = Math.floor((e.x + (dir>0 ? e.w+2 : -2)) / TILE);
+  const belowRow = Math.floor((e.y + e.h + 2) / TILE);
+  const midRow = Math.floor((e.y + e.h/2) / TILE);
+  const groundAhead = solidAt(aheadCol, belowRow);
+  const wallAhead = solidAt(aheadCol, midRow);
+  if (!groundAhead || wallAhead || e.x < e.minX || e.x > e.maxX) e.vx = -e.vx;
+}
+function updateChase(e, cfg){
+  const p = player;
+  const dx = p.x - e.x;
+  if (Math.abs(dx) < 90 && Math.abs(p.y - e.y) < 24){
+    e.vx = Math.sign(dx || 1) * cfg.speed * 1.4;
+  } else {
+    updatePatrol(e, cfg);
+    return;
+  }
+  if (e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
+  if (e.x > e.maxX){ e.x = e.maxX; e.vx = -Math.abs(e.vx); }
+}
+function updateSwoop(e, cfg, dt){
+  e.t += dt;
+  if (!e.vx) e.vx = cfg.speed * (e.dir || 1);
+  e.x += e.vx * dt;
+  if (e.x < e.minX || e.x > e.maxX) e.vx = -e.vx;
+  e.y = e.baseY + Math.sin(e.t * 2.2) * 10;
+}
+function updateErratic(e, cfg, dt){
+  e.changeT = (e.changeT || 0) - dt;
+  if (e.changeT <= 0){
+    e.vx = (Math.random()*2-1) * cfg.speed;
+    e.vy = (Math.random()*2-1) * cfg.speed * 0.6;
+    e.changeT = 0.3 + Math.random()*0.5;
+  }
+  e.x = clamp(e.x + e.vx*dt, e.minX, e.maxX);
+  e.y = clamp(e.y + e.vy*dt, e.minY, e.maxY);
+}
+
+function updateEnemies(dt){
+  for (const e of level.enemies){
+    if (!e.alive) continue;
+    const cfg = ENEMY_TYPES[e.type];
+    switch (cfg.behavior){
+      case 'patrol': updatePatrol(e,cfg); physicsStep(e,dt); break;
+      case 'chase':  updateChase(e,cfg);  physicsStep(e,dt); break;
+      case 'swoop':  updateSwoop(e,cfg,dt); break;
+      case 'erratic':updateErratic(e,cfg,dt); break;
+    }
+    if (e.flash > 0) e.flash -= dt;
+  }
+}
+
+/* =========================================================================
+   POPUPS (floating damage numbers / call-outs)
+========================================================================= */
+function updatePopups(dt){
+  popups.forEach(p => { p.y += p.vy*dt; p.life -= dt; });
+  popups = popups.filter(p => p.life > 0);
+}
+
+/* =========================================================================
+   DUST — Mario-style poof at jump takeoff and landing
+========================================================================= */
+function spawnDust(x, y, count){
+  for (let i=0;i<count;i++){
+    dust.push({
+      x, y,
+      vx:(Math.random()*2-1) * 32,
+      vy:-(16 + Math.random()*18),
+      life:0.28 + Math.random()*0.14,
+      maxLife:0.42,
+      size: 1 + Math.floor(Math.random()*2),
+    });
+  }
+}
+function updateDust(dt){
+  dust.forEach(d => {
+    d.x += d.vx*dt;
+    d.y += d.vy*dt;
+    d.vy += 70*dt;
+    d.life -= dt;
+  });
+  dust = dust.filter(d => d.life > 0);
+}
+function drawDust(){
+  dust.forEach(d => {
+    const a = clamp(d.life/d.maxLife, 0, 1);
+    ctx.globalAlpha = a * 0.85;
+    ctx.fillStyle = COLORS.paper;
+    ctx.fillRect(Math.round(d.x-camX-d.size/2), Math.round(d.y-d.size/2), d.size, d.size);
+  });
+  ctx.globalAlpha = 1;
+}
+
+/* =========================================================================
+   CAMERA
+========================================================================= */
+function updateCamera(){
+  const target = player.x + player.w/2 - CANVAS_W/2;
+  camX = clamp(target, 0, Math.max(0, level.totalCols*TILE - CANVAS_W));
+}
+
+/* =========================================================================
+   RESET / INIT
+========================================================================= */
+function resetLevel(opts){
+  const keepProgress = opts && opts.keepProgress;
+  level = buildLevel(LEVELS[levelIndex]);
+  level.enemies = instantiateEnemies(level.rawEnemies);
+  level.items = instantiateItems(level.rawItems);
+
+  const carryHp = keepProgress ? player.hp : START_HP;
+  const carryClub = keepProgress ? player.clubDurability : START_CLUB;
+
+  player.x = 16;
+  player.y = GROUND_ROW*TILE - PLAYER_H;
+  player.vx = 0; player.vy = 0; player.facing = 1;
+  player.hp = carryHp; player.maxHp = MAX_HP;
+  player.clubDurability = carryClub; player.clubMax = START_CLUB;
+  player.invuln = 0; player.attackTimer = 0; player.attackCooldown = 0;
+  player.dead = false; player.state = 'idle'; player.hitStun = 0;
+  player.squashTimer = 0; player.squashDir = 1;
+  player.coyote = 0; player.jumpBuffer = 0;
+
+  popups = [];
+  dust = [];
+  camX = 0;
+}
+
+/* =========================================================================
+   INPUT WIRING
+========================================================================= */
+function updateInputEdges(){
+  input.aPressed = input.a && !input.aPrev;
+  input.bPressed = input.b && !input.bPrev;
+  input.selectPressed = input.select && !input.selectPrev;
+  input.startPressed = input.start && !input.startPrev;
+}
+function storePrevInput(){
+  input.aPrev = input.a; input.bPrev = input.b;
+  input.selectPrev = input.select; input.startPrev = input.start;
+}
+
+/*
+  POINTER ROUTER
+  One router over all the buttons instead of listeners per button. This fixes
+  three things the per-button version got wrong on a phone:
+   1. Touch implicitly captures the pointer to the element you pressed, so
+      `pointerleave` never fired — sliding your thumb off left the button STUCK.
+   2. You couldn't slide from ◀ to ▶ without lifting your thumb.
+   3. A release that landed outside the button was lost entirely.
+  Now: hit-test on every move, re-route live, and listen for releases on
+  `window` so a release can never go missing.
+*/
+const BTN_PAD = 6;             // px of forgiveness around each button's real box
+const buttonEls = Array.from(document.querySelectorAll('[data-key]'));
+let buttonBoxes = [];
+const activePointers = new Map();   // pointerId -> key
+
+function measureButtons(){
+  buttonBoxes = buttonEls.map(el => {
+    const r = el.getBoundingClientRect();
+    return {
+      el, key: el.dataset.key,
+      x1: r.left - BTN_PAD, y1: r.top - BTN_PAD,
+      x2: r.right + BTN_PAD, y2: r.bottom + BTN_PAD,
+    };
+  });
+}
+measureButtons();
+window.addEventListener('resize', measureButtons);
+window.addEventListener('orientationchange', () => setTimeout(measureButtons, 120));
+
+function hitTest(x, y){
+  // Nearest-center wins when padded boxes overlap, so diagonals feel predictable.
+  let best = null, bestDist = Infinity;
+  for (const b of buttonBoxes){
+    if (x < b.x1 || x > b.x2 || y < b.y1 || y > b.y2) continue;
+    const cx = (b.x1+b.x2)/2, cy = (b.y1+b.y2)/2;
+    const d = (x-cx)*(x-cx) + (y-cy)*(y-cy);
+    if (d < bestDist){ bestDist = d; best = b; }
+  }
+  return best;
+}
+
+function setKey(key, down){
+  if (!key) return;
+  input[key] = down;
+  const box = buttonBoxes.find(b => b.key === key);
+  if (box) box.el.classList.toggle('pressed', down);
+}
+
+function keyStillHeld(key){
+  for (const k of activePointers.values()) if (k === key) return true;
+  return false;
+}
+
+function routePointer(id, x, y){
+  const hit = hitTest(x, y);
+  const newKey = hit ? hit.key : null;
+  const oldKey = activePointers.get(id) || null;
+  if (newKey === oldKey) return;
+
+  if (oldKey){
+    activePointers.delete(id);
+    if (!keyStillHeld(oldKey)) setKey(oldKey, false);
+  }
+  if (newKey){
+    activePointers.set(id, newKey);
+    setKey(newKey, true);
+    if (navigator.vibrate) navigator.vibrate(8);
+  }
+}
+
+function releasePointer(id){
+  const key = activePointers.get(id);
+  if (key == null) return;
+  activePointers.delete(id);
+  if (!keyStillHeld(key)) setKey(key, false);
+}
+
+window.addEventListener('pointerdown', e => {
+  const hit = hitTest(e.clientX, e.clientY);
+  if (!hit) return;
+  e.preventDefault();
+  ensureAudio();
+  measureButtons();               // layout can shift on first interaction
+  routePointer(e.pointerId, e.clientX, e.clientY);
+}, { passive:false });
+
+window.addEventListener('pointermove', e => {
+  if (!activePointers.has(e.pointerId) && !hitTest(e.clientX, e.clientY)) return;
+  e.preventDefault();
+  routePointer(e.pointerId, e.clientX, e.clientY);
+}, { passive:false });
+
+['pointerup','pointercancel'].forEach(evt =>
+  window.addEventListener(evt, e => releasePointer(e.pointerId), { passive:true })
+);
+
+// Belt-and-braces: if the page loses focus mid-press, drop everything held.
+function releaseAll(){
+  for (const id of Array.from(activePointers.keys())) releasePointer(id);
+  ['left','right','up','down','a','b','select','start'].forEach(k => setKey(k, false));
+}
+window.addEventListener('blur', releaseAll);
+document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });
+
+const KEY_MAP = {
+  ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down',
+  a:'left', d:'right', w:'up', s:'down',
+  z:'b', x:'a', ' ':'a', Enter:'start', Shift:'select',
+};
+window.addEventListener('keydown', e => {
+  const k = KEY_MAP[e.key]; if (!k) return;
+  if (!e.repeat){ setKey(k, true); ensureAudio(); }
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key)) e.preventDefault();
+});
+window.addEventListener('keyup', e => {
+  const k = KEY_MAP[e.key]; if (!k) return;
+  if (!keyStillHeld(k)) setKey(k, false);   // a thumb may still be on that button
+});
+
+/* =========================================================================
+   DRAWING — tiles, background
+========================================================================= */
+const canvas = document.getElementById('game');
+canvas.width = CANVAS_W; canvas.height = CANVAS_H;
+const ctx = canvas.getContext('2d');
+
+function drawTile(t, x, y){
+  switch(t){
+    case 1:
+      ctx.fillStyle = COLORS.dirt; ctx.fillRect(x,y,TILE,TILE);
+      ctx.fillStyle = COLORS.grass; ctx.fillRect(x,y,TILE,4);
+      break;
+    case 2:
+      ctx.fillStyle = COLORS.dirt; ctx.fillRect(x,y,TILE,TILE);
+      ctx.fillStyle = COLORS.dirtDark; ctx.fillRect(x,y,TILE,2);
+      break;
+    case 3:
+      ctx.fillStyle = COLORS.rock; ctx.fillRect(x,y,TILE,7);
+      ctx.fillStyle = COLORS.rockDark; ctx.fillRect(x,y+7,TILE,2);
+      break;
+    case 4:
+      ctx.fillStyle = COLORS.caveRock; ctx.fillRect(x,y,TILE,TILE);
+      ctx.fillStyle = COLORS.caveRock2; ctx.fillRect(x,y,3,3);
+      ctx.fillStyle = COLORS.caveRockDark; ctx.fillRect(x,y+TILE-2,TILE,2);
+      break;
+  }
+}
+
+function drawBackdrop(isCave){
+  const grd = ctx.createLinearGradient(0,0,0,CANVAS_H);
+  if (isCave){
+    grd.addColorStop(0, COLORS.skyCave);
+    grd.addColorStop(1, '#0a070d');
+  } else {
+    grd.addColorStop(0, COLORS.sky);
+    grd.addColorStop(1, COLORS.skyLow);
+  }
+  ctx.fillStyle = grd;
+  ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+
+  // distant hills, slow parallax
+  ctx.fillStyle = isCave ? '#231a2c' : '#9cc27a';
+  const parX = -((camX*0.35) % 80);
+  for (let i=-1;i<=CANVAS_W/80+1;i++){
+    const hx = parX + i*80;
+    ctx.beginPath();
+    ctx.ellipse(hx+40, GROUND_ROW*TILE+6, 46, 20, 0, Math.PI, 0, true);
+    ctx.fill();
+  }
+}
+
+/* =========================================================================
+   DRAWING — characters (procedural, no external art)
+
+   Depth convention: light comes from the upper-left. Every sprite is built
+   in the same order — ground shadow, dark silhouette (acts as the outline),
+   base fill, lit edge on the upper-left, shade on the lower-right, then
+   details. These functions are PURELY COSMETIC: they read state but never
+   write it, and never touch collision fields (x/y/w/h/vx/vy).
+========================================================================= */
+
+// A soft contact shadow on whatever solid ground is beneath the entity.
+function drawGroundShadow(ent, widthScale = 1){
+  const cx = ent.x + ent.w/2;
+  const col = Math.floor(cx / TILE);
+  let groundY = null;
+  for (let r = Math.floor((ent.y+ent.h)/TILE); r < ROWS; r++){
+    if (solidAt(col, r)){ groundY = r*TILE; break; }
+  }
+  if (groundY == null) return;
+  const fallDist = clamp((groundY - (ent.y+ent.h)) / 48, 0, 1);
+  const rw = (ent.w/2) * widthScale * (1 - fallDist*0.45);
+  ctx.save();
+  ctx.globalAlpha = 0.55 * (1 - fallDist*0.6);
+  ctx.fillStyle = COLORS.shadow;
+  ctx.beginPath();
+  ctx.ellipse(Math.round(cx-camX), groundY+1, Math.max(1.5, rw), 2, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawPlayer(){
+  const p = player;
+  const sx = Math.round(p.x - camX), sy = Math.round(p.y);
+
+  drawGroundShadow(p);
+
+  ctx.save();
+  if (p.invuln > 0 && Math.floor(p.invuln*20) % 2 === 0) ctx.globalAlpha = 0.35;
+  ctx.translate(sx + p.w/2, sy);
+  if (p.facing < 0) ctx.scale(-1,1);
+  ctx.translate(-p.w/2, 0);
+
+  if (p.squashTimer > 0){
+    const t = p.squashTimer / SQUASH_DURATION;
+    const amt = 0.22 * t * p.squashDir;
+    ctx.translate(p.w/2, p.h);
+    ctx.scale(1-amt, 1+amt);
+    ctx.translate(-p.w/2, -p.h);
+  }
+
+  const walkStep = Math.floor(p.animTime*8) % 2 === 0 ? 1 : -1;
+  const legKick = p.state === 'walk' ? walkStep : 0;
+  const airborne = p.state === 'jump';
+  const tuck = airborne ? (p.vy < 0 ? -1 : 1) : 0;   // tuck rising, reach falling
+  const breathe = (p.state === 'idle' && Math.floor(p.animTime*2) % 2 === 0) ? 1 : 0;
+
+  // ---- legs (dark silhouette, then lit front edge) ----
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(1, 11+tuck, 4, 5-Math.abs(tuck));
+  ctx.fillRect(6, 11+tuck-legKick, 4, 5-Math.abs(tuck));
+  ctx.fillStyle = COLORS.skinDark;
+  ctx.fillRect(2, 11+tuck, 2, 4-Math.abs(tuck));
+  ctx.fillRect(7, 11+tuck-legKick, 2, 4-Math.abs(tuck));
+  ctx.fillStyle = COLORS.skin;
+  ctx.fillRect(2, 11+tuck, 1, 3-Math.abs(tuck));
+
+  // ---- torso: hide wrap with a lit shoulder and a shaded flank ----
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(0, 4+breathe, 12, 9-breathe);
+  ctx.fillStyle = COLORS.hide;
+  ctx.fillRect(1, 5+breathe, 10, 7-breathe);
+  ctx.fillStyle = COLORS.hideLit;                 // upper-left catch light
+  ctx.fillRect(1, 5+breathe, 6, 2);
+  ctx.fillStyle = COLORS.hideShade;               // lower-right falloff
+  ctx.fillRect(8, 8, 3, 4-breathe);
+  ctx.fillStyle = COLORS.skinShade;               // bare midriff in shadow
+  ctx.fillRect(2, 10, 8, 2-breathe);
+  ctx.fillStyle = COLORS.hideShade;               // jagged hem
+  ctx.fillRect(2, 11-breathe, 2, 1);
+  ctx.fillRect(6, 11-breathe, 2, 1);
+
+  // ---- head ----
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(1, -1+breathe, 10, 8);
+  ctx.fillStyle = COLORS.skin;
+  ctx.fillRect(2, 0+breathe, 8, 6);
+  ctx.fillStyle = COLORS.skinLit;                 // lit brow + cheek
+  ctx.fillRect(2, 1+breathe, 5, 2);
+  ctx.fillStyle = COLORS.skinShade;               // jaw shadow
+  ctx.fillRect(3, 5+breathe, 6, 1);
+  ctx.fillStyle = COLORS.skinShade;               // heavy brow ridge
+  ctx.fillRect(5, 1+breathe, 5, 1);
+  ctx.fillStyle = '#fff';                         // eye white + pupil
+  ctx.fillRect(7, 2+breathe, 2, 2);
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(8, 2+breathe, 1, 2);
+  ctx.fillStyle = COLORS.skinShade;               // nose
+  ctx.fillRect(9, 4+breathe, 1, 1);
+
+  // ---- hair: shaggy, lit on top ----
+  ctx.fillStyle = COLORS.hair;
+  ctx.fillRect(1, -2+breathe, 9, 3);
+  ctx.fillRect(0, 0+breathe, 2, 4);               // sideburn
+  ctx.fillStyle = COLORS.hairLit;
+  ctx.fillRect(2, -2+breathe, 6, 1);
+  ctx.fillStyle = COLORS.hair;                    // tufts
+  ctx.fillRect(3, -3+breathe, 2, 1);
+  ctx.fillRect(7, -3+breathe, 2, 1);
+
+  // ---- arm + club ----
+  let clubAngle = -25;
+  if (p.state === 'attack'){
+    const t = 1 - Math.max(0, p.attackTimer / p.attackDuration);
+    clubAngle = -70 + t*150;
+  } else if (airborne){
+    clubAngle = -45;
+  }
+  ctx.save();
+  ctx.translate(10, 7+breathe);
+  ctx.rotate(clubAngle * Math.PI/180);
+
+  ctx.fillStyle = COLORS.ink;                     // arm
+  ctx.fillRect(-1, -2, 7, 4);
+  ctx.fillStyle = COLORS.skin;
+  ctx.fillRect(0, -1, 5, 2);
+  ctx.fillStyle = COLORS.skinLit;
+  ctx.fillRect(0, -1, 4, 1);
+
+  if (p.clubDurability > 0){
+    const worn = p.clubDurability / p.clubMax;    // club visibly frays as it wears
+    ctx.fillStyle = COLORS.ink;                   // shaft silhouette
+    ctx.fillRect(4, -3, 9, 5);
+    ctx.fillStyle = COLORS.clubWood;
+    ctx.fillRect(4, -2, 7, 3);
+    ctx.fillStyle = COLORS.clubWoodLit;
+    ctx.fillRect(4, -2, 6, 1);
+    ctx.fillStyle = COLORS.clubWoodShade;
+    ctx.fillRect(5, 0, 6, 1);
+    ctx.fillStyle = COLORS.ink;                   // stone head
+    ctx.fillRect(9, -4, 5, 6);
+    ctx.fillStyle = COLORS.clubStone;
+    ctx.fillRect(10, -3, 3, 4);
+    ctx.fillStyle = COLORS.clubStoneLit;
+    ctx.fillRect(10, -3, 2, 1);
+    ctx.fillStyle = COLORS.clubStoneShade;
+    ctx.fillRect(11, 0, 2, 1);
+    if (worn <= 0.3){                             // chipped when nearly spent
+      ctx.fillStyle = COLORS.ink;
+      ctx.fillRect(12, -3, 1, 1);
+      ctx.fillRect(10, 1, 1, 1);
+    }
+  }
+  ctx.restore();
+
+  ctx.restore();
+}
+
+function drawRaptor(e){
+  const x = Math.round(e.x-camX), y = Math.round(e.y);
+  drawGroundShadow(e);
+  ctx.save();
+  if (e.flash > 0) ctx.filter = 'brightness(2.2)';
+  const facing = e.vx < 0 ? -1 : 1;
+  ctx.translate(x+e.w/2, y);
+  if (facing < 0) ctx.scale(-1,1);
+  ctx.translate(-e.w/2, 0);
+
+  const step = Math.floor(performance.now()/110) % 2;
+  const bob = step ? 0 : 1;                       // whole body lopes
+
+  // tail (silhouette + lit top)
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(-3, 2+bob, 5, 3);
+  ctx.fillStyle = COLORS.raptorDark;
+  ctx.fillRect(-2, 3+bob, 4, 1);
+
+  // body
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(0, 2+bob, e.w, e.h-5);
+  ctx.fillStyle = COLORS.raptor;
+  ctx.fillRect(1, 3+bob, e.w-2, e.h-7);
+  ctx.fillStyle = COLORS.raptorLit;               // lit spine
+  ctx.fillRect(1, 3+bob, e.w-4, 1);
+  ctx.fillStyle = COLORS.raptorBelly;             // pale underside
+  ctx.fillRect(2, e.h-5+bob, e.w-5, 1);
+
+  // head + snout
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(e.w-8, 0+bob, 8, 6);
+  ctx.fillStyle = COLORS.raptor;
+  ctx.fillRect(e.w-7, 1+bob, 7, 4);
+  ctx.fillStyle = COLORS.raptorLit;
+  ctx.fillRect(e.w-7, 1+bob, 5, 1);
+  ctx.fillStyle = '#f5d76e';                       // yellow predator eye
+  ctx.fillRect(e.w-4, 2+bob, 2, 2);
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(e.w-3, 2+bob, 1, 2);
+  ctx.fillStyle = '#fff';                          // teeth
+  ctx.fillRect(e.w-3, 5+bob, 1, 1);
+  ctx.fillRect(e.w-5, 5+bob, 1, 1);
+
+  // legs + claws
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(2+step, e.h-3, 3, 3);
+  ctx.fillRect(e.w-6-step, e.h-3, 3, 3);
+  ctx.fillStyle = COLORS.raptorDark;
+  ctx.fillRect(2+step, e.h-3, 2, 2);
+  ctx.fillRect(e.w-6-step, e.h-3, 2, 2);
+  ctx.fillStyle = '#e8dcc0';
+  ctx.fillRect(4+step, e.h-1, 1, 1);
+  ctx.restore();
+}
+
+function drawTiger(e){
+  const x = Math.round(e.x-camX), y = Math.round(e.y);
+  drawGroundShadow(e, 1.15);
+  ctx.save();
+  if (e.flash > 0) ctx.filter = 'brightness(2.2)';
+  const facing = e.vx < 0 ? -1 : 1;
+  ctx.translate(x+e.w/2, y);
+  if (facing < 0) ctx.scale(-1,1);
+  ctx.translate(-e.w/2, 0);
+
+  const step = Math.floor(performance.now()/90) % 2;
+  const bob = step ? 0 : 1;
+
+  // tail, curled up behind
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(-4, 1+bob, 6, 3);
+  ctx.fillStyle = COLORS.tiger;
+  ctx.fillRect(-3, 2+bob, 5, 1);
+  ctx.fillStyle = COLORS.tigerStripe;
+  ctx.fillRect(-3, 2+bob, 1, 1);
+
+  // body
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(0, 2+bob, e.w, e.h-4);
+  ctx.fillStyle = COLORS.tiger;
+  ctx.fillRect(1, 3+bob, e.w-2, e.h-6);
+  ctx.fillStyle = COLORS.tigerLit;                 // sunlit back
+  ctx.fillRect(1, 3+bob, e.w-4, 2);
+  ctx.fillStyle = COLORS.tigerBelly;               // cream underside
+  ctx.fillRect(2, e.h-4+bob, e.w-6, 1);
+  ctx.fillStyle = COLORS.tigerDark;                // shaded haunch
+  ctx.fillRect(1, e.h-5+bob, 4, 2);
+
+  ctx.fillStyle = COLORS.tigerStripe;              // stripes, tapering down
+  for (let i=0;i<3;i++){
+    ctx.fillRect(4+i*4, 3+bob, 2, e.h-7);
+    ctx.fillRect(4+i*4, 3+bob, 1, e.h-6);
+  }
+
+  // head, heavy and low
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(e.w-9, 0+bob, 9, 8);
+  ctx.fillStyle = COLORS.tiger;
+  ctx.fillRect(e.w-8, 1+bob, 8, 6);
+  ctx.fillStyle = COLORS.tigerLit;
+  ctx.fillRect(e.w-8, 1+bob, 5, 1);
+  ctx.fillStyle = COLORS.tigerBelly;               // muzzle
+  ctx.fillRect(e.w-4, 4+bob, 4, 3);
+  ctx.fillStyle = '#f5d76e';                        // eyes
+  ctx.fillRect(e.w-5, 2+bob, 2, 2);
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(e.w-4, 2+bob, 1, 2);
+  ctx.fillStyle = COLORS.tigerStripe;               // ear
+  ctx.fillRect(e.w-8, 0+bob, 2, 2);
+
+  // sabre fangs — the visual tell that this one can't be stomped
+  ctx.fillStyle = '#fffaf0';
+  ctx.fillRect(e.w-3, 7+bob, 1, 3);
+  ctx.fillRect(e.w-6, 7+bob, 1, 2);
+
+  // legs + claws
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(2+step, e.h-4, 4, 4);
+  ctx.fillRect(e.w-8-step, e.h-4, 4, 4);
+  ctx.fillStyle = COLORS.tigerDark;
+  ctx.fillRect(2+step, e.h-4, 3, 3);
+  ctx.fillRect(e.w-8-step, e.h-4, 3, 3);
+  ctx.fillStyle = '#e8dcc0';
+  ctx.fillRect(2+step, e.h-1, 1, 1);
+  ctx.fillRect(e.w-8-step, e.h-1, 1, 1);
+  ctx.restore();
+}
+
+function drawPterodactyl(e){
+  const x = Math.round(e.x-camX), y = Math.round(e.y);
+  drawGroundShadow(e, 0.8);
+  ctx.save();
+  if (e.flash > 0) ctx.filter = 'brightness(2.2)';
+  const facing = e.vx < 0 ? -1 : 1;
+  ctx.translate(x+e.w/2, y);
+  if (facing < 0) ctx.scale(-1,1);
+  ctx.translate(-e.w/2, 0);
+
+  const flap = Math.sin(performance.now()/110) * 4;
+  const cx = e.w/2;
+
+  // FAR wing first (darker, drawn behind the body) — reads as depth
+  ctx.fillStyle = COLORS.pteroDark;
+  ctx.beginPath();
+  ctx.moveTo(cx, 4); ctx.lineTo(1, 3+flap*0.6); ctx.lineTo(cx-1, 7);
+  ctx.closePath(); ctx.fill();
+
+  // NEAR wing: membrane + lit leading edge + strut
+  ctx.fillStyle = COLORS.ptero;
+  ctx.beginPath();
+  ctx.moveTo(cx, 4); ctx.lineTo(e.w, 2-flap); ctx.lineTo(cx+1, 7);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = COLORS.pteroLit;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx, 4); ctx.lineTo(e.w, 2-flap);
+  ctx.stroke();
+  ctx.strokeStyle = COLORS.pteroDark;               // wing-finger strut
+  ctx.beginPath();
+  ctx.moveTo(cx+1, 5); ctx.lineTo(e.w-2, 3-flap);
+  ctx.stroke();
+
+  // body
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(cx-3, 2, 7, 7);
+  ctx.fillStyle = COLORS.ptero;
+  ctx.fillRect(cx-2, 3, 5, 5);
+  ctx.fillStyle = COLORS.pteroBelly;                // pale chest
+  ctx.fillRect(cx-1, 6, 3, 2);
+  ctx.fillStyle = COLORS.pteroLit;
+  ctx.fillRect(cx-2, 3, 4, 1);
+
+  // head crest + long beak
+  ctx.fillStyle = COLORS.pteroDark;
+  ctx.fillRect(cx-2, 0, 4, 3);                      // crest
+  ctx.fillStyle = COLORS.pteroLit;
+  ctx.fillRect(cx-2, 0, 3, 1);
+  ctx.fillStyle = '#e8c05a';                        // beak
+  ctx.fillRect(cx+2, 3, 5, 2);
+  ctx.fillStyle = '#b08c2e';
+  ctx.fillRect(cx+2, 4, 4, 1);
+  ctx.fillStyle = '#f5d76e';                        // eye
+  ctx.fillRect(cx+1, 2, 2, 2);
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillRect(cx+2, 2, 1, 2);
+  ctx.restore();
+}
+
+function drawBat(e){
+  const x = Math.round(e.x-camX), y = Math.round(e.y);
+  ctx.save();
+  if (e.flash > 0) ctx.filter = 'brightness(2.2)';
+  ctx.translate(x, y);
+  const flap = Math.sin(performance.now()/60) * 3;
+  const cx = e.w/2;
+
+  // far wing (behind)
+  ctx.fillStyle = COLORS.batDark;
+  ctx.beginPath();
+  ctx.moveTo(cx, 2); ctx.lineTo(1, 3+flap*0.5); ctx.lineTo(cx, e.h/2+2);
+  ctx.closePath(); ctx.fill();
+
+  // near wings with scalloped membrane
+  ctx.fillStyle = COLORS.bat;
+  ctx.beginPath();
+  ctx.moveTo(cx, 2); ctx.lineTo(0, 2-flap); ctx.lineTo(cx-1, e.h/2+1);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx, 2); ctx.lineTo(e.w, 2-flap); ctx.lineTo(cx+1, e.h/2+1);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = COLORS.batLit;                  // lit leading edges
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx, 2); ctx.lineTo(0, 2-flap);
+  ctx.moveTo(cx, 2); ctx.lineTo(e.w, 2-flap);
+  ctx.stroke();
+
+  // body + ears
+  ctx.fillStyle = COLORS.batDark;
+  ctx.fillRect(cx-2, 1, 4, 5);
+  ctx.fillStyle = COLORS.batLit;
+  ctx.fillRect(cx-2, 1, 3, 1);
+  ctx.fillStyle = COLORS.batDark;
+  ctx.fillRect(cx-2, -1, 1, 2);
+  ctx.fillRect(cx+1, -1, 1, 2);
+
+  // eyeshine — the only thing you really see in a dark cave
+  ctx.fillStyle = '#ff6b6b';
+  ctx.fillRect(cx-2, 2, 1, 1);
+  ctx.fillRect(cx+1, 2, 1, 1);
+  ctx.restore();
+}
+
+function drawEnemy(e){
+  switch(e.type){
+    case 'raptor':      drawRaptor(e); break;
+    case 'tiger':        drawTiger(e); break;
+    case 'pterodactyl':  drawPterodactyl(e); break;
+    case 'bat':          drawBat(e); break;
+  }
+}
+
+function drawItem(it){
+  const x = Math.round(it.x - camX);
+  const y = Math.round(it.y + Math.sin(performance.now()/240 + it.bob)*2);
+  if (it.type === 'meat'){
+    ctx.fillStyle = COLORS.meatBone;
+    ctx.fillRect(x+3, y+5, 3, 3);
+    ctx.fillStyle = COLORS.meat;
+    ctx.beginPath();
+    ctx.ellipse(x+it.w/2-1, y+3, 4, 3.4, -0.4, 0, Math.PI*2);
+    ctx.fill();
+  } else if (it.type === 'club'){
+    ctx.fillStyle = COLORS.clubWood;
+    ctx.fillRect(x+1, y+4, 7, 2);
+    ctx.fillStyle = COLORS.clubStone;
+    ctx.fillRect(x+7, y+2, 3, 6);
+  }
+}
+
+function drawGoalMarker(){
+  if (level.goalCol == null) return;
+  const gx = Math.round(level.goalCol*TILE - camX);
+  const gy = GROUND_ROW*TILE;
+  ctx.fillStyle = COLORS.clubWood;
+  ctx.fillRect(gx-1, gy-22, 3, 22);
+  const flicker = 1 + Math.sin(performance.now()/70)*0.15;
+  ctx.fillStyle = COLORS.fire;
+  ctx.beginPath();
+  ctx.ellipse(gx+0.5, gy-24, 4*flicker, 6*flicker, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = COLORS.fireCore;
+  ctx.beginPath();
+  ctx.ellipse(gx+0.5, gy-23, 2*flicker, 3*flicker, 0, 0, Math.PI*2);
+  ctx.fill();
+}
+
+function drawPopups(){
+  ctx.font = '7px monospace';
+  ctx.textAlign = 'center';
+  popups.forEach(p => {
+    ctx.fillStyle = p.text === 'GREAT KILL' ? COLORS.gold : '#fff176';
+    ctx.fillText(p.text, Math.round(p.x-camX), Math.round(p.y));
+  });
+  ctx.textAlign = 'left';
+}
+
+/* =========================================================================
+   DRAWING — HUD & screens
+========================================================================= */
+function drawHUD(){
+  ctx.save();
+  ctx.fillStyle = 'rgba(15,10,8,0.55)';
+  ctx.fillRect(0,0,CANVAS_W,10);
+
+  for (let i=0;i<player.maxHp;i++){
+    const x = 2 + i*6;
+    ctx.fillStyle = i < player.hp ? COLORS.hpFull : COLORS.hpEmpty;
+    ctx.fillRect(x,2,4,4);
+  }
+
+  const barW = 40, barH = 4, bx = CANVAS_W-barW-2, by = 3;
+  ctx.fillStyle = '#3a2c22';
+  ctx.fillRect(bx,by,barW,barH);
+  const pct = player.clubDurability / player.clubMax;
+  ctx.fillStyle = player.clubDurability>0 ? COLORS.clubWood : '#5a3b1f';
+  ctx.fillRect(bx,by,Math.max(0,barW*pct),barH);
+  ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 0.6;
+  ctx.strokeRect(bx+0.3,by+0.3,barW-0.6,barH-0.6);
+
+  if (muted){
+    ctx.font = '6px monospace';
+    ctx.fillStyle = COLORS.hud;
+    ctx.fillText('MUTE', 2, 9);
+  }
+
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(0,CANVAS_H-2,CANVAS_W,2);
+  const prog = level ? clamp(player.x/(level.totalCols*TILE),0,1) : 0;
+  ctx.fillStyle = COLORS.gold;
+  ctx.fillRect(0,CANVAS_H-2,CANVAS_W*prog,2);
+  ctx.restore();
+}
+
+function blink(){ return Math.floor(performance.now()/500) % 2 === 0; }
+
+function drawTitleScreen(){
+  ctx.fillStyle = 'rgba(8,6,5,0.72)';
+  ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = COLORS.cream;
+  ctx.font = 'bold 15px monospace';
+  ctx.fillText('CAVE RUN', CANVAS_W/2, 42);
+  ctx.font = '7px monospace';
+  ctx.fillStyle = COLORS.paper;
+  ctx.fillText('THE FIRST LIGHT', CANVAS_W/2, 54);
+
+  ctx.fillStyle = '#eee';
+  ctx.fillText('\u25C0\u25B6 MOVE    A JUMP', CANVAS_W/2, 80);
+  ctx.fillText('B SWING CLUB', CANVAS_W/2, 90);
+
+  if (blink()){
+    ctx.fillStyle = COLORS.gold;
+    ctx.fillText('PRESS START', CANVAS_W/2, 112);
+  }
+  ctx.textAlign = 'left';
+}
+
+function drawPauseScreen(){
+  ctx.fillStyle = 'rgba(8,6,5,0.7)';
+  ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = COLORS.cream;
+  ctx.font = 'bold 12px monospace';
+  ctx.fillText('PAUSED', CANVAS_W/2, 58);
+  ctx.font = '7px monospace';
+  ctx.fillStyle = COLORS.paper;
+  ctx.fillText('\u25C0\u25B6 MOVE   A JUMP   B CLUB', CANVAS_W/2, 76);
+  ctx.fillText('SELECT: MUTE', CANVAS_W/2, 86);
+  if (blink()){
+    ctx.fillStyle = COLORS.gold;
+    ctx.fillText('START TO RESUME', CANVAS_W/2, 104);
+  }
+  ctx.textAlign = 'left';
+}
+
+function drawEndScreen(title, sub){
+  ctx.fillStyle = 'rgba(8,5,4,0.82)';
+  ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = COLORS.cream;
+  ctx.font = 'bold 12px monospace';
+  ctx.fillText(title, CANVAS_W/2, 58);
+  if (sub){
+    ctx.font = '7px monospace';
+    ctx.fillStyle = COLORS.paper;
+    ctx.fillText(sub, CANVAS_W/2, 72);
+  }
+  if (blink()){
+    ctx.fillStyle = COLORS.gold;
+    ctx.font = '7px monospace';
+    ctx.fillText('PRESS START', CANVAS_W/2, 96);
+  }
+  ctx.textAlign = 'left';
+}
+
+/* =========================================================================
+   MAIN LOOP
+========================================================================= */
+function update(dt){
+  updateInputEdges();
+  if (input.selectPressed) muted = !muted;
+
+  if (game.state === 'title'){
+    if (input.startPressed){ levelIndex = 0; resetLevel(); game.state = 'playing'; }
+  } else if (game.state === 'playing'){
+    if (input.startPressed){
+      game.state = 'paused';
+    } else {
+      updatePlayer(dt);
+      if (game.state === 'playing'){
+        updateEnemies(dt);
+        updateCamera();
+        updatePopups(dt);
+        updateDust(dt);
+      }
+    }
+  } else if (game.state === 'levelclear'){
+    // brief "walk on" card, then straight into the next level
+    advanceCard -= dt;
+    if (advanceCard <= 0 || input.startPressed){ advanceCard = 0; game.state = 'playing'; }
+  } else if (game.state === 'paused'){
+    if (input.startPressed) game.state = 'playing';
+  } else if (game.state === 'gameover'){
+    if (input.startPressed){ resetLevel(); game.state = 'playing'; }   // retry current level
+  } else if (game.state === 'win'){
+    if (input.startPressed){ levelIndex = 0; game.state = 'title'; }
+  }
+
+  storePrevInput();
+}
+
+function render(){
+  ctx.imageSmoothingEnabled = false;
+
+  const isCave = level ? !!level.caveFlags[Math.floor(clamp(camX+CANVAS_W/2,0,level.totalCols*TILE-1)/TILE)] : false;
+  drawBackdrop(isCave);
+
+  if (level){
+    const firstCol = Math.floor(camX/TILE);
+    const lastCol = firstCol + COLS_VISIBLE + 1;
+    for (let c=firstCol;c<=lastCol;c++){
+      const colTiles = level.cols[c];
+      if (!colTiles) continue;
+      for (let r=0;r<ROWS;r++){
+        const t = colTiles[r];
+        if (t) drawTile(t, c*TILE-camX, r*TILE);
+      }
+    }
+    drawGoalMarker();
+    for (const it of level.items) if (it.alive) drawItem(it);
+    for (const e of level.enemies) if (e.alive) drawEnemy(e);
+    drawPlayer();
+    drawDust();
+    drawPopups();
+    drawHUD();
+  }
+
+  if (game.state === 'title') drawTitleScreen();
+  else if (game.state === 'paused') drawPauseScreen();
+  else if (game.state === 'levelclear') drawEndScreen('SUN ' + (levelIndex+1) + '. WALK ON.', (LEVELS[levelIndex].name || ''));
+  else if (game.state === 'gameover') drawEndScreen(game.overMsg, 'YOU CARRY NOTHING HOME.');
+  else if (game.state === 'win') drawEndScreen('SUN DOWN. HOME.', 'ALL BEAST FALL \u2014 WELL HUNTED.');
+}
+
+let lastTs = 0;
+function loop(ts){
+  if (!lastTs) lastTs = ts;
+  let dt = (ts - lastTs) / 1000;
+  lastTs = ts;
+  dt = Math.min(dt, 0.05);
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+/* =========================================================================
+   TEST HOOK — lets node/jsdom exercise the real code paths headlessly
+   rather than a reimplementation. Read-write by design; harmless in play.
+========================================================================= */
+window.__CAVE_TEST__ = {
+  get level(){ return level; }, set level(v){ level = v; },
+  get camX(){ return camX; },
+  player, game, input, ENEMY_TYPES, ITEM_TYPES, LEVELS,
+  get levelIndex(){ return levelIndex; }, set levelIndex(v){ levelIndex = v; },
+  advanceLevel, winLevel,
+  get LEVEL_DATA(){ return LEVELS[levelIndex]; },
+  CONST:{ TILE, ROWS, GROUND_ROW, CANVAS_W, CANVAS_H, GRAVITY, FALL_MULTIPLIER,
+          LOW_JUMP_MULTIPLIER, MOVE_SPEED, JUMP_VELOCITY, STOMP_DAMAGE,
+          STOMP_BOUNCE, STOMP_TOLERANCE, COYOTE_TIME, JUMP_BUFFER,
+          ACCEL, FRICTION, TURN_ACCEL, START_HP, MAX_HP, START_CLUB },
+  buildLevel, resetLevel, update, render,
+  updatePlayer, updateEnemies, physicsStep, computePlayerGravity,
+  checkEnemyContact, resolveAttackHit, damagePlayer, killEnemy,
+  solidAt, aabbOverlap, hitTest, routePointer, releasePointer,
+  activePointers, measureButtons, setKey,
+  get dust(){ return dust; }, get popups(){ return popups; },
+};
+
+/* =========================================================================
+   BOOT
+========================================================================= */
+resetLevel();
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
