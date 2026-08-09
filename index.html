@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="arcade-build" content="arcade-selector-2026-08-09-blackbox-reclaimer">
+<meta name="arcade-build" content="arcade-selector-2026-08-09-reclaimer-run">
 <title>SKAB'S DIGITAL REALITY ARCADE // Select a Cabinet</title>
 <style>
 :root{--ink:#fff8e9;--muted:#c8bfd7;--black:#100b18;--screen:#191025;--pink:#ff4f9a;--yellow:#ffd34d;--blue:#61d9ff;--green:#7bf2a7;--line:rgba(255,255,255,.18);--shadow:rgba(0,0,0,.52)}
@@ -46,7 +46,7 @@
       <p class="marquee-copy">Pick a cabinet, look at the cover, flip it for the quick rundown, and run the thing. Some are solid. Some are still being figured out. That is the point.</p>
     </section>
     <aside class="operator-panel" aria-label="Arcade status">
-      <div class="operator-screen"><span class="live-dot">24 CABINETS LOADED</span><strong>SELECT A GAME</strong><span>Swipe to select a cabinet.</span><span>Tap a cover for the rundown, then run it.</span></div>
+      <div class="operator-screen"><span class="live-dot">25 CABINETS LOADED</span><strong>SELECT A GAME</strong><span>Swipe to select a cabinet.</span><span>Tap a cover for the rundown, then run it.</span></div>
       <div class="coin-row"><span>PLAYER 1</span><span>NO COINS REQUIRED</span></div>
     </aside>
   </header>
@@ -57,7 +57,7 @@
   <nav class="arcade-nav" aria-label="Arcade rows"><a href="#event-playables">Quick Play</a><a href="#live-playable-systems">Arcade Games</a><a href="#proof-boards-tabletop-trials">Proof Boards</a><a href="#live-demos-candidate-systems">Workbench</a><a href="#design-review-under-review">Under Review</a><a href="#top">Show All</a></nav>
   <section class="selector-stage" id="arcade-selector" aria-labelledby="selector-title">
     <div class="selector-bar">
-      <div><p class="eyebrow">ARCADE SELECTOR // CABINET 24</p><h2 id="selector-title">Choose your cabinet.</h2><p>Swipe the shelf to center a game. The selected cabinet opens for the quick rundown and its start button.</p></div>
+      <div><p class="eyebrow">ARCADE SELECTOR // CABINET 25</p><h2 id="selector-title">Choose your cabinet.</h2><p>Swipe the shelf to center a game. The selected cabinet opens for the quick rundown and its start button.</p></div>
       <div class="aisle-picker"><label for="aisle-filter">Jump to aisle</label><select id="aisle-filter"><option value="all">All cabinets</option><option value="event-playables">Quick Play</option><option value="live-playable-systems">Arcade Games</option><option value="proof-boards-tabletop-trials">Proof Boards</option><option value="live-demos-candidate-systems">Workbench</option><option value="design-review-under-review">Under Review</option></select></div>
     </div>
     <div class="selector-readout" aria-live="polite"><span id="selected-status">Selected cabinet</span><strong id="selected-title">Loading cabinet…</strong></div>
@@ -83,6 +83,7 @@
     {id:'digital-reality-run',section:'live-playable-systems',format:'Arcade System',status:'Playable Now',evidence:'Recovery',kicker:'Browser FPS Recovery Loop',title:'Digital Reality Run / FPS-002',description:'A legacy-sensitive browser FPS proof around fractured sectors, signal disruption, and controlled patch discipline.',howTo:'Use the FPS controls, restore the route through the fractured sectors, and notice where the signal breaks.',href:'https://skabkleveta-creator.github.io/FPS-002/',cover:'./assets/arcade-covers/cards/04-digital-reality-run.jpg'},
     {id:'blackbox-squadron',section:'live-playable-systems',format:'Arcade System',status:'Playable Now',evidence:'Pressure',kicker:'Compact Vertical Shooter',title:'Blackbox Squadron',description:'A quick-restart shooter proof for mobile controls, power-up readability, and score pressure.',howTo:'Move, fire, survive the wave, and restart quickly enough to learn what the next run needs.',href:'https://skabkleveta-creator.github.io/BLACKBOX_SQUADRON_Public_Game/',cover:'./assets/arcade-covers/cards/05-blackbox-squadron.jpg'},
     {id:'blackbox-reclaimer',section:'live-playable-systems',format:'Arcade System',status:'Playable Now',evidence:'Reclamation',kicker:'One-Thumb Orbital Survival',title:'BLACKBOX // RECLAIMER',description:'A serious one-thumb launch survival run: ride the automated ascent, take control after booster separation, and deploy the RCLM-01 reclamation relay.',howTo:'Watch the 10-second countdown and computer ascent. When PILOT appears, hold one thumb anywhere and slide left or right to avoid weather and orbital debris.',href:'./games/blackbox-reclaimer/',cover:'./assets/arcade-covers/cards/24-blackbox-reclaimer.svg'},
+    {id:'reclaimer-run',section:'live-demos-candidate-systems',format:'Live Demo',status:'Candidate',evidence:'Machine Verified',kicker:'Orbital Salvage / Fuel Budget',title:'RECLAIMER RUN',description:'You fly a salvage tug. Hook derelict satellites, chain them into a tow train, and haul them home to the RECLAIMER. The mothership owns the fuel pods, and every drop-off spends one. Your haul only counts if you depart docked — run the tank dry out in the field and the whole level is written off. Seven fields, each one bigger, faster-drifting, and heavier than the last.',howTo:'Pilot with the left pad or WASD. Hold A / Space to match velocity, tap B / K to hook or drop your tow train, and depart docked with X. Watch whether the fuel-versus-greed decision feels fair with a real thumb.',href:'./games/reclaimer-run/reclaimer-run-build-2026-08-08-04.html',cover:'./assets/arcade-covers/cards/25-reclaimer-run.svg'},
     {id:'anchor-run',section:'live-playable-systems',format:'Arcade System',status:'Stable Baseline',evidence:'Access',kicker:'Access-Layer Route Runner',title:'Anchor Run',description:'Recover anchors, validate sectors, and keep a route alive through unstable floor conditions.',howTo:'Move, grapple fixed anchors, use short booster bursts, stabilize the route terminal, and reach the exit. No jump.',href:'https://skabkleveta-creator.github.io/ANCHOR_RUN_Public_Game/',cover:'./assets/arcade-covers/cards/06-anchor-run.jpg'},
     {id:'reintegration-core',section:'live-playable-systems',format:'Arcade System',status:'Candidate',evidence:'Validation',kicker:'Systems Repair District 01',title:'Reintegration Core',description:'Repair broken infrastructure, validate routes, and prove a system is fixed by evidence, not appearance.',howTo:'Move through the district, repair the route, and look for the evidence that proves the fix held.',href:'https://skabkleveta-creator.github.io/Reintegration_Core_HTML/',cover:'./assets/arcade-covers/cards/07-reintegration-core.jpg'},
     {id:'human-in-the-loop',section:'live-playable-systems',format:'Arcade System',status:'Candidate',evidence:'Human Judgment',kicker:'Judgment Under Hostile Automation',title:'Human-in-the-Loop',description:'A horror systems branch about preserving human judgment under compliance pressure and hostile automation.',howTo:'Read the situation, make the next judgment call, and notice what the system tries to make you ignore.',href:'https://skabkleveta-creator.github.io/Human-in-the-Loop/',cover:'./assets/arcade-covers/cards/08-human-in-the-loop.jpg'},
@@ -152,7 +153,7 @@
     const promoted=cards.find(card=>card.dataset.gameId==='blackbox-reclaimer')||cards[0];requestAnimationFrame(()=>activate(promoted,false));
   }
 
-  window.__arcadeAudit={build:'cabinet-rebuild-2026-07-30-chaos-goblin-quick-play',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
+  window.__arcadeAudit={build:'arcade-selector-2026-08-09-reclaimer-run',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
 })();
 </script>
 </body>
