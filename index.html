@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="arcade-build" content="arcade-neon-skater-2026-08-09-03">
+<meta name="arcade-build" content="arcade-neon-skater-2026-08-09-04">
 <title>SKAB DIGITAL ARCADE // Neon Skater Arcade</title>
 <style>
 :root{--ink:#fff8e9;--muted:#c8bfd7;--black:#100b18;--screen:#191025;--pink:#ff4f9a;--yellow:#ffd34d;--blue:#61d9ff;--green:#7bf2a7;--line:rgba(255,255,255,.18);--shadow:rgba(0,0,0,.52)}
@@ -57,8 +57,7 @@ body{min-height:100vh;background:
 .music-toggle{display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:6px 9px;border:2px solid rgba(169,255,79,.85);border-radius:4px;background:#0A1616;color:var(--acid);font:900 10px/1 "Trebuchet MS",sans-serif;letter-spacing:.09em;cursor:pointer;box-shadow:3px 3px 0 rgba(0,0,0,.36)}
 .music-toggle:hover,.music-toggle:focus-visible{background:#17301E;filter:brightness(1.14)}
 .music-toggle .music-note{font-size:14px;line-height:0}
-.music-toggle.is-on{border-color:var(--hot);background:#361025;color:#FFE6F4;animation:musicPulse 1.1s steps(2,jump-none) infinite}
-@keyframes musicPulse{50%{box-shadow:0 0 16px rgba(255,61,154,.65),3px 3px 0 rgba(0,0,0,.36)}}
+.music-toggle.is-on{border-color:var(--hot);background:#361025;color:#FFE6F4;box-shadow:0 0 14px rgba(255,61,154,.42),3px 3px 0 rgba(0,0,0,.36)}
 .intro-panel{border-color:#17101F;background:linear-gradient(105deg,rgba(21,9,39,.96),rgba(8,25,40,.96));box-shadow:8px 9px 0 #020106,0 0 0 2px rgba(255,61,154,.12)}
 .intro-panel h2,.selector-bar h2{font-family:Impact,"Arial Black",sans-serif;letter-spacing:.01em;text-transform:uppercase;transform:skewX(-3deg);text-shadow:3px 3px 0 var(--violet),5px 5px 0 #0B0710}
 .button-link.primary{border-color:var(--acid);background:var(--acid);color:#0B1110;box-shadow:4px 4px 0 #06050A}
@@ -95,7 +94,7 @@ body{min-height:100vh;background:
     </section>
     <aside class="operator-panel" aria-label="Arcade status">
       <div class="operator-screen"><span class="live-dot">26 CABINETS LOADED</span><strong>SELECT A GAME</strong><span>Swipe to select a cabinet.</span><span>Tap a cover for the rundown, then run it.</span></div>
-      <div class="coin-row"><span>PLAYER 1</span><button class="music-toggle" id="music-toggle" type="button" aria-pressed="false" aria-label="Start original arcade music"><span class="music-note" aria-hidden="true">♫</span><span class="music-label">START MUSIC</span></button></div>
+      <div class="coin-row"><span>PLAYER 1</span><button class="music-toggle" id="music-toggle" type="button" aria-pressed="false" aria-label="Start original industrial arcade music"><span class="music-note" aria-hidden="true">♫</span><span class="music-label">START // INDUSTRIAL</span></button></div>
     </aside>
   </header>
   <section class="intro-panel" aria-label="How to use the arcade">
@@ -208,18 +207,22 @@ body{min-height:100vh;background:
 
   const musicButton=document.querySelector('#music-toggle');
   if(musicButton){
-    let musicContext=null,musicBus=null,musicTimer=null,musicActive=false,musicStep=0;
-    const riff=[55,0,55,65.41,73.42,65.41,55,0,82.41,73.42,65.41,55,98,82.41,73.42,65.41];
-    const lead=[0,0,220,0,261.63,246.94,220,0,329.63,293.66,261.63,220,0,261.63,293.66,0];
-    const setMusicState=(on,label)=>{musicActive=on;musicButton.classList.toggle('is-on',on);musicButton.setAttribute('aria-pressed',String(on));musicButton.setAttribute('aria-label',on?'Stop original arcade music':'Start original arcade music');musicButton.querySelector('.music-label').textContent=label;};
+    let musicContext=null,musicBus=null,musicTimer=null,musicActive=false,musicStep=0,musicNoise=null;
+    // Original industrial/nu-metal palette: drop-tuned pulse, machine drums, and a sparse signal lead.
+    const riff=[46.25,0,46.25,51.91,46.25,0,61.74,0,46.25,46.25,0,69.30,61.74,0,51.91,0];
+    const lead=[0,0,0,0,0,0,0,184.99,0,0,0,0,0,207.65,0,0];
+    const setMusicState=(on,label)=>{musicActive=on;musicButton.classList.toggle('is-on',on);musicButton.setAttribute('aria-pressed',String(on));musicButton.setAttribute('aria-label',on?'Stop original industrial arcade music':'Start original industrial arcade music');musicButton.querySelector('.music-label').textContent=label;};
     const getMusicContext=()=>{
       if(musicContext)return musicContext;
       const AudioCtor=window.AudioContext||window.webkitAudioContext;
       if(!AudioCtor)return null;
       musicContext=new AudioCtor();
       musicBus=musicContext.createGain();
-      musicBus.gain.value=.055;
-      musicBus.connect(musicContext.destination);
+      const compressor=musicContext.createDynamicsCompressor();
+      compressor.threshold.value=-20;compressor.knee.value=12;compressor.ratio.value=8;compressor.attack.value=.004;compressor.release.value=.14;
+      musicBus.gain.value=.042;musicBus.connect(compressor);compressor.connect(musicContext.destination);
+      musicNoise=musicContext.createBuffer(1,musicContext.sampleRate*.16,musicContext.sampleRate);
+      const samples=musicNoise.getChannelData(0);for(let i=0;i<samples.length;i++)samples[i]=(Math.random()*2-1)*(1-i/samples.length*.42);
       return musicContext;
     };
     const tone=(frequency,when,duration,type,volume)=>{
@@ -231,13 +234,36 @@ body{min-height:100vh;background:
       gain.gain.exponentialRampToValueAtTime(.0001,when+duration);
       osc.connect(gain);gain.connect(musicBus);osc.start(when);osc.stop(when+duration+.03);
     };
+    const grit=(frequency,when,duration,volume)=>{
+      if(!frequency||!musicContext||!musicBus)return;
+      const osc=musicContext.createOscillator(),filter=musicContext.createBiquadFilter(),drive=musicContext.createWaveShaper(),gain=musicContext.createGain();
+      const curve=new Float32Array(96);for(let i=0;i<curve.length;i++){const x=i*2/(curve.length-1)-1;curve[i]=Math.tanh(x*3.2);}
+      osc.type='sawtooth';osc.frequency.setValueAtTime(frequency,when);filter.type='lowpass';filter.frequency.setValueAtTime(720,when);filter.Q.value=3.2;drive.curve=curve;drive.oversample='2x';
+      gain.gain.setValueAtTime(.0001,when);gain.gain.exponentialRampToValueAtTime(volume,when+.008);gain.gain.exponentialRampToValueAtTime(.0001,when+duration);
+      osc.connect(filter);filter.connect(drive);drive.connect(gain);gain.connect(musicBus);osc.start(when);osc.stop(when+duration+.025);
+    };
+    const noiseHit=(when,duration,frequency,volume)=>{
+      if(!musicContext||!musicBus||!musicNoise)return;
+      const src=musicContext.createBufferSource(),filter=musicContext.createBiquadFilter(),gain=musicContext.createGain();
+      src.buffer=musicNoise;filter.type='bandpass';filter.frequency.setValueAtTime(frequency,when);filter.Q.value=.9;
+      gain.gain.setValueAtTime(volume,when);gain.gain.exponentialRampToValueAtTime(.0001,when+duration);
+      src.connect(filter);filter.connect(gain);gain.connect(musicBus);src.start(when);src.stop(when+duration+.012);
+    };
+    const kick=(when,accent=.32)=>{
+      if(!musicContext||!musicBus)return;
+      const osc=musicContext.createOscillator(),gain=musicContext.createGain();
+      osc.type='sine';osc.frequency.setValueAtTime(138,when);osc.frequency.exponentialRampToValueAtTime(47,when+.13);
+      gain.gain.setValueAtTime(accent,when);gain.gain.exponentialRampToValueAtTime(.0001,when+.15);osc.connect(gain);gain.connect(musicBus);osc.start(when);osc.stop(when+.17);
+    };
     const beat=()=>{
       if(!musicContext)return;
       const now=musicContext.currentTime+.02,slot=musicStep%riff.length;
-      tone(riff[slot],now,.15,'sawtooth',.32);
-      tone(lead[slot],now+.025,.12,'square',.13);
-      if(slot%4===0){tone(43.65,now,.32,'triangle',.46);tone(130.81,now+.015,.065,'square',.09);}
-      if(slot%4===2)tone(196,now,.04,'square',.075);
+      grit(riff[slot],now,.115,.31);
+      tone(lead[slot],now+.01,.14,'square',.055);
+      if(slot===0||slot===6||slot===8||slot===11)kick(now,slot===0?.42:.30);
+      if(slot===4||slot===12)noiseHit(now,.12,1850,.18);
+      if(slot%2===0)noiseHit(now+.006,.027,7200,.025);
+      if(slot===14)noiseHit(now,.055,940,.075);
       musicStep+=1;
     };
     const startMusic=async()=>{
@@ -245,18 +271,18 @@ body{min-height:100vh;background:
       if(!ctx){setMusicState(false,'MUSIC UNSUPPORTED');return;}
       try{
         if(ctx.state==='suspended')await ctx.resume();
-        musicStep=0;beat();musicTimer=window.setInterval(beat,150);setMusicState(true,'MUSIC ON');
+        musicStep=0;beat();musicTimer=window.setInterval(beat,125);setMusicState(true,'MUSIC ON // INDUSTRIAL');
       }catch(_){setMusicState(false,'TAP TO RETRY');}
     };
     const stopMusic=()=>{
       if(musicTimer)window.clearInterval(musicTimer);
-      musicTimer=null;setMusicState(false,'START MUSIC');
+      musicTimer=null;setMusicState(false,'START // INDUSTRIAL');
     };
     musicButton.addEventListener('click',()=>musicActive?stopMusic():startMusic());
     document.addEventListener('visibilitychange',()=>{if(document.hidden&&musicActive)stopMusic();});
   }
 
-  window.__arcadeAudit={build:'arcade-neon-skater-2026-08-09-03',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
+  window.__arcadeAudit={build:'arcade-neon-skater-2026-08-09-04',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
 })();
 </script>
 </body>
