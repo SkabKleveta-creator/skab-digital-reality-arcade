@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="arcade-build" content="arcade-neon-skater-2026-08-09-02">
+<meta name="arcade-build" content="arcade-neon-skater-2026-08-09-03">
 <title>SKAB DIGITAL ARCADE // Neon Skater Arcade</title>
 <style>
 :root{--ink:#fff8e9;--muted:#c8bfd7;--black:#100b18;--screen:#191025;--pink:#ff4f9a;--yellow:#ffd34d;--blue:#61d9ff;--green:#7bf2a7;--line:rgba(255,255,255,.18);--shadow:rgba(0,0,0,.52)}
@@ -152,6 +152,7 @@ body{min-height:100vh;background:
     {id:'connection-trace',section:'design-review-under-review',format:'Design Review',status:'Under Review',evidence:'Validation',kicker:'Connectivity Puzzle Under Review',title:'Connection Trace',description:'A visible concept for diagnosing the one broken relationship that prevents a system from validating truth.',howTo:'Scan the network, identify the critical bad connection, stabilize it, and validate the restored route.',href:'./games/connection-trace/',cover:'./assets/arcade-covers/cards/18-connection-trace.jpg'}
 ,
     {id:'moon-trash',section:'live-playable-systems',format:'Arcade System',status:'Locked Baseline',evidence:'6 Routes',kicker:'16-Bit Lunar Salvage Run',title:'Moon Trash: Salvage Run',description:'A six-route moon cleanup inconvenience. Recover ship parts, haul them to increasingly ridiculous carts, and leave before the next human moonwalk finds the evidence.',howTo:'Use the D-pad to move and A to moon-jump. B picks up parts, moves obstacles, and safely enters or exits tunnels. X loads parts into the cart. Y scans.',href:'./games/moon-trash/moon-trash-mtr-patch-2026-08-09-03.html',cover:'./assets/arcade-covers/cards/26-moon-trash.svg'},
+    {id:'cave-run',section:'live-playable-systems',format:'Arcade System',status:'Live Now',evidence:'10 Levels',kicker:'16-Bit Caveman Hunt',title:'CAVE RUN',description:'A 10-level handheld-style caveman run through pits, caves, bats, pterodactyls, and the Great Beast finale. HP and club durability carry across the whole hunt.',howTo:'Use the D-pad to run. A jumps. B swings the club. Clear all 10 levels; take the pit crossings seriously.',href:'./games/cave-run/',cover:'./assets/arcade-covers/cards/27-cave-run.svg'},
   ];
   const demoFormats = new Set(['Proof Board','Tabletop Trial','Live Demo','Design Review']);
   const make = (tag, cls, text) => { const node=document.createElement(tag); if(cls) node.className=cls; if(text!==undefined) node.textContent=text; return node; };
@@ -255,7 +256,7 @@ body{min-height:100vh;background:
     document.addEventListener('visibilitychange',()=>{if(document.hidden&&musicActive)stopMusic();});
   }
 
-  window.__arcadeAudit={build:'arcade-neon-skater-2026-08-09-02',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
+  window.__arcadeAudit={build:'arcade-neon-skater-2026-08-09-03',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
 })();
 </script>
 </body>
