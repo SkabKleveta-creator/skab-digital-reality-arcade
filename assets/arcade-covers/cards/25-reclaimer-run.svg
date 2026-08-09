@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 576" role="img" aria-labelledby="title desc">
+  <title id="title">Reclaimer Run cabinet cover</title>
+  <desc id="desc">A copper salvage tug pulls a train of derelict satellites toward a mothership through a deep orbital void.</desc>
+  <defs>
+    <linearGradient id="void" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07131a"/><stop offset=".58" stop-color="#10282c"/><stop offset="1" stop-color="#180e13"/></linearGradient>
+    <radialGradient id="glow" cx=".77" cy=".43" r=".48"><stop stop-color="#d48b4d" stop-opacity=".42"/><stop offset=".47" stop-color="#4d968d" stop-opacity=".18"/><stop offset="1" stop-color="#061015" stop-opacity="0"/></radialGradient>
+    <linearGradient id="copper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd29c"/><stop offset=".36" stop-color="#c87843"/><stop offset="1" stop-color="#6e3525"/></linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="5"/></filter>
+    <pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse"><path d="M0 41.5H42M41.5 0V42" fill="none" stroke="#8cc7bd" stroke-opacity=".08"/></pattern>
+  </defs>
+  <rect width="768" height="576" fill="url(#void)"/>
+  <rect width="768" height="576" fill="url(#grid)"/>
+  <ellipse cx="574" cy="251" rx="245" ry="226" fill="url(#glow)"/>
+  <g fill="#b4e1d6" opacity=".7"><circle cx="68" cy="82" r="2"/><circle cx="127" cy="168" r="1.5"/><circle cx="260" cy="70" r="1.5"/><circle cx="305" cy="336" r="2"/><circle cx="92" cy="381" r="1"/><circle cx="661" cy="86" r="1.5"/><circle cx="705" cy="315" r="2"/><circle cx="523" cy="116" r="1"/><circle cx="726" cy="157" r="1"/></g>
+  <g transform="rotate(-12 519 261)" fill="none">
+    <ellipse cx="519" cy="261" rx="201" ry="112" stroke="#d58b50" stroke-opacity=".5" stroke-width="2" stroke-dasharray="9 10"/>
+    <ellipse cx="519" cy="261" rx="152" ry="84" stroke="#82b9ae" stroke-opacity=".35" stroke-width="1.5" stroke-dasharray="3 9"/>
+  </g>
+  <g transform="translate(564 210)">
+    <circle r="78" fill="#0d2429" stroke="#d48b4d" stroke-width="7"/>
+    <circle r="55" fill="#183a39" stroke="#8bbdb2" stroke-width="2"/>
+    <circle r="33" fill="#0b171d" stroke="#c57a45" stroke-width="4"/>
+    <path d="M-116-10H-75M75-10H116M-116 10H-75M75 10H116" stroke="#c98047" stroke-width="11"/>
+    <path d="M-128-24H-87V24H-128M87-24H128V24H87" fill="#234945" stroke="#d6a06a" stroke-width="3"/>
+    <path d="M-31-28H31M-31 28H31M-28-31V31M28-31V31" stroke="#81beb2" stroke-width="3" opacity=".7"/>
+    <circle r="13" fill="#c87843"/><circle r="5" fill="#fff0cb"/>
+  </g>
+  <path d="M176 332C279 356 373 330 461 287" fill="none" stroke="#e5a062" stroke-width="3" stroke-dasharray="8 8" opacity=".8"/>
+  <g transform="translate(152 351) rotate(8)">
+    <path d="M0 0 53-22 83 0 53 22z" fill="url(#copper)" stroke="#f7c58d" stroke-width="3"/>
+    <path d="M44-12H104L124 0 104 12H44z" fill="#2e6763" stroke="#c97d46" stroke-width="3"/>
+    <path d="M8 0 38-8 48 0 38 8z" fill="#111d20"/>
+    <path d="M-24-8H0M-24 8H0" stroke="#c66b3e" stroke-width="6"/>
+    <circle cx="53" cy="0" r="6" fill="#b9efe3"/>
+  </g>
+  <g transform="translate(281 364) rotate(-8)" stroke="#d7a06c" stroke-width="3">
+    <rect x="-23" y="-16" width="46" height="32" rx="3" fill="#273f40"/><path d="M-58 0H-23M23 0H58" stroke="#c17242" stroke-width="4"/><rect x="-77" y="-16" width="19" height="32" fill="#315e5c"/><rect x="58" y="-16" width="19" height="32" fill="#315e5c"/><circle r="8" fill="#c67a45"/>
+  </g>
+  <g transform="translate(384 337) rotate(12)" stroke="#d7a06c" stroke-width="3">
+    <rect x="-18" y="-13" width="36" height="26" rx="3" fill="#293d3e"/><path d="M-48 0H-18M18 0H48" stroke="#c17242" stroke-width="4"/><path d="M-65-18H-48V18H-65M48-18H65V18H48" fill="#315e5c"/><circle r="6" fill="#c67a45"/>
+  </g>
+  <g opacity=".8"><path d="M462 282l22-9-4 22z" fill="#f7d5a1"/><path d="M448 297l14-5-3 15z" fill="#c87843"/></g>
+  <rect x="28" y="27" width="233" height="31" rx="3" fill="#09181c" stroke="#cd7c45" stroke-width="2"/>
+  <text x="43" y="48" fill="#b7e3d9" font-family="monospace" font-size="16" font-weight="700" letter-spacing="2">RCL-1 // SALVAGE TUG</text>
+  <g transform="translate(28 438)">
+    <rect width="712" height="106" fill="#071115" fill-opacity=".88" stroke="#c87843" stroke-width="3"/>
+    <path d="M0 16H712" stroke="#b8503e" stroke-width="4"/>
+    <text x="22" y="65" fill="#f5d4a4" font-family="Impact,Arial Black,sans-serif" font-size="54" letter-spacing="3">RECLAIMER RUN</text>
+    <text x="26" y="91" fill="#90d1c5" font-family="monospace" font-size="15" font-weight="700" letter-spacing="2">SALVAGE WHAT&apos;S LEFT // RETURN WITH THE HAUL</text>
+    <text x="625" y="30" fill="#f08a68" font-family="monospace" font-size="12" font-weight="700">FUEL: FINITE</text>
+  </g>
+</svg>
