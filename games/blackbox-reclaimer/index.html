@@ -1,0 +1,397 @@
+<!doctype html>
+<!-- BBR-PATCH-2026-08-08-03 | BLACKBOX // RECLAIMER | Local-only candidate -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#060b12">
+  <title>BLACKBOX // RECLAIMER — BBR-PATCH-2026-08-08-03</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0; min-height: 100svh; display: grid; place-items: center;
+      overflow: hidden; background: #030609; color: #e7f2f2;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    main { width: min(100vw, 540px); height: 100svh; max-height: 960px; position: relative; }
+    canvas { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  </style>
+</head>
+<body>
+<main aria-label="BLACKBOX RECLAIMER one-thumb launch game">
+  <canvas id="game" aria-label="Launch and steer the reclaimer rocket"></canvas>
+  <p class="sr-only">Drag one thumb left or right anywhere on the game screen to steer after pilot control begins.</p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const PATCH_ID = 'BBR-PATCH-2026-08-08-03';
+  const canvas = document.querySelector('#game');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const TAU = Math.PI * 2;
+  const view = { w: 390, h: 844, dpr: 1 };
+  const C = {
+    ink: '#050a10', panel: '#0b151e', cyan: '#5ee8ec', cyanDim: '#2e9eaa',
+    amber: '#f7bb51', orange: '#fb6d37', red: '#ff5363', green: '#83e1a6',
+    white: '#e9f7f8', fog: '#b8d1d9', metal: '#9db5c0', violet: '#7d76d7'
+  };
+  const state = {
+    mode: 'briefing', startAt: 0, last: performance.now(), elapsed: 0,
+    flightTime: 0, altitude: 0, integrity: 4, score: 0, input: 0,
+    pointerId: null, pointerStart: 0, pointerX: 0, rocketX: 0,
+    vx: 0, wind: 0, shake: 0, hitFlash: 0, note: '', noteUntil: 0,
+    boostersReleased: false, obstacleTimer: 0, obstacles: [], particles: [],
+    clouds: [], lightning: [], stars: [], best: 0, elapsedAfterLoss: 0
+  };
+  const keys = new Set();
+  const rng = mulberry32(8032026);
+
+  function mulberry32(seed) {
+    return function random() { let t = seed += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function fmt(n) { return String(Math.max(0, Math.ceil(n))).padStart(2, '0'); }
+  function rgba(hex, a) {
+    const x = hex.replace('#', '');
+    const n = parseInt(x, 16);
+    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+  }
+
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    view.w = Math.max(320, r.width || 390); view.h = Math.max(560, r.height || 844);
+    view.dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.round(view.w * view.dpr); canvas.height = Math.round(view.h * view.dpr);
+    ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    state.rocketX = clamp(state.rocketX || view.w / 2, 32, view.w - 32);
+    buildAtmosphere();
+  }
+  function buildAtmosphere() {
+    state.clouds = Array.from({ length: 12 }, (_, i) => ({
+      x: rng() * view.w, y: rng() * view.h, r: 70 + rng() * 140, a: .13 + rng() * .18, s: 4 + rng() * 16, p: i
+    }));
+    state.stars = Array.from({ length: 90 }, () => ({ x: rng() * view.w, y: rng() * view.h, a: .18 + rng() * .74, r: .3 + rng() * 1.4 }));
+  }
+  window.addEventListener('resize', resize, { passive: true });
+  resize();
+
+  function resetFlight(skipOpening = false) {
+    state.mode = skipOpening ? 'flight' : 'countdown';
+    state.startAt = performance.now(); state.elapsed = 0; state.flightTime = 0;
+    state.altitude = skipOpening ? 28 : 0; state.integrity = 4; state.score = 0;
+    state.input = 0; state.vx = 0; state.wind = 0; state.shake = 0; state.hitFlash = 0;
+    state.note = ''; state.noteUntil = 0; state.boostersReleased = false;
+    state.obstacleTimer = .65; state.obstacles = []; state.particles = []; state.lightning = [];
+    state.rocketX = view.w / 2;
+  }
+  function armMission() { resetFlight(false); }
+  function openFlight() {
+    state.mode = 'flight'; state.flightTime = 0; state.altitude = 28; state.obstacleTimer = .35;
+    state.note = 'FLIGHT CONTROL TRANSFERRED'; state.noteUntil = performance.now() + 2400;
+    burst(state.rocketX, view.h * .68, C.cyan, 28, 2.4);
+  }
+  function failFlight() { state.best = Math.max(state.best, state.altitude); state.mode = 'failed'; state.elapsedAfterLoss = 0; }
+  function completeFlight() { state.best = Math.max(state.best, state.altitude); state.mode = 'complete'; burst(state.rocketX, view.h * .58, C.cyan, 82, 4); }
+
+  function stageName() {
+    if (state.mode !== 'flight') return 'FLIGHT COMPUTER';
+    if (state.flightTime < 21) return 'STORM CORRIDOR';
+    if (state.flightTime < 44) return 'UPPER ASCENT';
+    if (state.flightTime < 66) return 'ORBITAL TRANSIT';
+    return 'RCLM-01 APPROACH';
+  }
+  function cloudStrength() {
+    if (state.mode === 'countdown' || state.mode === 'ignition' || state.mode === 'assisted') return 1;
+    if (state.mode === 'flight') return state.flightTime < 22 ? 1 - state.flightTime / 38 : 0;
+    return 0;
+  }
+  function addLightning(x = rng() * view.w) {
+    state.lightning.push({ x, y: -8, life: .32 + rng() * .15, max: .32 + rng() * .15, forks: 3 + Math.floor(rng() * 3) });
+  }
+  function burst(x, y, color, count, speed) {
+    for (let i = 0; i < count; i++) {
+      const a = rng() * TAU; const s = (.3 + rng()) * speed * 65;
+      state.particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: .35 + rng() * .9, max: .35 + rng() * .9, color, size: 1 + rng() * 3 });
+    }
+  }
+  function boosterSeparation() {
+    if (state.boostersReleased) return;
+    state.boostersReleased = true; state.note = 'AUX BOOSTERS SEPARATED'; state.noteUntil = performance.now() + 2200;
+    const ry = view.h * .61;
+    for (const side of [-1, 1]) {
+      state.particles.push({ kind: 'booster', x: state.rocketX + side * 25, y: ry + 20, vx: side * 68, vy: 40, side, life: 4.5, max: 4.5, color: C.metal, size: 1 });
+      burst(state.rocketX + side * 25, ry + 22, C.amber, 11, 1.6);
+    }
+  }
+  function spawnObstacle() {
+    const p = clamp(state.flightTime / 78, 0, 1);
+    const phase = state.flightTime < 22 ? 'storm' : state.flightTime < 44 ? 'high' : state.flightTime < 66 ? 'orbit' : 'approach';
+    const lanes = [38, 88, 138, 188, 238, 288, 338].map(v => v / 376 * view.w);
+    const count = p < .28 ? 2 : p < .68 ? 2 + (rng() > .45 ? 1 : 0) : 3;
+    const chosen = [];
+    const picked = [...lanes].sort(() => rng() - .5);
+    for (const x of picked) {
+      if (chosen.every(v => Math.abs(v - x) > 47)) chosen.push(x);
+      if (chosen.length >= count) break;
+    }
+    chosen.forEach((x, i) => {
+      const roll = rng();
+      let kind = 'fragment';
+      if (phase === 'storm') kind = roll < .45 ? 'gust' : roll < .72 ? 'fragment' : 'tank';
+      else if (phase === 'high') kind = roll < .42 ? 'fragment' : roll < .67 ? 'panel' : 'ring';
+      else if (phase === 'orbit') kind = roll < .25 ? 'satellite' : roll < .53 ? 'panel' : roll < .75 ? 'tank' : 'fragment';
+      else kind = roll < .36 ? 'satellite' : roll < .7 ? 'fragment' : 'panel';
+      const scale = kind === 'satellite' ? .95 : .68 + rng() * .46;
+      state.obstacles.push({ x, y: -70 - i * 12, kind, scale, rot: rng() * TAU, spin: (rng() - .5) * 2.2, hit: false });
+    });
+  }
+  function obstacleBounds(o) {
+    const base = o.kind === 'satellite' ? [54, 30] : o.kind === 'panel' ? [46, 22] : o.kind === 'tank' ? [28, 38] : o.kind === 'ring' ? [38, 38] : o.kind === 'gust' ? [44, 28] : [25, 25];
+    return [base[0] * o.scale, base[1] * o.scale];
+  }
+  function updateOpening(dt) {
+    state.elapsed = (performance.now() - state.startAt) / 1000;
+    if (state.elapsed < 10) { state.mode = 'countdown'; }
+    else if (state.elapsed < 13) { state.mode = 'ignition'; }
+    else if (state.elapsed < 30) {
+      state.mode = 'assisted';
+      if (state.elapsed > 24.2) boosterSeparation();
+    } else if (state.elapsed < 32.6) { state.mode = 'handoff'; }
+    else { openFlight(); }
+    if (cloudStrength() && rng() < dt * 1.65) addLightning();
+  }
+  function updateParticles(dt) {
+    for (const p of state.particles) {
+      p.life -= dt;
+      if (p.kind === 'booster') { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 16 * dt; p.rot = (p.rot || 0) + p.side * 2.3 * dt; }
+      else { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 55 * dt; p.vx *= Math.pow(.08, dt); }
+    }
+    state.particles = state.particles.filter(p => p.life > 0 && p.y < view.h + 90);
+    state.lightning.forEach(l => l.life -= dt);
+    state.lightning = state.lightning.filter(l => l.life > 0);
+  }
+  function updateFlight(dt) {
+    state.flightTime += dt;
+    state.altitude = 28 + state.flightTime * 3.25;
+    state.score = Math.floor(state.altitude * 20);
+    const keyboard = (keys.has('ArrowLeft') || keys.has('a')) ? -1 : (keys.has('ArrowRight') || keys.has('d')) ? 1 : 0;
+    let desired = keyboard || state.input;
+    const inStorm = state.flightTime < 22;
+    state.wind = inStorm ? Math.sin(state.flightTime * .92) * (42 + 32 * Math.sin(state.flightTime * .27) ** 2) : 0;
+    state.vx += ((desired * 255 + state.wind) - state.vx) * Math.min(1, dt * 5.2);
+    state.rocketX = clamp(state.rocketX + state.vx * dt, 27, view.w - 27);
+    if (inStorm && rng() < dt * .5) addLightning(30 + rng() * (view.w - 60));
+    state.obstacleTimer -= dt;
+    const p = clamp(state.flightTime / 78, 0, 1);
+    if (state.obstacleTimer <= 0) {
+      spawnObstacle();
+      state.obstacleTimer = lerp(.88, .48, p) + rng() * .22;
+    }
+    const speed = lerp(140, 265, p);
+    const rocketY = view.h * .68;
+    for (const o of state.obstacles) {
+      o.y += speed * dt; o.rot += o.spin * dt;
+      const [ow, oh] = obstacleBounds(o);
+      if (!o.hit && Math.abs(o.x - state.rocketX) < ow / 2 + 14 && Math.abs(o.y - rocketY) < oh / 2 + 23) {
+        o.hit = true; state.integrity--; state.shake = 13; state.hitFlash = .4;
+        burst(o.x, o.y, C.orange, 24, 2.2);
+        state.note = state.integrity > 0 ? 'HULL STRIKE — CORRECT COURSE' : 'FLIGHT LOST'; state.noteUntil = performance.now() + 1800;
+        if (state.integrity <= 0) { failFlight(); break; }
+      }
+    }
+    state.obstacles = state.obstacles.filter(o => !o.hit && o.y < view.h + 90);
+    if (state.flightTime >= 78) completeFlight();
+  }
+  function update(dt) {
+    state.shake = Math.max(0, state.shake - dt * 38); state.hitFlash = Math.max(0, state.hitFlash - dt);
+    if (state.mode === 'countdown' || state.mode === 'ignition' || state.mode === 'assisted' || state.mode === 'handoff') updateOpening(dt);
+    if (state.mode === 'flight') updateFlight(dt);
+    if (state.mode === 'failed') state.elapsedAfterLoss += dt;
+    updateParticles(dt);
+  }
+
+  function horizonGradient(mode) {
+    const g = ctx.createLinearGradient(0, 0, 0, view.h);
+    if (mode === 'flight' && state.flightTime > 43) { g.addColorStop(0, '#01040c'); g.addColorStop(.64, '#071221'); g.addColorStop(1, '#09202d'); }
+    else { g.addColorStop(0, '#09131d'); g.addColorStop(.42, '#233b4c'); g.addColorStop(.72, '#756c69'); g.addColorStop(1, '#101720'); }
+    return g;
+  }
+  function drawBackground(t) {
+    ctx.fillStyle = horizonGradient(state.mode); ctx.fillRect(0, 0, view.w, view.h);
+    const isSpace = state.mode === 'flight' && state.flightTime > 42;
+    if (isSpace) {
+      for (const s of state.stars) { ctx.fillStyle = `rgba(220,246,255,${s.a})`; ctx.fillRect(s.x, s.y, s.r, s.r); }
+      const arc = ctx.createRadialGradient(view.w / 2, view.h + 270, 30, view.w / 2, view.h + 270, view.w * 1.23);
+      arc.addColorStop(0, 'rgba(25,137,163,.74)'); arc.addColorStop(.73, 'rgba(10,48,75,.25)'); arc.addColorStop(.74, 'rgba(177,240,251,.66)'); arc.addColorStop(.75, 'rgba(5,12,23,0)');
+      ctx.fillStyle = arc; ctx.fillRect(0, 0, view.w, view.h);
+    } else {
+      drawStorm(t);
+      drawPad();
+    }
+  }
+  function drawStorm(t) {
+    for (const c of state.clouds) {
+      const drift = (t * c.s * .015 + c.p * 53) % (view.w + c.r * 2);
+      const x = drift - c.r; const y = c.y + Math.sin(t * .0005 + c.p) * 9;
+      const g = ctx.createRadialGradient(x, y, 5, x, y, c.r);
+      g.addColorStop(0, `rgba(20,39,53,${c.a * 1.7})`); g.addColorStop(1, 'rgba(6,12,19,0)');
+      ctx.fillStyle = g; ctx.fillRect(x - c.r, y - c.r, c.r * 2, c.r * 2);
+    }
+    for (let i = 0; i < 30; i++) {
+      const x = (i * 37 + (t * (i % 3 + 1) * .1)) % (view.w + 30) - 15;
+      const y = (i * 83 + t * .18) % view.h;
+      ctx.strokeStyle = 'rgba(194,229,235,.12)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 13, y + 38); ctx.stroke();
+    }
+    for (const l of state.lightning) drawLightning(l);
+  }
+  function drawLightning(l) {
+    const a = clamp(l.life / l.max, 0, 1); ctx.save(); ctx.globalCompositeOperation = 'screen';
+    ctx.shadowColor = C.cyan; ctx.shadowBlur = 16; ctx.strokeStyle = `rgba(204,245,255,${a})`; ctx.lineWidth = 2.2; ctx.beginPath();
+    let x = l.x, y = l.y; ctx.moveTo(x, y);
+    for (let i = 0; i < l.forks; i++) { x += (rng() - .5) * 42; y += 35 + rng() * 38; ctx.lineTo(x, y); }
+    ctx.stroke(); ctx.restore();
+  }
+  function drawPad() {
+    const y = view.h * .84; ctx.fillStyle = '#10181e'; ctx.fillRect(0, y, view.w, view.h - y);
+    ctx.strokeStyle = 'rgba(139,180,191,.25)'; ctx.lineWidth = 1;
+    for (let x = -view.w; x < view.w * 2; x += 46) { ctx.beginPath(); ctx.moveTo(view.w / 2, y); ctx.lineTo(x, view.h); ctx.stroke(); }
+    ctx.fillStyle = '#202c32'; ctx.fillRect(view.w / 2 - 72, y - 12, 144, 16); ctx.fillStyle = '#4f6a70'; ctx.fillRect(view.w / 2 - 68, y - 8, 136, 7);
+  }
+  function drawRocket(x, y, scale, attached = false, plume = 0, tilt = 0) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(tilt);
+    const s = scale;
+    if (attached) {
+      for (const side of [-1, 1]) {
+        ctx.save(); ctx.translate(side * 24 * s, 15 * s); ctx.fillStyle = '#7d9097'; ctx.beginPath(); ctx.roundRect(-7*s, -33*s, 14*s, 62*s, 5*s); ctx.fill();
+        ctx.fillStyle = '#e6f2f3'; ctx.fillRect(-4*s, -28*s, 8*s, 40*s); ctx.fillStyle = '#f17b42'; ctx.fillRect(-7*s, 21*s, 14*s, 9*s); ctx.restore();
+      }
+    }
+    if (plume > .02) {
+      const g = ctx.createLinearGradient(0, 34*s, 0, (80 + plume * 70) * s); g.addColorStop(0, 'rgba(255,249,222,.98)'); g.addColorStop(.25, 'rgba(249,186,67,.92)'); g.addColorStop(1, 'rgba(243,75,38,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-11*s, 27*s); ctx.quadraticCurveTo(-7*s, (71+plume*62)*s, 0, (88+plume*65)*s); ctx.quadraticCurveTo(7*s, (71+plume*62)*s, 11*s, 27*s); ctx.fill();
+    }
+    ctx.fillStyle = '#63777f'; ctx.beginPath(); ctx.moveTo(-16*s, 28*s); ctx.lineTo(-26*s, 43*s); ctx.lineTo(-9*s, 37*s); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(16*s, 28*s); ctx.lineTo(26*s, 43*s); ctx.lineTo(9*s, 37*s); ctx.closePath(); ctx.fill();
+    const body = ctx.createLinearGradient(-16*s, 0, 16*s, 0); body.addColorStop(0, '#6a8089'); body.addColorStop(.46, '#e6f0ef'); body.addColorStop(.65, '#a7b8bd'); body.addColorStop(1, '#596e79');
+    ctx.fillStyle = body; ctx.beginPath(); ctx.moveTo(0, -70*s); ctx.quadraticCurveTo(17*s, -49*s, 16*s, 28*s); ctx.lineTo(-16*s, 28*s); ctx.quadraticCurveTo(-17*s, -49*s, 0, -70*s); ctx.fill();
+    ctx.fillStyle = '#17242c'; ctx.fillRect(-16*s, -2*s, 32*s, 6*s); ctx.fillStyle = C.cyan; ctx.fillRect(-14*s, 0, 28*s, 2*s);
+    ctx.fillStyle = '#2c3e49'; ctx.beginPath(); ctx.ellipse(0, -34*s, 10*s, 13*s, 0, 0, TAU); ctx.fill(); ctx.fillStyle = 'rgba(117,221,237,.8)'; ctx.beginPath(); ctx.ellipse(-3*s, -38*s, 4*s, 5*s, -.3, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#e3583a'; ctx.fillRect(-16*s, 17*s, 32*s, 8*s); ctx.fillStyle = '#222f36'; ctx.fillRect(-10*s, 28*s, 20*s, 5*s); ctx.restore();
+  }
+  function drawDetachedBooster(p) {
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot || 0); ctx.fillStyle = '#78909a'; ctx.beginPath(); ctx.roundRect(-6, -23, 12, 46, 4); ctx.fill(); ctx.fillStyle = '#ecf6f4'; ctx.fillRect(-3, -18, 6, 27); ctx.fillStyle = C.orange; ctx.fillRect(-6, 15, 12, 8); ctx.restore();
+  }
+  function drawObstacle(o) {
+    ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.rot);
+    if (o.kind === 'gust') {
+      ctx.strokeStyle = 'rgba(195,238,244,.78)'; ctx.lineWidth = 2; for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(-24, i*8); ctx.bezierCurveTo(-6, i*8-8, 8, i*8+8, 25, i*8); ctx.stroke(); }
+    } else if (o.kind === 'satellite') {
+      ctx.fillStyle = '#748995'; ctx.fillRect(-9, -10, 18, 20); ctx.fillStyle = '#c3d7da'; ctx.fillRect(-5, -15, 10, 8);
+      ctx.fillStyle = '#355e84'; ctx.fillRect(-39, -7, 27, 14); ctx.fillRect(12, -7, 27, 14); ctx.strokeStyle = '#9ec6e0'; ctx.strokeRect(-39, -7, 27, 14); ctx.strokeRect(12, -7, 27, 14);
+      ctx.strokeStyle = '#e4c46c'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, 10); ctx.lineTo(0, 23); ctx.lineTo(13, 30); ctx.stroke();
+    } else if (o.kind === 'panel') {
+      ctx.fillStyle = '#284e79'; ctx.fillRect(-23, -8, 46, 16); ctx.strokeStyle = '#a5d2ed'; ctx.strokeRect(-23, -8, 46, 16); ctx.strokeStyle = 'rgba(205,242,255,.48)'; for (let x=-15;x<22;x+=8) { ctx.beginPath();ctx.moveTo(x,-8);ctx.lineTo(x,8);ctx.stroke(); }
+    } else if (o.kind === 'tank') {
+      ctx.fillStyle = '#849ca4'; ctx.beginPath(); ctx.roundRect(-10, -20, 20, 40, 9); ctx.fill(); ctx.fillStyle = '#e7b55a'; ctx.fillRect(-10, -3, 20, 7); ctx.strokeStyle = '#1d2b30'; ctx.strokeRect(-10,-20,20,40);
+    } else if (o.kind === 'ring') {
+      ctx.strokeStyle = '#c9d8d6'; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(0,0,18,0,TAU); ctx.stroke(); ctx.strokeStyle = '#e77443'; ctx.lineWidth=3; ctx.beginPath();ctx.arc(0,0,18,.2,1.15);ctx.stroke();
+    } else {
+      ctx.fillStyle = '#9aaeb0'; ctx.beginPath(); ctx.moveTo(-10,-13);ctx.lineTo(14,-6);ctx.lineTo(9,14);ctx.lineTo(-15,8);ctx.closePath();ctx.fill(); ctx.strokeStyle='#44555b';ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawParticles() {
+    for (const p of state.particles) {
+      const a = clamp(p.life / p.max, 0, 1);
+      if (p.kind === 'booster') { ctx.globalAlpha = a; drawDetachedBooster(p); ctx.globalAlpha = 1; continue; }
+      ctx.fillStyle = rgba(p.color, a); ctx.fillRect(p.x, p.y, p.size, p.size);
+    }
+  }
+  function label(text, x, y, opts = {}) {
+    ctx.save(); ctx.textAlign = opts.align || 'left'; ctx.textBaseline = opts.base || 'alphabetic'; ctx.font = `${opts.weight || 700} ${opts.size || 12}px ui-monospace, SFMono-Regular, Menlo, monospace`; ctx.fillStyle = opts.color || C.white; ctx.fillText(text, x, y); ctx.restore();
+  }
+  function panel(x, y, w, h, alpha = .72) {
+    ctx.fillStyle = `rgba(4,10,15,${alpha})`; ctx.fillRect(x, y, w, h); ctx.strokeStyle = 'rgba(125,208,216,.25)'; ctx.lineWidth = 1; ctx.strokeRect(x+.5,y+.5,w-1,h-1);
+  }
+  function drawHud() {
+    if (state.mode === 'briefing') return;
+    panel(14, 14, 143, 51); label('BLACKBOX // RECLAIMER', 23, 34, {size:10,color:C.cyan}); label(stageName(), 23, 52, {size:11});
+    panel(view.w - 126, 14, 112, 51); label(`ALT ${Math.floor(state.altitude).toString().padStart(3,'0')} KM`, view.w - 23, 34, {size:11, align:'right'}); label(`HULL ${'▰'.repeat(state.integrity)}${'▱'.repeat(4-state.integrity)}`, view.w - 23, 52, {size:11,align:'right',color: state.integrity<2 ? C.red : C.green});
+    if (state.mode === 'flight') {
+      panel(14, view.h - 50, view.w - 28, 36, .56); const sec = Math.max(0, 78-state.flightTime); label(`RCLM-01 WINDOW  ${fmt(sec)}s`, 25, view.h - 28,{size:11,color:C.cyan});
+      label(state.flightTime < 22 ? `CROSSWIND ${Math.abs(Math.floor(state.wind))} m/s` : 'ORBITAL DEBRIS DENSITY: HIGH', view.w - 25, view.h - 28,{size:10,align:'right',color:C.amber});
+    }
+  }
+  function drawOpening() {
+    const t = state.elapsed; const floorY = view.h * .84; let y = floorY - 74; let attached = true; let plume = 0;
+    if (t >= 10 && t < 13) plume = .22 + (t-10)/3 * .55;
+    if (t >= 13 && t < 30) { const p = (t-13)/17; y = lerp(floorY - 74, view.h*.56, p); plume = .78; attached = !state.boostersReleased; }
+    if (t >= 30) { y = view.h*.56; plume = .55; attached = false; }
+    drawRocket(state.rocketX, y, 1.08, attached, plume, 0);
+    if (t < 10) {
+      panel(24, view.h*.16, view.w-48, 110,.78); label('WINDOW: LAST SAFE ASCENT',view.w/2,view.h*.16+30,{align:'center',size:12,color:C.cyan}); label('AUTOMATED LAUNCH SEQUENCE',view.w/2,view.h*.16+53,{align:'center',size:11}); label(`T− ${fmt(10-t)}`,view.w/2,view.h*.16+92,{align:'center',size:27,color:C.amber});
+    } else if (t < 13) {
+      label('IGNITION / HOLD-DOWN',view.w/2,view.h*.19,{align:'center',size:15,color:C.amber}); label('ENGINE CHAMBERS NOMINAL',view.w/2,view.h*.19+21,{align:'center',size:10});
+    } else if (t < 30) {
+      label('AUTONOMOUS ASCENT',view.w/2,view.h*.14,{align:'center',size:14,color:C.cyan}); label(state.boostersReleased ? 'SEPARATION COMPLETE — TRAJECTORY HOLD' : 'AUXILIARY BOOSTERS ENGAGED',view.w/2,view.h*.14+20,{align:'center',size:10});
+      const p=(t-13)/17; panel(35,view.h*.2,view.w-70,8,.4); ctx.fillStyle=C.cyan;ctx.fillRect(37,view.h*.2+2,(view.w-74)*p,4);
+    } else {
+      ctx.fillStyle='rgba(2,8,13,.52)';ctx.fillRect(0,0,view.w,view.h); panel(22,view.h*.32,view.w-44,160,.91); label('PILOT',view.w/2,view.h*.32+46,{align:'center',size:26,color:C.amber}); label('TAKE CONTROL',view.w/2,view.h*.32+77,{align:'center',size:17}); label('HOLD ANYWHERE • SLIDE LEFT / RIGHT',view.w/2,view.h*.32+111,{align:'center',size:10,color:C.cyan}); label('SURVIVE TO DEPLOY RCLM-01',view.w/2,view.h*.32+132,{align:'center',size:10});
+    }
+  }
+  function drawBriefing() {
+    drawBackground(performance.now());
+    ctx.fillStyle='rgba(1,5,9,.52)';ctx.fillRect(0,0,view.w,view.h);
+    label('BLACKBOX',view.w/2,view.h*.18,{align:'center',size:13,color:C.cyan}); label('// RECLAIMER',view.w/2,view.h*.18+33,{align:'center',size:26});
+    panel(24,view.h*.29,view.w-48,180,.87); label('LAST WINDOW',view.w/2,view.h*.29+35,{align:'center',size:15,color:C.amber});
+    const copy=['Launch the RCLM-01 reclamation relay.','The computer handles ascent.','After booster separation, you fly.','Hold one thumb anywhere and slide left/right.','Avoid storm traffic, dead satellites, and debris.'];
+    copy.forEach((line,i)=>label(line,view.w/2,view.h*.29+63+i*19,{align:'center',size:10,color:i===3?C.cyan:C.white}));
+    const by=view.h*.58; ctx.fillStyle='#104a58';ctx.fillRect(30,by,view.w-60,57);ctx.strokeStyle=C.cyan;ctx.strokeRect(30.5,by+.5,view.w-61,56); label('ARM / BEGIN COUNTDOWN',view.w/2,by+35,{align:'center',size:13});
+    label('LOCAL-ONLY CANDIDATE • NO COMBAT',view.w/2,view.h-35,{align:'center',size:9,color:'rgba(230,247,248,.66)'}); label(PATCH_ID,view.w/2,view.h-19,{align:'center',size:9,color:'rgba(94,232,236,.75)'});
+  }
+  function drawEnd(type) {
+    ctx.fillStyle='rgba(2,7,12,.65)';ctx.fillRect(0,0,view.w,view.h); const y=view.h*.28; panel(24,y,view.w-48,type==='complete'?225:205,.93);
+    if (type === 'complete') {
+      label('RCLM-01 DEPLOYED',view.w/2,y+44,{align:'center',size:19,color:C.cyan}); label('ORBITAL RECLAMATION PATH ONLINE',view.w/2,y+72,{align:'center',size:10}); label(`FLIGHT SCORE  ${state.score.toString().padStart(5,'0')}`,view.w/2,y+108,{align:'center',size:12,color:C.amber}); label('NEXT: CAPTURE / TOW OPERATIONS',view.w/2,y+136,{align:'center',size:10});
+    } else { label('FLIGHT LOST',view.w/2,y+44,{align:'center',size:20,color:C.red}); label(`SURVIVED TO ${Math.floor(state.altitude)} KM`,view.w/2,y+76,{align:'center',size:11}); label('RE-ENTER THE PILOT WINDOW',view.w/2,y+105,{align:'center',size:10,color:C.fog}); }
+    const by=y+(type==='complete'?160:130);ctx.fillStyle='#104a58';ctx.fillRect(42,by,view.w-84,51);ctx.strokeStyle=C.cyan;ctx.strokeRect(42.5,by+.5,view.w-85,50);label(type==='complete'?'RUN ANOTHER RECLAIMER':'RETRY PILOT PHASE',view.w/2,by+31,{align:'center',size:12});
+    label(`${PATCH_ID} • LOCAL CANDIDATE`,view.w/2,view.h-22,{align:'center',size:9,color:'rgba(230,247,248,.65)'});
+  }
+  function render(t) {
+    const dx = state.shake ? (rng()-.5)*state.shake : 0; const dy = state.shake ? (rng()-.5)*state.shake : 0;
+    ctx.save();ctx.translate(dx,dy); drawBackground(t);
+    if (state.mode === 'briefing') { drawBriefing();ctx.restore();return; }
+    if (state.mode === 'countdown' || state.mode === 'ignition' || state.mode === 'assisted' || state.mode === 'handoff') drawOpening();
+    else {
+      for (const o of state.obstacles) drawObstacle(o);
+      drawRocket(state.rocketX,view.h*.68,1,false,.42,clamp(state.vx/850,-.18,.18));
+    }
+    drawParticles(); drawHud();
+    if (state.note && performance.now() < state.noteUntil && state.mode !== 'handoff') {
+      panel(28,view.h*.25,view.w-56,34,.82);label(state.note,view.w/2,view.h*.25+22,{align:'center',size:11,color:state.integrity<2?C.red:C.amber});
+    }
+    if (state.hitFlash) { ctx.fillStyle=`rgba(255,81,99,${state.hitFlash*.22})`;ctx.fillRect(0,0,view.w,view.h); }
+    if (state.mode === 'failed') drawEnd('failed'); if (state.mode === 'complete') drawEnd('complete');
+    ctx.restore();
+  }
+  function frame(now) { const dt = Math.min(.033,(now-state.last)/1000);state.last=now;update(dt);render(now);requestAnimationFrame(frame); }
+  requestAnimationFrame(frame);
+
+  function eventPoint(e) { const r=canvas.getBoundingClientRect(); return {x:(e.clientX-r.left)*view.w/r.width,y:(e.clientY-r.top)*view.h/r.height}; }
+  canvas.addEventListener('pointerdown', e => {
+    const p=eventPoint(e); canvas.setPointerCapture?.(e.pointerId);
+    if (state.mode==='briefing') { if (p.y>view.h*.56 && p.y<view.h*.68) armMission(); return; }
+    if (state.mode==='failed' || state.mode==='complete') { resetFlight(true); return; }
+    if (state.mode!=='flight') return;
+    state.pointerId=e.pointerId; state.pointerStart=p.x; state.pointerX=p.x; state.input=0;
+  });
+  canvas.addEventListener('pointermove', e => { if (state.mode!=='flight' || e.pointerId!==state.pointerId) return; const p=eventPoint(e);state.pointerX=p.x;state.input=clamp((p.x-state.pointerStart)/72,-1,1); });
+  function clearPointer(e) { if (e.pointerId===state.pointerId){state.pointerId=null;state.input=0;} }
+  canvas.addEventListener('pointerup',clearPointer); canvas.addEventListener('pointercancel',clearPointer);
+  window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','a','d'].includes(e.key)){keys.add(e.key);e.preventDefault();}});window.addEventListener('keyup',e=>keys.delete(e.key));
+})();
+</script>
+</body>
+</html>
