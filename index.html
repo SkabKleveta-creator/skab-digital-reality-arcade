@@ -139,7 +139,8 @@
     const rail=document.querySelector('#cabinet-rail'), gamePicker=document.querySelector('#game-picker'), selectedTitle=document.querySelector('#selected-title'), selectedStatus=document.querySelector('#selected-status'), prev=document.querySelector('#rail-prev'), next=document.querySelector('#rail-next');
     const gameById=new Map(games.map(game=>[game.id,game]));
     const cards=[...document.querySelectorAll('.cabinet-card')];
-    cards.forEach(card=>{const game=gameById.get(card.dataset.gameId);if(game){rail.append(card);}});\n    gamePicker.replaceChildren(...games.map((game,index)=>{const option=document.createElement('option');option.value=game.id;option.textContent=String(index+1).padStart(2,'0')+' — '+game.title;return option;}));
+    cards.forEach(card=>{const game=gameById.get(card.dataset.gameId);if(game){rail.append(card);}});
+    gamePicker.replaceChildren(...games.map((game,index)=>{const option=document.createElement('option');option.value=game.id;option.textContent=String(index+1).padStart(2,'0')+' — '+game.title;return option;}));
     document.querySelectorAll('.arcade-row').forEach(row=>row.hidden=true);
     let active=null, frame=0;
     const visible=()=>cards.filter(card=>!card.hidden);
