@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="arcade-build" content="arcade-neon-skater-2026-08-09-01">
+<meta name="arcade-build" content="arcade-neon-skater-2026-08-09-02">
 <title>SKAB DIGITAL ARCADE // Neon Skater Arcade</title>
 <style>
 :root{--ink:#fff8e9;--muted:#c8bfd7;--black:#100b18;--screen:#191025;--pink:#ff4f9a;--yellow:#ffd34d;--blue:#61d9ff;--green:#7bf2a7;--line:rgba(255,255,255,.18);--shadow:rgba(0,0,0,.52)}
@@ -126,6 +126,7 @@ body{min-height:100vh;background:
   const games = [
     {id:'chaos-goblin',section:'event-playables',format:'Quick Play',status:'Verified Candidate',evidence:'Recovery',kicker:'Six-Level Handheld Mischief Run',title:'Chaos Goblin: The Big Shiny',description:'A six-stage mobile-friendly platform run about bashing through Orderlings, collecting shiny scraps, and recovering the one prize that matters.',howTo:'Use the D-pad to move. A bashes or dashes. B jumps. Land on enemies only after a committed fall to stomp.',href:'./games/chaos-goblin/',cover:'./assets/arcade-covers/cards/22-chaos-goblin.svg'},
     {id:'lady-liberty-street-sweep',section:'event-playables',format:'Quick Play',status:'Playable Now',evidence:'Pressure',kicker:'America 250 Five-Lane Shooter',title:'Lady Liberty: Street Sweep',description:'A fast, patriotic, phone-first five-lane shooter built for event energy and quick public play.',howTo:'Move between five lanes, manage survival pressure, and see if you can reach the 250-point payoff.',href:'./games/lady_liberty/',cover:'./assets/arcade-covers/cards/01-lady-liberty.jpg'},
+    {id:'lady-liberty-defense',section:'event-playables',format:'Replit Game',actionLabel:'Run on Replit ↗',external:true,status:'Live on Replit',evidence:'5 Levels',kicker:'America 250 Defense Run',title:'Lady Liberty’s Defense',description:'A five-level patriotic defense run with escalating pressure and a fireworks win condition.',howTo:'Open the Replit build, hold the line through all five levels, and earn the fireworks finale.',href:'https://libertys-defense.replit.app/',cover:'./assets/arcade-covers/cards/01-lady-liberty.jpg'},
     {id:'bottle-rocket-rodeo',section:'event-playables',format:'Quick Play',status:'Stable Baseline',evidence:'Pressure',kicker:'America 250 One-Thumb Climb',title:'Bottle Rocket Rodeo',description:'Steer a bottle rocket upward with one-thumb controls and reach the pure fireworks finale at 250.',howTo:'Steer with one thumb or the arrow keys, dodge the hazards, and keep the fuse alive.',href:'./games/bottle_rocket_rodeo/',cover:'./assets/arcade-covers/cards/02-bottle-rocket-rodeo.jpg'},
     {id:'grill-sergeant',section:'event-playables',format:'Quick Play',status:'Stable Baseline',evidence:'Recovery',kicker:'America 250 Cookout Chaos',title:'Grill Sergeant',description:'Run the cookout, manage burgers, buns, chili, and Gary without turning unlocked capacity into punishment.',howTo:'Keep the grill moving, prep the next order, and use capacity to make the loop easier—not meaner.',href:'./games/grill_sergeant/',cover:'./assets/arcade-covers/cards/03-grill-sergeant.jpg'},
     {id:'digital-reality-run',section:'live-playable-systems',format:'Arcade System',status:'Playable Now',evidence:'Recovery',kicker:'Browser FPS Recovery Loop',title:'Digital Reality Run / FPS-002',description:'A legacy-sensitive browser FPS proof around fractured sectors, signal disruption, and controlled patch discipline.',howTo:'Use the FPS controls, restore the route through the fractured sectors, and notice where the signal breaks.',href:'https://skabkleveta-creator.github.io/FPS-002/',cover:'./assets/arcade-covers/cards/04-digital-reality-run.jpg'},
@@ -172,7 +173,7 @@ body{min-height:100vh;background:
     const howTo=make('div','info-block'); howTo.append(make('strong','','How to play'),make('span','',game.howTo));
     const badges=make('div','badge-row'); addBadge(badges,'format',game.format); addBadge(badges,'status'+(hasLiveLink?'':' coming-soon'),hasLiveLink?game.status:'Coming Soon'); addBadge(badges,'evidence',game.evidence);
     const actions=make('div','back-actions');
-    if(hasLiveLink){const run=make('a','run-link',game.actionLabel||(demoFormats.has(game.format)?'Run Demo':'Run Game'));run.href=game.href;run.setAttribute('aria-label',run.textContent+': '+game.title);actions.append(run);}else actions.append(make('span','coming-soon-action','Coming Soon'));
+    if(hasLiveLink){const run=make('a','run-link',game.actionLabel||(demoFormats.has(game.format)?'Run Demo':'Run Game'));run.href=game.href;if(game.external){run.target='_blank';run.rel='noopener noreferrer';}run.setAttribute('aria-label',run.textContent+': '+game.title);actions.append(run);}else actions.append(make('span','coming-soon-action','Coming Soon'));
     const flipAgain=make('button','flip-again','Flip back'); flipAgain.type='button'; actions.append(flipAgain);
     content.append(make('p','back-kicker',game.kicker),backTitle,make('p','back-description',game.description),howTo,badges,actions); back.append(backHead,content); shell.append(front,back); card.append(shell);
     const setFace=(isBack)=>{front.hidden=isBack;back.hidden=!isBack;front.setAttribute('aria-expanded',String(isBack));card.classList.toggle('is-open',isBack);(isBack?back:front).focus({preventScroll:true});};
@@ -254,7 +255,7 @@ body{min-height:100vh;background:
     document.addEventListener('visibilitychange',()=>{if(document.hidden&&musicActive)stopMusic();});
   }
 
-  window.__arcadeAudit={build:'arcade-neon-skater-2026-08-09-01',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
+  window.__arcadeAudit={build:'arcade-neon-skater-2026-08-09-02',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
 })();
 </script>
 </body>
