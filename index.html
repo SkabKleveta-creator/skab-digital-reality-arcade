@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="arcade-build" content="arcade-selector-2026-08-09-reclaimer-run">
+<meta name="arcade-build" content="arcade-selector-2026-08-09-game-picker">
 <title>SKAB'S DIGITAL REALITY ARCADE // Select a Cabinet</title>
 <style>
 :root{--ink:#fff8e9;--muted:#c8bfd7;--black:#100b18;--screen:#191025;--pink:#ff4f9a;--yellow:#ffd34d;--blue:#61d9ff;--green:#7bf2a7;--line:rgba(255,255,255,.18);--shadow:rgba(0,0,0,.52)}
@@ -57,8 +57,8 @@
   <nav class="arcade-nav" aria-label="Arcade rows"><a href="#event-playables">Quick Play</a><a href="#live-playable-systems">Arcade Games</a><a href="#proof-boards-tabletop-trials">Proof Boards</a><a href="#live-demos-candidate-systems">Workbench</a><a href="#design-review-under-review">Under Review</a><a href="#top">Show All</a></nav>
   <section class="selector-stage" id="arcade-selector" aria-labelledby="selector-title">
     <div class="selector-bar">
-      <div><p class="eyebrow">ARCADE SELECTOR // CABINET 25</p><h2 id="selector-title">Choose your cabinet.</h2><p>Swipe the shelf to center a game. The selected cabinet opens for the quick rundown and its start button.</p></div>
-      <div class="aisle-picker"><label for="aisle-filter">Jump to aisle</label><select id="aisle-filter"><option value="all">All cabinets</option><option value="event-playables">Quick Play</option><option value="live-playable-systems">Arcade Games</option><option value="proof-boards-tabletop-trials">Proof Boards</option><option value="live-demos-candidate-systems">Workbench</option><option value="design-review-under-review">Under Review</option></select></div>
+      <div><p class="eyebrow">ARCADE SELECTOR // 25 CABINETS</p><h2 id="selector-title">Choose your cabinet.</h2><p>Swipe the shelf to center a game. The selected cabinet opens for the quick rundown and its start button.</p></div>
+      <div class="aisle-picker"><label for="game-picker">Jump to game</label><select id="game-picker" aria-label="Jump to game"><option value="" selected disabled>Loading games…</option></select></div>
     </div>
     <div class="selector-readout" aria-live="polite"><span id="selected-status">Selected cabinet</span><strong id="selected-title">Loading cabinet…</strong></div>
     <div class="cabinet-rail" id="cabinet-rail" aria-label="Swipe left or right to select an arcade cabinet" tabindex="0"></div>
@@ -136,24 +136,23 @@
 
   const selector=document.querySelector('#arcade-selector');
   if(selector){
-    const rail=document.querySelector('#cabinet-rail'), filter=document.querySelector('#aisle-filter'), selectedTitle=document.querySelector('#selected-title'), selectedStatus=document.querySelector('#selected-status'), prev=document.querySelector('#rail-prev'), next=document.querySelector('#rail-next');
+    const rail=document.querySelector('#cabinet-rail'), gamePicker=document.querySelector('#game-picker'), selectedTitle=document.querySelector('#selected-title'), selectedStatus=document.querySelector('#selected-status'), prev=document.querySelector('#rail-prev'), next=document.querySelector('#rail-next');
     const gameById=new Map(games.map(game=>[game.id,game]));
     const cards=[...document.querySelectorAll('.cabinet-card')];
-    cards.forEach(card=>{const game=gameById.get(card.dataset.gameId);if(game){card.dataset.aisle=game.section;rail.append(card);}});
+    cards.forEach(card=>{const game=gameById.get(card.dataset.gameId);if(game){rail.append(card);}});\n    gamePicker.replaceChildren(...games.map((game,index)=>{const option=document.createElement('option');option.value=game.id;option.textContent=String(index+1).padStart(2,'0')+' — '+game.title;return option;}));
     document.querySelectorAll('.arcade-row').forEach(row=>row.hidden=true);
     let active=null, frame=0;
     const visible=()=>cards.filter(card=>!card.hidden);
-    const activate=(card,scroll)=>{if(!card)return;cards.forEach(item=>item.classList.toggle('is-selected',item===card));active=card;const game=gameById.get(card.dataset.gameId);selectedTitle.textContent=game.title;selectedStatus.textContent=(game.format+' // '+game.status).toUpperCase();if(scroll)card.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest',inline:'center'});const list=visible(),idx=list.indexOf(card);prev.disabled=idx<=0;next.disabled=idx<0||idx>=list.length-1;};
-    const filterCards=()=>{cards.forEach(card=>{card.hidden=filter.value!=='all'&&card.dataset.aisle!==filter.value;});const list=visible();activate(list.includes(active)?active:list[0],true);};
-    const step=(direction)=>{const list=visible(),idx=Math.max(0,list.indexOf(active));activate(list[Math.max(0,Math.min(list.length-1,idx+direction))],true);};
+    const activate=(card,scroll)=>{if(!card)return;cards.forEach(item=>item.classList.toggle('is-selected',item===card));active=card;const game=gameById.get(card.dataset.gameId);gamePicker.value=game.id;selectedTitle.textContent=game.title;selectedStatus.textContent=(game.format+' // '+game.status).toUpperCase();if(scroll)card.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest',inline:'center'});const idx=cards.indexOf(card);prev.disabled=idx<=0;next.disabled=idx<0||idx>=cards.length-1;};
+    const step=(direction)=>{const idx=Math.max(0,cards.indexOf(active));activate(cards[Math.max(0,Math.min(cards.length-1,idx+direction))],true);};
     rail.addEventListener('scroll',()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;const list=visible();if(!list.length)return;const center=rail.getBoundingClientRect().left+rail.clientWidth/2;let closest=list[0],distance=Infinity;list.forEach(card=>{const box=card.getBoundingClientRect(),delta=Math.abs((box.left+box.width/2)-center);if(delta<distance){distance=delta;closest=card;}});activate(closest,false);});},{passive:true});
     rail.addEventListener('click',event=>{const card=event.target.closest('.cabinet-card');if(card)activate(card,false);});
-    filter.addEventListener('change',filterCards);prev.addEventListener('click',()=>step(-1));next.addEventListener('click',()=>step(1));
+    gamePicker.addEventListener('change',()=>activate(cards.find(card=>card.dataset.gameId===gamePicker.value),true));prev.addEventListener('click',()=>step(-1));next.addEventListener('click',()=>step(1));
     document.addEventListener('keydown',event=>{if(event.target.matches('select,input,textarea,button'))return;if(event.key==='ArrowLeft'){event.preventDefault();step(-1)}if(event.key==='ArrowRight'){event.preventDefault();step(1)}});
     const promoted=cards.find(card=>card.dataset.gameId==='blackbox-reclaimer')||cards[0];requestAnimationFrame(()=>activate(promoted,false));
   }
 
-  window.__arcadeAudit={build:'arcade-selector-2026-08-09-reclaimer-run',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
+  window.__arcadeAudit={build:'arcade-selector-2026-08-09-game-picker',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
 })();
 </script>
 </body>
