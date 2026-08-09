@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="arcade-build" content="arcade-neon-skater-2026-08-09-04">
+<meta name="arcade-build" content="arcade-neon-skater-2026-08-09-05">
 <title>SKAB DIGITAL ARCADE // Neon Skater Arcade</title>
 <style>
 :root{--ink:#fff8e9;--muted:#c8bfd7;--black:#100b18;--screen:#191025;--pink:#ff4f9a;--yellow:#ffd34d;--blue:#61d9ff;--green:#7bf2a7;--line:rgba(255,255,255,.18);--shadow:rgba(0,0,0,.52)}
@@ -94,7 +94,7 @@ body{min-height:100vh;background:
     </section>
     <aside class="operator-panel" aria-label="Arcade status">
       <div class="operator-screen"><span class="live-dot">26 CABINETS LOADED</span><strong>SELECT A GAME</strong><span>Swipe to select a cabinet.</span><span>Tap a cover for the rundown, then run it.</span></div>
-      <div class="coin-row"><span>PLAYER 1</span><button class="music-toggle" id="music-toggle" type="button" aria-pressed="false" aria-label="Start original industrial arcade music"><span class="music-note" aria-hidden="true">♫</span><span class="music-label">START // INDUSTRIAL</span></button></div>
+      <div class="coin-row"><span>PLAYER 1</span><button class="music-toggle" id="music-toggle" type="button" aria-pressed="false" aria-label="Start original instrumental arcade music"><span class="music-note" aria-hidden="true">♫</span><span class="music-label">START // RIFF MODE</span></button></div>
     </aside>
   </header>
   <section class="intro-panel" aria-label="How to use the arcade">
@@ -208,9 +208,12 @@ body{min-height:100vh;background:
   const musicButton=document.querySelector('#music-toggle');
   if(musicButton){
     let musicContext=null,musicBus=null,musicTimer=null,musicActive=false,musicStep=0,musicNoise=null;
-    // Original industrial/nu-metal palette: drop-tuned pulse, machine drums, and a sparse signal lead.
-    const riff=[46.25,0,46.25,51.91,46.25,0,61.74,0,46.25,46.25,0,69.30,61.74,0,51.91,0];
-    const lead=[0,0,0,0,0,0,0,184.99,0,0,0,0,0,207.65,0,0];
+    // Original instrumental industrial/nu-metal palette: a chugging double-track, sub bass, and machine kit.
+    const guitarRiff=[46.25,0,46.25,0,46.25,51.91,0,46.25,46.25,0,61.74,0,46.25,51.91,69.30,0];
+    const bassRiff=[46.25,0,46.25,0,46.25,51.91,0,46.25,46.25,0,61.74,0,46.25,51.91,69.30,0];
+    const signalLead=[0,0,0,0,0,0,0,0,0,0,0,0,92.50,103.83,138.59,0];
+    const kickPattern=new Set([0,3,4,7,8,10,11,14]);
+    const snarePattern=new Set([4,12]);
     const setMusicState=(on,label)=>{musicActive=on;musicButton.classList.toggle('is-on',on);musicButton.setAttribute('aria-pressed',String(on));musicButton.setAttribute('aria-label',on?'Stop original industrial arcade music':'Start original industrial arcade music');musicButton.querySelector('.music-label').textContent=label;};
     const getMusicContext=()=>{
       if(musicContext)return musicContext;
@@ -220,8 +223,8 @@ body{min-height:100vh;background:
       musicBus=musicContext.createGain();
       const compressor=musicContext.createDynamicsCompressor();
       compressor.threshold.value=-20;compressor.knee.value=12;compressor.ratio.value=8;compressor.attack.value=.004;compressor.release.value=.14;
-      musicBus.gain.value=.042;musicBus.connect(compressor);compressor.connect(musicContext.destination);
-      musicNoise=musicContext.createBuffer(1,musicContext.sampleRate*.16,musicContext.sampleRate);
+      musicBus.gain.value=.05;musicBus.connect(compressor);compressor.connect(musicContext.destination);
+      musicNoise=musicContext.createBuffer(1,musicContext.sampleRate*.24,musicContext.sampleRate);
       const samples=musicNoise.getChannelData(0);for(let i=0;i<samples.length;i++)samples[i]=(Math.random()*2-1)*(1-i/samples.length*.42);
       return musicContext;
     };
@@ -234,13 +237,20 @@ body{min-height:100vh;background:
       gain.gain.exponentialRampToValueAtTime(.0001,when+duration);
       osc.connect(gain);gain.connect(musicBus);osc.start(when);osc.stop(when+duration+.03);
     };
-    const grit=(frequency,when,duration,volume)=>{
+    const guitar=(frequency,when,duration,volume)=>{
       if(!frequency||!musicContext||!musicBus)return;
-      const osc=musicContext.createOscillator(),filter=musicContext.createBiquadFilter(),drive=musicContext.createWaveShaper(),gain=musicContext.createGain();
-      const curve=new Float32Array(96);for(let i=0;i<curve.length;i++){const x=i*2/(curve.length-1)-1;curve[i]=Math.tanh(x*3.2);}
-      osc.type='sawtooth';osc.frequency.setValueAtTime(frequency,when);filter.type='lowpass';filter.frequency.setValueAtTime(720,when);filter.Q.value=3.2;drive.curve=curve;drive.oversample='2x';
+      const oscA=musicContext.createOscillator(),oscB=musicContext.createOscillator(),filter=musicContext.createBiquadFilter(),drive=musicContext.createWaveShaper(),gain=musicContext.createGain();
+      const curve=new Float32Array(128);for(let i=0;i<curve.length;i++){const x=i*2/(curve.length-1)-1;curve[i]=Math.tanh(x*4.4);}
+      oscA.type='sawtooth';oscB.type='square';oscA.frequency.setValueAtTime(frequency,when);oscB.frequency.setValueAtTime(frequency*1.006,when);filter.type='lowpass';filter.frequency.setValueAtTime(980,when);filter.frequency.exponentialRampToValueAtTime(510,when+duration);filter.Q.value=2.5;drive.curve=curve;drive.oversample='2x';
       gain.gain.setValueAtTime(.0001,when);gain.gain.exponentialRampToValueAtTime(volume,when+.008);gain.gain.exponentialRampToValueAtTime(.0001,when+duration);
-      osc.connect(filter);filter.connect(drive);drive.connect(gain);gain.connect(musicBus);osc.start(when);osc.stop(when+duration+.025);
+      oscA.connect(filter);oscB.connect(filter);filter.connect(drive);drive.connect(gain);gain.connect(musicBus);oscA.start(when);oscB.start(when);oscA.stop(when+duration+.025);oscB.stop(when+duration+.025);
+    };
+    const bass=(frequency,when,duration,volume)=>{
+      if(!frequency||!musicContext||!musicBus)return;
+      const osc=musicContext.createOscillator(),filter=musicContext.createBiquadFilter(),gain=musicContext.createGain();
+      osc.type='sawtooth';osc.frequency.setValueAtTime(frequency,when);filter.type='lowpass';filter.frequency.setValueAtTime(230,when);filter.Q.value=1.4;
+      gain.gain.setValueAtTime(.0001,when);gain.gain.exponentialRampToValueAtTime(volume,when+.01);gain.gain.exponentialRampToValueAtTime(.0001,when+duration);
+      osc.connect(filter);filter.connect(gain);gain.connect(musicBus);osc.start(when);osc.stop(when+duration+.03);
     };
     const noiseHit=(when,duration,frequency,volume)=>{
       if(!musicContext||!musicBus||!musicNoise)return;
@@ -255,15 +265,19 @@ body{min-height:100vh;background:
       osc.type='sine';osc.frequency.setValueAtTime(138,when);osc.frequency.exponentialRampToValueAtTime(47,when+.13);
       gain.gain.setValueAtTime(accent,when);gain.gain.exponentialRampToValueAtTime(.0001,when+.15);osc.connect(gain);gain.connect(musicBus);osc.start(when);osc.stop(when+.17);
     };
+    const snare=(when,accent=.16)=>{noiseHit(when,.12,1740,accent);tone(188,when,.055,'triangle',accent*.28);};
     const beat=()=>{
       if(!musicContext)return;
-      const now=musicContext.currentTime+.02,slot=musicStep%riff.length;
-      grit(riff[slot],now,.115,.31);
-      tone(lead[slot],now+.01,.14,'square',.055);
-      if(slot===0||slot===6||slot===8||slot===11)kick(now,slot===0?.42:.30);
-      if(slot===4||slot===12)noiseHit(now,.12,1850,.18);
-      if(slot%2===0)noiseHit(now+.006,.027,7200,.025);
-      if(slot===14)noiseHit(now,.055,940,.075);
+      const now=musicContext.currentTime+.02,slot=musicStep%16,bar=Math.floor(musicStep/16)%4;
+      const chugDuration=slot%2===0?.105:.075;
+      guitar(guitarRiff[slot],now,chugDuration,.145);
+      bass(bassRiff[slot],now,.145,.105);
+      tone(signalLead[slot],now+.008,.16,'square',.026);
+      if(kickPattern.has(slot))kick(now,slot===0?.38:.26);
+      if(snarePattern.has(slot))snare(now,slot===12?.19:.16);
+      noiseHit(now+.003,.024,slot%2?7800:6100,slot%2?.018:.012);
+      if(slot===15&&bar===3)noiseHit(now,.16,520,.11);
+      if(slot===14&&bar===1)tone(155.56,now,.12,'sawtooth',.032);
       musicStep+=1;
     };
     const startMusic=async()=>{
@@ -271,18 +285,18 @@ body{min-height:100vh;background:
       if(!ctx){setMusicState(false,'MUSIC UNSUPPORTED');return;}
       try{
         if(ctx.state==='suspended')await ctx.resume();
-        musicStep=0;beat();musicTimer=window.setInterval(beat,125);setMusicState(true,'MUSIC ON // INDUSTRIAL');
+        musicStep=0;beat();musicTimer=window.setInterval(beat,150);setMusicState(true,'MUSIC ON // RIFF MODE');
       }catch(_){setMusicState(false,'TAP TO RETRY');}
     };
     const stopMusic=()=>{
       if(musicTimer)window.clearInterval(musicTimer);
-      musicTimer=null;setMusicState(false,'START // INDUSTRIAL');
+      musicTimer=null;setMusicState(false,'START // RIFF MODE');
     };
     musicButton.addEventListener('click',()=>musicActive?stopMusic():startMusic());
     document.addEventListener('visibilitychange',()=>{if(document.hidden&&musicActive)stopMusic();});
   }
 
-  window.__arcadeAudit={build:'arcade-neon-skater-2026-08-09-04',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
+  window.__arcadeAudit={build:'arcade-neon-skater-2026-08-09-05',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
 })();
 </script>
 </body>
