@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="arcade-build" content="cabinet-rebuild-2026-07-30-chaos-goblin-quick-play">
+<meta name="arcade-build" content="arcade-selector-2026-08-09-blackbox-reclaimer">
 <title>SKAB'S DIGITAL REALITY ARCADE // Select a Cabinet</title>
 <style>
 :root{--ink:#fff8e9;--muted:#c8bfd7;--black:#100b18;--screen:#191025;--pink:#ff4f9a;--yellow:#ffd34d;--blue:#61d9ff;--green:#7bf2a7;--line:rgba(255,255,255,.18);--shadow:rgba(0,0,0,.52)}
@@ -21,6 +21,19 @@
 .cabinet-back{display:block;padding:15px;background:linear-gradient(160deg,#3a2051,#1a0d27)}.back-head{display:flex;justify-content:space-between;align-items:start;gap:10px;padding-bottom:11px;border-bottom:2px solid rgba(255,255,255,.14)}.back-head small{color:var(--muted);font-size:9px;font-weight:900;text-transform:uppercase;white-space:nowrap}.flip-back{padding:2px 0;border:0;background:transparent;color:var(--yellow);font-size:11px;font-weight:900;cursor:pointer}.back-content{display:grid;gap:10px;padding:13px 0 0}.back-content h3{margin:0;color:#fff;font-size:27px;letter-spacing:-.045em;line-height:.93}.back-kicker{margin:0;color:var(--blue);font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.back-description{margin:0;color:#f6ecfa;font-size:13px;line-height:1.36}.info-block{padding:9px;border:2px dashed rgba(255,211,77,.56);background:rgba(255,211,77,.07)}.info-block strong{display:block;margin-bottom:3px;color:var(--yellow);font-size:10px;letter-spacing:.08em;text-transform:uppercase}.info-block span{color:#fff3c7;font-size:12px;line-height:1.3}.badge-row{display:flex;flex-wrap:wrap;gap:5px}.badge{padding:4px 6px;border:1px solid rgba(255,255,255,.25);border-radius:3px;background:rgba(255,255,255,.06);color:#f7eefb;font-size:10px;font-weight:800}.badge.format{border-color:rgba(97,217,255,.55);color:#c9f6ff}.badge.status{border-color:rgba(123,242,167,.55);color:#caffdb}.badge.status.coming-soon{border-color:rgba(255,211,77,.55);color:#fff0a9}.badge.evidence{border-color:rgba(255,211,77,.55);color:#fff0a9}.back-actions{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding-top:11px;border-top:2px solid rgba(255,255,255,.13)}.run-link,.coming-soon-action{display:inline-flex;align-items:center;min-height:34px;padding:7px 10px;border:2px solid #ff9bc7;border-radius:4px;background:var(--pink);color:#260d2d;font-size:13px;font-weight:900;text-decoration:none}.coming-soon-action{border-color:rgba(255,211,77,.55);background:transparent;color:var(--yellow)}.flip-again{margin-left:auto;padding:7px 0;border:0;background:transparent;color:var(--muted);font-size:11px;font-weight:900;cursor:pointer}.empty-row p{margin:0;color:var(--muted)}
 .footer-panel{margin-top:18px;padding:15px 17px;background:#1b1029;color:var(--muted);line-height:1.45}.footer-panel strong{color:var(--yellow)}
 @media(max-width:1020px){.arcade-header{grid-template-columns:1fr}.cabinet-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:680px){.page{width:min(94vw,520px);padding-top:12px}.marquee{padding:21px 20px 24px}.marquee h1{font-size:clamp(51px,17vw,82px)}.marquee-copy{font-size:14px}.intro-panel{display:block}.intro-actions{margin-top:14px}.row-head{align-items:start;flex-direction:column}.back-top{align-self:start}.cabinet-grid{grid-template-columns:1fr}.cover-title{font-size:35px}.cover-window{aspect-ratio:16/10}}
+
+/* Arcade selector — swipe-first cabinet browsing */
+.arcade-nav,.arcade-row{display:none!important}
+.selector-stage{margin-top:18px;border:3px solid #090610;border-radius:12px;overflow:hidden;background:linear-gradient(155deg,rgba(18,29,46,.96),rgba(29,13,43,.98));box-shadow:8px 9px 0 rgba(0,0,0,.35),0 20px 35px var(--shadow)}
+.selector-bar{display:flex;justify-content:space-between;align-items:end;gap:14px;padding:18px 19px 15px;border-bottom:2px solid rgba(255,255,255,.13);background:linear-gradient(90deg,rgba(97,217,255,.09),transparent 62%)}
+.selector-bar h2{margin:0;color:#fff;font-size:clamp(27px,4.4vw,46px);line-height:.9;text-shadow:3px 3px 0 #9c2d84}.selector-bar p:not(.eyebrow){max-width:650px;margin:8px 0 0;color:var(--muted);line-height:1.38}
+.aisle-picker{display:grid;gap:6px;flex:0 0 min(260px,100%)}.aisle-picker label{color:var(--yellow);font-size:10px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}.aisle-picker select{min-height:42px;padding:0 34px 0 11px;border:2px solid rgba(97,217,255,.58);border-radius:5px;background:#0a1724;color:#fff;font:800 13px/1 "Trebuchet MS",system-ui,sans-serif;cursor:pointer}
+.selector-readout{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.11);background:rgba(5,9,16,.42)}.selector-readout span{color:var(--blue);font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.selector-readout strong{color:#fff;font-size:15px;text-align:right}
+.cabinet-rail{display:flex;gap:17px;overflow-x:auto;overscroll-behavior-inline:contain;padding:21px max(17px,calc((100% - 380px)/2)) 25px;scroll-padding-inline:max(17px,calc((100% - 380px)/2));scroll-snap-type:x mandatory;scrollbar-color:var(--pink) rgba(255,255,255,.08);-webkit-overflow-scrolling:touch;touch-action:pan-x}.cabinet-rail::-webkit-scrollbar{height:10px}.cabinet-rail::-webkit-scrollbar-track{background:rgba(255,255,255,.08);border-radius:9px}.cabinet-rail::-webkit-scrollbar-thumb{background:var(--pink);border-radius:9px}
+.cabinet-rail .cabinet-card{flex:0 0 min(78vw,380px);scroll-snap-align:center;scroll-snap-stop:always;transition:transform .18s ease,filter .18s ease;filter:saturate(.74) brightness(.73)}.cabinet-rail .cabinet-card.is-selected{filter:none;transform:translateY(-3px)}.cabinet-rail .cabinet-card.is-selected .cabinet-shell{box-shadow:0 0 0 3px var(--blue),9px 10px 0 rgba(0,0,0,.48),0 0 30px rgba(97,217,255,.28)}
+.selector-controls{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:0 18px 19px}.selector-controls p{margin:0;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}.selector-buttons{display:flex;gap:8px}.rail-button{min-width:46px;min-height:39px;border:2px solid rgba(255,211,77,.58);border-radius:5px;background:#1b2535;color:var(--yellow);font:900 22px/1 system-ui,sans-serif;cursor:pointer}.rail-button:hover{background:#33455f}.rail-button:disabled{opacity:.35;cursor:not-allowed}
+@media(max-width:680px){.selector-stage{margin-top:14px}.selector-bar{display:grid;align-items:start;padding:17px}.aisle-picker{width:100%}.selector-readout{padding:10px 15px}.selector-readout strong{font-size:13px}.cabinet-rail{gap:14px;padding-block:17px 21px}.cabinet-rail .cabinet-card{flex-basis:82vw}.selector-controls{padding:0 15px 16px}.selector-controls p{max-width:220px;line-height:1.35}.rail-button{min-width:49px;min-height:43px}}
+@media(prefers-reduced-motion:reduce){.cabinet-rail,.cabinet-rail .cabinet-card{scroll-behavior:auto;transition:none}}
 </style>
 </head>
 <body id="top">
@@ -33,15 +46,24 @@
       <p class="marquee-copy">Pick a cabinet, look at the cover, flip it for the quick rundown, and run the thing. Some are solid. Some are still being figured out. That is the point.</p>
     </section>
     <aside class="operator-panel" aria-label="Arcade status">
-      <div class="operator-screen"><span class="live-dot">24 CABINETS LOADED</span><strong>SELECT A GAME</strong><span>Tap the cover to see the back.</span><span>Run Game / Run Demo lives down there.</span></div>
+      <div class="operator-screen"><span class="live-dot">24 CABINETS LOADED</span><strong>SELECT A GAME</strong><span>Swipe to select a cabinet.</span><span>Tap a cover for the rundown, then run it.</span></div>
       <div class="coin-row"><span>PLAYER 1</span><span>NO COINS REQUIRED</span></div>
     </aside>
   </header>
   <section class="intro-panel" aria-label="How to use the arcade">
     <div><p class="eyebrow">WELCOME TO THE WORKBENCH</p><h2>Pick something and press start.</h2><p>No portfolio ceremony. These are the games, prototypes, and experiments currently sitting on the shelf.</p></div>
-    <div class="intro-actions"><a class="button-link primary" href="#event-playables">Start playing</a><a class="button-link" href="#live-demos-candidate-systems">See the workbench</a></div>
+    <div class="intro-actions"><a class="button-link primary" href="#arcade-selector">Select a cabinet</a><a class="button-link" href="#arcade-selector">Browse the shelf</a></div>
   </section>
   <nav class="arcade-nav" aria-label="Arcade rows"><a href="#event-playables">Quick Play</a><a href="#live-playable-systems">Arcade Games</a><a href="#proof-boards-tabletop-trials">Proof Boards</a><a href="#live-demos-candidate-systems">Workbench</a><a href="#design-review-under-review">Under Review</a><a href="#top">Show All</a></nav>
+  <section class="selector-stage" id="arcade-selector" aria-labelledby="selector-title">
+    <div class="selector-bar">
+      <div><p class="eyebrow">ARCADE SELECTOR // CABINET 24</p><h2 id="selector-title">Choose your cabinet.</h2><p>Swipe the shelf to center a game. The selected cabinet opens for the quick rundown and its start button.</p></div>
+      <div class="aisle-picker"><label for="aisle-filter">Jump to aisle</label><select id="aisle-filter"><option value="all">All cabinets</option><option value="event-playables">Quick Play</option><option value="live-playable-systems">Arcade Games</option><option value="proof-boards-tabletop-trials">Proof Boards</option><option value="live-demos-candidate-systems">Workbench</option><option value="design-review-under-review">Under Review</option></select></div>
+    </div>
+    <div class="selector-readout" aria-live="polite"><span id="selected-status">Selected cabinet</span><strong id="selected-title">Loading cabinet…</strong></div>
+    <div class="cabinet-rail" id="cabinet-rail" aria-label="Swipe left or right to select an arcade cabinet" tabindex="0"></div>
+    <div class="selector-controls"><p>Swipe left / right · Tap cover to flip</p><div class="selector-buttons"><button class="rail-button" id="rail-prev" type="button" aria-label="Previous cabinet">‹</button><button class="rail-button" id="rail-next" type="button" aria-label="Next cabinet">›</button></div></div>
+  </section>
 
   <section class="arcade-row" id="event-playables"><div class="row-head"><div><p class="eyebrow">ARCADE ROW 01</p><h2>Quick Play</h2><p>Fast-entry games. Pick one, play one run, and see if it has a pulse.</p></div><a class="back-top" href="#top">Back to top</a></div><div class="cabinet-grid"></div></section>
   <section class="arcade-row" id="live-playable-systems"><div class="row-head"><div><p class="eyebrow">ARCADE ROW 02</p><h2>Arcade Games</h2><p>Stronger systems and longer loops where the game carries the idea.</p></div><a class="back-top" href="#top">Back to top</a></div><div class="cabinet-grid"></div></section>
@@ -110,6 +132,26 @@
   games.forEach((game,index)=>{const card=renderCard(game,index),target=game.href?document.querySelector('#'+game.section+' .cabinet-grid'):document.querySelector('#coming-soon .cabinet-grid');if(target){target.append(card);sectionCounts[game.section]=(sectionCounts[game.section]||0)+1;}});
   const comingSoon=document.querySelector('#coming-soon'); if(comingSoon.querySelector('.cabinet-grid').children.length) comingSoon.hidden=false;
   document.addEventListener('keydown',(event)=>{if(event.key==='Escape') document.querySelectorAll('.cabinet-card.is-open .flip-back').forEach((button)=>button.click());});
+
+  const selector=document.querySelector('#arcade-selector');
+  if(selector){
+    const rail=document.querySelector('#cabinet-rail'), filter=document.querySelector('#aisle-filter'), selectedTitle=document.querySelector('#selected-title'), selectedStatus=document.querySelector('#selected-status'), prev=document.querySelector('#rail-prev'), next=document.querySelector('#rail-next');
+    const gameById=new Map(games.map(game=>[game.id,game]));
+    const cards=[...document.querySelectorAll('.cabinet-card')];
+    cards.forEach(card=>{const game=gameById.get(card.dataset.gameId);if(game){card.dataset.aisle=game.section;rail.append(card);}});
+    document.querySelectorAll('.arcade-row').forEach(row=>row.hidden=true);
+    let active=null, frame=0;
+    const visible=()=>cards.filter(card=>!card.hidden);
+    const activate=(card,scroll)=>{if(!card)return;cards.forEach(item=>item.classList.toggle('is-selected',item===card));active=card;const game=gameById.get(card.dataset.gameId);selectedTitle.textContent=game.title;selectedStatus.textContent=(game.format+' // '+game.status).toUpperCase();if(scroll)card.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest',inline:'center'});const list=visible(),idx=list.indexOf(card);prev.disabled=idx<=0;next.disabled=idx<0||idx>=list.length-1;};
+    const filterCards=()=>{cards.forEach(card=>{card.hidden=filter.value!=='all'&&card.dataset.aisle!==filter.value;});const list=visible();activate(list.includes(active)?active:list[0],true);};
+    const step=(direction)=>{const list=visible(),idx=Math.max(0,list.indexOf(active));activate(list[Math.max(0,Math.min(list.length-1,idx+direction))],true);};
+    rail.addEventListener('scroll',()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;const list=visible();if(!list.length)return;const center=rail.getBoundingClientRect().left+rail.clientWidth/2;let closest=list[0],distance=Infinity;list.forEach(card=>{const box=card.getBoundingClientRect(),delta=Math.abs((box.left+box.width/2)-center);if(delta<distance){distance=delta;closest=card;}});activate(closest,false);});},{passive:true});
+    rail.addEventListener('click',event=>{const card=event.target.closest('.cabinet-card');if(card)activate(card,false);});
+    filter.addEventListener('change',filterCards);prev.addEventListener('click',()=>step(-1));next.addEventListener('click',()=>step(1));
+    document.addEventListener('keydown',event=>{if(event.target.matches('select,input,textarea,button'))return;if(event.key==='ArrowLeft'){event.preventDefault();step(-1)}if(event.key==='ArrowRight'){event.preventDefault();step(1)}});
+    const promoted=cards.find(card=>card.dataset.gameId==='blackbox-reclaimer')||cards[0];requestAnimationFrame(()=>activate(promoted,false));
+  }
+
   window.__arcadeAudit={build:'cabinet-rebuild-2026-07-30-chaos-goblin-quick-play',cardCount:games.length,coverPaths:games.map((game)=>game.cover),linkTargets:games.filter((game)=>game.href).map((game)=>game.href),comingSoonCount:games.filter((game)=>!game.href).length,sectionCounts};
 })();
 </script>
