@@ -209,7 +209,7 @@ body{min-height:100vh;background:
     let musicContext=null,musicBus=null,musicTimer=null,musicActive=false,musicStep=0;
     const riff=[55,0,55,65.41,73.42,65.41,55,0,82.41,73.42,65.41,55,98,82.41,73.42,65.41];
     const lead=[0,0,220,0,261.63,246.94,220,0,329.63,293.66,261.63,220,0,261.63,293.66,0];
-    const setMusicState=(on,label)=>{musicActive=on;musicButton.classList.toggle('is-on',on);musicButton.setAttribute('aria-pressed',String(on));musicButton.querySelector('.music-label').textContent=label;};
+    const setMusicState=(on,label)=>{musicActive=on;musicButton.classList.toggle('is-on',on);musicButton.setAttribute('aria-pressed',String(on));musicButton.setAttribute('aria-label',on?'Stop original arcade music':'Start original arcade music');musicButton.querySelector('.music-label').textContent=label;};
     const getMusicContext=()=>{
       if(musicContext)return musicContext;
       const AudioCtor=window.AudioContext||window.webkitAudioContext;
