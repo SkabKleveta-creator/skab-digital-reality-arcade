@@ -1,0 +1,2046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BREAK DOWN 2 REBUILD — 32-BIT DESCENT</title>
+<style>
+/* ============================================================
+   BD2R — 32-BIT LAB BUILD v3  (third artifact — NOT CANON)
+   NES ROM REMAINS AUTHORITATIVE.
+
+   STAGES BUILT: 0 SURVEY · 1 LOAD
+   AUTOMAP: reveals by line of sight, viewed on pause (START).
+
+   DELIBERATE LAB-ONLY DIVERGENCES FROM CANON:
+     * Stage 0 runs 4 CUSTODIAN patrols (canon: low density)
+     * Stage 1 runs 6 (canon says CUSTODIANS are "thick here", so
+       density is canon-aligned; the exact count is a lab choice)
+     * SWEEP: tethered attendant unit — a 4th entity class absent
+       from DESIGN.md. Quarantine candidate at most.
+       MUST NOT migrate to the ROM unaudited.
+     * Automap has no canon basis. NES has no framebuffer; a
+       revealed-geometry map is a real PRG/vblank cost and would
+       need its own decision entry before the ROM gets one.
+   CANON HELD:
+     * BD2R vocabulary only · CLEARANCE from items, never combat
+     * per-stage mirror, permanently missable, silence as mechanic
+     * mirror flags persist across stages (ZP_MIRROR_FLAGS model)
+     * Stage 1 = branching, many ACCESS, many SEALS, 3 hidden
+       routes, failing amber lights, no boss, 2 codes to exit
+     * enemies are malfunctioning legacy systems, never AI agents
+     * AI presence neither confirmed nor denied anywhere
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root{
+  --black:#06070a;--ink:#0c0f14;--steel:#2a323d;--steel-lt:#4a5563;
+  --amber:#e09422;--amber-lt:#ffc45e;--amber-dk:#8a5a14;
+  --red:#c74436;--white:#e8e3d6;--seal:#5b86ab;--green:#7da457;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--black);color:var(--white);font-family:'IBM Plex Mono',monospace;
+  display:flex;align-items:center;justify-content:center;min-height:100vh;
+  overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;touch-action:none}
+.frame{position:relative;width:100vw;height:100vh;max-width:1040px;
+  display:flex;align-items:center;justify-content:center;background:#000}
+canvas#screen{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;display:block;background:#000}
+.grade{pointer-events:none;position:absolute;inset:0;z-index:3;
+  background:radial-gradient(ellipse at 50% 45%,transparent 52%,rgba(0,0,0,.5) 100%)}
+.overlay{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:15px;text-align:center;padding:26px;
+  background:linear-gradient(180deg,rgba(6,7,10,.90),rgba(6,7,10,.97))}
+.overlay.hidden{display:none}
+.overlay .stage{font-family:'Chakra Petch',sans-serif;font-weight:600;
+  font-size:clamp(11px,2.5vw,14px);letter-spacing:.55em;color:var(--steel-lt);text-transform:uppercase}
+.overlay h2{font-family:'Chakra Petch',sans-serif;font-weight:700;line-height:1.03;
+  font-size:clamp(24px,6.2vw,48px);letter-spacing:.04em;color:var(--amber);
+  text-shadow:0 0 28px rgba(224,148,34,.35)}
+.overlay h2.red{color:var(--red);text-shadow:0 0 28px rgba(199,68,54,.35)}
+.overlay h2.green{color:var(--green);text-shadow:0 0 28px rgba(125,164,87,.3)}
+.overlay p{font-size:12px;line-height:1.75;color:#8b95a1;max-width:50ch;letter-spacing:.02em}
+.overlay p .a{color:var(--amber-lt)}.overlay p .s{color:var(--seal)}
+.overlay .press{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:14px;
+  letter-spacing:.3em;color:var(--white);animation:pulse 1.6s ease-in-out infinite;margin-top:2px}
+@keyframes pulse{50%{opacity:.25}}
+.endlog{font-size:12.5px;line-height:1.9;color:var(--white);max-width:44ch;font-style:italic;
+  text-align:left;border-left:2px solid var(--amber-dk);padding-left:16px}
+.tally{font-size:10.5px;line-height:1.9;color:#6b7580;letter-spacing:.08em}
+.tally b{color:var(--amber-lt);font-weight:500}
+.tagline{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:9px;
+  letter-spacing:.28em;color:#333c46;text-transform:uppercase}
+.touch{position:absolute;inset:0;z-index:5;display:none;pointer-events:none;touch-action:none}
+.stickZone{position:absolute;left:0;bottom:0;width:200px;height:200px;
+  pointer-events:auto;touch-action:none}
+.stickBase{position:absolute;left:16px;bottom:16px;width:116px;height:116px;
+  border-radius:50%;border:1.5px solid rgba(232,227,214,.22);
+  background:radial-gradient(circle at 50% 45%,rgba(28,34,43,.5),rgba(12,15,20,.42));
+  box-shadow:inset 0 1px 0 rgba(232,227,214,.08);pointer-events:none}
+.stickBase::before,.stickBase::after{content:'';position:absolute;background:rgba(232,227,214,.13)}
+.stickBase::before{left:50%;top:12px;bottom:12px;width:1px;transform:translateX(-.5px)}
+.stickBase::after{top:50%;left:12px;right:12px;height:1px;transform:translateY(-.5px)}
+.stickNub{position:absolute;left:50px;bottom:50px;width:48px;height:48px;border-radius:50%;
+  background:radial-gradient(circle at 38% 32%,rgba(232,227,214,.55),rgba(74,85,99,.55));
+  border:1px solid rgba(232,227,214,.3);pointer-events:none;transition:transform .10s ease-out}
+.stickZone.active .stickNub{transition:none}
+.stickZone.active .stickBase{border-color:rgba(224,148,34,.45)}
+.padHint{position:absolute;left:22px;bottom:140px;font-family:'Chakra Petch',sans-serif;
+  font-size:8px;letter-spacing:.2em;color:#4a5563;pointer-events:none}
+.btn{position:absolute;pointer-events:auto;touch-action:none;
+  border:1.5px solid rgba(232,227,214,.2);border-radius:50%;
+  background:rgba(20,24,31,.34);color:rgba(232,227,214,.75);
+  font-family:'Chakra Petch',sans-serif;font-weight:600;display:flex;
+  align-items:center;justify-content:center;letter-spacing:.05em}
+.btn small{position:absolute;bottom:-15px;font-size:8px;letter-spacing:.18em;color:#4a5563}
+.btn.pressed{background:rgba(224,148,34,.28);border-color:rgba(224,148,34,.6);color:var(--amber-lt)}
+#btnA{right:20px;bottom:112px;width:74px;height:74px;font-size:20px}
+#btnB{right:110px;bottom:48px;width:64px;height:64px;font-size:18px}
+#btnStart{right:22px;top:18px;width:auto;height:30px;border-radius:15px;padding:0 16px;font-size:10px;letter-spacing:.25em}
+@media (pointer:coarse){
+  .touch{display:block}
+  .tagline{bottom:auto;top:8px;left:12px;right:auto;text-align:left;max-width:52%;line-height:1.5}
+}
+</style>
+</head>
+<body>
+<div class="frame">
+  <canvas id="screen" width="480" height="270"></canvas>
+  <div class="grade"></div>
+  <div class="touch" id="touch">
+    <div class="stickZone" id="stickZone">
+      <div class="padHint">▲ WALK · ◄ ► TURN</div>
+      <div class="stickBase" id="stickBase"></div><div class="stickNub" id="stickNub"></div>
+    </div>
+    <button class="btn" id="btnA">A<small>INTERACT</small></button>
+    <button class="btn" id="btnB">B<small>FIRE</small></button>
+    <button class="btn" id="btnStart">START<small>MAP</small></button>
+  </div>
+  <div class="overlay" id="overlay"></div>
+  <div class="tagline">SKAB DIGITAL ARCADE · 32-BIT DESCENT · SEVEN STAGES</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const cv=document.getElementById('screen'),ctx=cv.getContext('2d',{alpha:false});
+ctx.imageSmoothingEnabled=false;
+const W=480,H=270,HUD_H=46,VIEW_H=H-HUD_H,HORIZON=VIEW_H*0.5;
+const MAP_W=16,MAP_H=16;
+
+/* Cell codes: 0 open · 1 wall · 2 MIRROR · 5 DESCENT SEAL
+                6 WEAK PLATE · 7 HIDDEN PANEL · 8 INNER SEAL          */
+const C_OPEN=0,C_WALL=1,C_MIRROR=2,C_DESCENT=5,C_PLATE=6,C_PANEL=7,C_INNER=8,C_WALL3=9;
+const BLOCK=c=>c!==C_OPEN;
+
+/* ══════════════════════════════════════════════════ STAGE 0 — SURVEY
+   Long straight corridors. Low density. Orientation, not revelation.
+   One ACCESS opens the one SEAL. One bolted plate hides the DOC.     */
+const MAP_S0=[
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,
+1,0,1,0,1,0,1,1,1,1,0,1,0,1,0,1,
+1,0,1,0,0,0,0,0,0,1,0,0,0,1,0,1,
+1,0,1,1,1,1,1,1,0,1,1,1,0,1,0,1,
+1,0,0,0,0,0,0,1,0,0,0,1,0,1,0,1,
+1,1,1,1,1,0,1,1,1,1,0,1,0,1,0,1,
+1,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,
+1,0,1,0,1,1,1,0,1,1,1,1,1,1,0,1,
+1,0,6,0,0,0,0,0,0,0,0,0,0,1,0,1,
+1,0,1,1,1,1,1,0,1,1,1,1,0,1,0,1,
+1,0,0,0,2,0,1,0,1,0,0,0,0,0,0,1,
+1,1,1,0,1,0,1,0,1,0,1,1,1,1,0,1,
+1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,
+1,0,1,1,1,1,1,1,1,0,1,0,1,1,5,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+
+/* ══════════════════════════════════════════════════ STAGE 1 — LOAD
+   "The Maintenance Warrens." Deliberately the opposite shape to Stage 0.
+   Stage 0 is a grid of one-wide corridors with the exit in the far corner:
+   you walk away from your start and never come back. Stage 1 is a RING
+   with FOUR SPOKES around a central plant hall, and the descent shaft sits
+   locked in the middle of that hall. You see your exit in the first second
+   and cannot use it. Everything you need is out on the perimeter, so the
+   level is walked as loops that keep returning you past the thing you want.
+   Open hall + long spokes + tight quadrant warrens = a different silhouette
+   at every distance, not just a different palette.                        */
+const MAP_S1=[
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,1,1,1,0,1,0,1,0,1,1,1,0,0,1,
+1,0,0,0,0,0,1,0,1,0,0,0,7,0,0,1,
+1,0,1,1,1,0,1,0,1,1,1,0,1,1,0,1,
+1,0,0,0,1,0,1,0,1,0,0,0,0,1,0,1,
+1,0,1,0,1,1,0,0,0,0,1,0,1,1,0,1,
+1,0,0,0,0,0,0,5,0,0,1,0,0,0,0,1,
+1,0,7,1,1,1,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,8,0,0,0,0,1,1,1,0,0,1,
+1,0,1,1,1,1,7,1,0,1,0,1,0,1,0,1,
+1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,
+1,0,1,1,1,0,1,1,0,1,1,1,1,0,0,1,
+1,0,1,2,1,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+
+
+/* ═══════════════════════════════════════════════ STAGE 2 — CLEAR
+   "Decommissioned Transit Hub." The widest map in the lab: one enormous
+   concourse hall broken only by platform islands, so enemy visibility is
+   high and there is nowhere to be surprised from. Topology: OPEN FIELD.
+   The LOAD-BEARING DOC sits in a transit office that only opens from a
+   SEAL, whose ACCESS code is sealed inside a pocket behind a panel —
+   canon's "secret passage first, then the seal."                        */
+const MAP_S2=[
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,1,1,0,0,0,0,0,0,0,0,1,1,0,1,
+1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1,
+1,0,0,0,0,2,1,0,0,1,1,0,0,0,0,1,
+1,0,0,0,0,1,1,0,0,1,1,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,1,1,0,0,1,1,0,0,0,0,1,
+1,0,0,0,0,1,1,0,0,1,1,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,7,1,1,1,0,1,1,7,1,1,1,1,0,1,
+1,0,0,0,0,0,0,1,0,0,0,1,0,0,1,1,
+1,1,1,1,1,0,1,1,1,1,1,1,8,1,1,1,
+1,5,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+
+/* ═══════════════════════════════════════════════ STAGE 3 — DETONATE
+   "The Core Infrastructure Node." Topology: LINEAR GAUNTLET. Almost the
+   whole grid is solid. One forced path down, a mirror alcove you cannot
+   help seeing, then the ADVOCATE arena, then the descent. Smallest and
+   tightest map here — irreversible has no side routes.                  */
+const MAP_S3=[
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,
+1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,
+1,1,1,0,1,1,2,1,1,0,1,1,1,1,1,1,
+1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1,
+1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,
+1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,
+1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,
+1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,
+1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,
+1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,
+1,1,1,1,1,1,1,5,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+
+/* ═══════════════════════════════════════════════ STAGE 4 — SIFT
+   Walking the rubble. Topology: IRREGULAR CHAMBERS. No repeating grid and
+   no straight runs — rooms of mismatched size joined by whatever gaps the
+   collapse left. The hardest stage to hold in your head, which is why the
+   automap earns its keep here. Two codes to leave.                      */
+const MAP_S4=[
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,0,0,0,0,0,1,1,0,0,0,1,0,0,0,1,
+1,0,0,0,0,0,1,1,0,0,0,1,0,0,0,1,
+1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,
+1,1,0,1,1,1,1,0,1,1,1,1,1,0,0,1,
+1,0,0,0,0,0,1,0,1,0,0,0,1,0,0,1,
+1,0,0,0,0,0,1,0,1,0,0,0,1,1,0,1,
+1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,
+1,1,1,7,1,1,1,1,1,1,1,1,1,1,0,1,
+1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,1,0,0,1,1,1,1,1,1,
+1,0,0,1,0,1,0,1,0,0,1,0,0,0,0,1,
+1,0,0,1,2,1,0,0,0,0,1,0,1,1,0,1,
+1,0,0,1,1,1,1,1,1,0,1,0,1,5,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+
+/* ═══════════════════════════════════════════════ STAGE 5 — FOUND
+   Laying the first thing that belongs to what comes next. Topology:
+   COLUMN GRID. Fully open, regular, symmetrical, legible at a glance —
+   the opposite of Stage 4's confusion. You can see everything. The mirror
+   is a freestanding pillar in open floor; it cannot be walked past by
+   accident. Brightest stage in the lab.                                 */
+const MAP_S5=[
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,1,0,0,2,0,0,1,0,0,1,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,5,0,0,0,0,0,0,0,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+
+/* ═══════════════════════════════════════════════ STAGE 6 — UNKNOWN
+   Topology: SINGLE THREAD. One long approach and one small terminal
+   chamber. No enemies. No fixtures — nothing here is being maintained.
+   The mirror stands in the middle of the floor and the descent needs no
+   code: the seal opens because you decide to open it. The game ends at
+   the act of beginning and shows nothing of what is built.              */
+const MAP_S6=[
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,
+1,1,1,1,1,0,0,2,0,0,1,1,1,1,1,1,
+1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,
+1,1,1,1,1,0,0,5,0,0,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+
+
+/* ═══════════════════════════════ ANNEX A — FLOODED SUB-BASEMENT
+   Slots between CLEAR and DETONATE. Topology: SERPENTINE BAFFLES — a
+   cistern divided by four full-width baffle walls with the gap alternating
+   end to end, so reaching the far corner means crossing the whole tank
+   five times. No branching decisions at all, which is the point: after
+   CLEAR's open hall this floor gives you one route and makes it long.  */
+const MAP_A1=[
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,1,1,1,1,7,1,1,1,1,1,1,1,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,8,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,5,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+
+/* ═══════════════════════════════ ANNEX B — THE VENTILATION STACKS
+   Slots between DETONATE and SIFT. Topology: HONEYCOMB — dozens of tiny
+   two-cell chambers joined by single gaps. The most enclosed floor here:
+   you can almost never see more than one chamber ahead, so DETONATE's
+   forced sightlines invert into having no sightline at all.            */
+const MAP_A2=[
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,
+1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,1,
+1,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,
+1,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,
+1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,
+1,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1,
+1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,
+1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,
+1,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,
+1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,
+1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,
+1,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1,
+1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,
+1,0,0,1,0,0,1,0,0,1,0,0,1,5,0,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+
+/* ═══════════════════════════════ ANNEX C — THE RECORDS VAULT
+   Slots between SIFT and FOUND. Topology: STACK AISLES — five long
+   horizontal aisles between shelf runs, crossed by three verticals. Every
+   aisle looks like every other aisle, which is exactly the failure mode
+   SIFT's rubble did not have: not confusion from disorder, confusion from
+   repetition. Two panels cut through shelving; one seal blocks the
+   middle vertical and makes you commit to a side.                      */
+const MAP_A3=[
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,1,1,7,1,1,0,1,1,1,1,1,0,0,1,
+1,0,1,1,0,1,1,0,1,1,1,1,1,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,1,1,1,1,1,8,1,1,1,1,1,0,0,1,
+1,0,1,1,1,1,1,0,1,1,1,1,1,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,1,1,1,1,1,0,1,1,1,1,1,0,0,1,
+1,0,1,1,1,1,1,0,1,1,1,1,1,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,1,1,1,1,1,0,1,1,7,1,1,0,0,1,
+1,0,1,1,1,1,1,0,1,1,0,1,1,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,5,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+
+const STAGES=[{
+  idx:0,flagBit:0,name:'SURVEY',place:'SUB-LEVEL 7 / CIVIL DEFENSE BLOCK C',
+  map:MAP_S0,spawn:{x:1.5,y:1.5,a:Math.PI*0.25},
+  descent:{x:14,y:14},descentCost:1,plate:{x:2,y:9,hp:3,drop:'doc'},
+  wallStyle:'concrete',wallBase:'#4a5666',rust:0.0,fogEnd:10.5,payload:12,
+  fogCol:'#0d1420',ceilA:'#05070d',ceilB:'#0c1320',floorA:'#0c1320',floorB:'#1b2533',
+  env:null,accent:'#e09422',auditors:[],advocate:null,
+  items:[[13.5,1.5,'access'],[2.5,13.5,'battery'],[9.5,5.5,'battery'],
+         [12.5,11.5,'battery'],[5.5,3.5,'ration'],[7.5,11.5,'ration'],
+         [3.5,7.5,'notes'],[11.5,7.5,'notes']],
+  routes:[[[7.5,7.5],[7.5,9.5],[11.5,9.5],[7.5,9.5],[7.5,13.5],[7.5,9.5]],
+          [[1.5,5.5],[5.5,5.5],[5.5,7.5],[5.5,5.5]],
+          [[14.5,3.5],[14.5,12.5]],
+          [[5.5,13.5],[9.5,13.5],[9.5,11.5],[9.5,13.5]]],
+  fixtures:[[3.5,1.5],[10.5,3.5],[5.5,7.5],[11.5,9.5],[3.5,11.5],[9.5,13.5],[14.5,7.5],[6.5,5.5]],
+  lockers:[[1.5,7.5,'battery'],[12.5,3.5,'ration'],[12.5,13.5,'battery']],
+  brief:'The assessment. Before anything is torn down, you walk the structure and '+
+    'understand what it is. Recover one <span class="a">ACCESS</span> code, release '+
+    'the <span class="s">SEAL</span>, reach the descent. Four CUSTODIAN routes still '+
+    'run down here, each with its SWEEP tethered to it. Neither is hostile. Neither '+
+    'was told to stop. Shoot the fixtures and the block goes dark. Shoot the bolted '+
+    'plate at the west junction to see what the structure was holding.',
+  log:'YOU UNDERSTAND NOW THAT THE VERSION OF YOURSELF WHO NEEDED THIS PLACE WAS '+
+    'PROTECTING SOMETHING REAL. YOU ARE NOT DISCARDING THAT. YOU ARE SETTING IT DOWN '+
+    'WHERE SOMEONE ELSE CAN FIND IT.',
+  read:'You looked. You let the SURVEY tell you what it was before you began to take '+
+    'it apart. The next stage will be heavier for it — and truer.',
+  skipped:'You walked past the mirror. The SEAL is open and the descent is reached. '+
+    'The understanding it offered is gone. The ending remembers what you did not read.'
+},{
+  idx:1,flagBit:1,name:'LOAD',place:'THE MAINTENANCE WARRENS',
+  map:MAP_S1,spawn:{x:1.5,y:7.5,a:0},
+  descent:{x:7,y:7},descentCost:2,plate:null,
+  wallStyle:'plate',wallBase:'#6b4c30',rust:0.85,fogEnd:7.2,payload:10,
+  fogCol:'#1d1409',ceilA:'#0e0a06',ceilB:'#1d1409',floorA:'#1d1409',floorB:'#33240f',
+  env:'warrens',accent:'#e0a022',auditors:[],advocate:null,
+  items:[[13.5,2.5,'access'],[1.5,11.5,'access'],[9.5,5.5,'access'],
+         [5.5,13.5,'access'],[13.5,9.5,'access'],
+         [3.5,3.5,'notes'],[11.5,3.5,'notes'],[8.5,13.5,'notes'],
+         [3.5,9.5,'ration'],[12.5,11.5,'ration'],
+         [5.5,5.5,'battery'],[8.5,1.5,'battery'],[10.5,11.5,'battery'],[1.5,5.5,'battery']],
+  routes:[[[1.5,1.5],[14.5,1.5]],
+          [[1.5,14.5],[14.5,14.5]],
+          [[14.5,2.5],[14.5,13.5]],
+          [[6.5,6.5],[9.5,6.5],[9.5,9.5],[6.5,9.5]],
+          [[5.5,11.5],[14.5,11.5]],
+          [[10.5,8.5],[13.5,8.5]]],
+  fixtures:[[7.5,3.5],[14.5,7.5],[6.5,7.5],[2.5,14.5],[12.5,8.5],[8.5,11.5]],
+  lockers:[[14.5,5.5,'access'],[4.5,1.5,'battery'],[1.5,13.5,'battery'],[13.5,13.5,'ration']],
+  brief:'Placing the charges. Knowing where the weight is, and what holds what up. '+
+    'You start at the mouth of the west spoke, looking straight down it at the plant '+
+    'hall — and at the descent shaft standing locked in the middle of the floor. You '+
+    'can see your exit from the first second. It takes <span class="a">TWO ACCESS</span> '+
+    'codes and neither of them is in this hall. Everything is out on the perimeter ring, '+
+    'so you will walk loops past the shaft you cannot use. Six CUSTODIAN routes work the '+
+    'ring, the spokes, and one orbits the shaft itself. Three service panels cut across '+
+    'the quadrants and read as wall until you are close. One inner '+
+    '<span class="s">SEAL</span> shortens the west approach for a code. The amber is '+
+    'already failing down here.',
+  log:'YOU KNOW WHERE THE WEIGHT SITS NOW. YOU CARRIED IT SO LONG YOU CALLED IT '+
+    'POSTURE. SETTING A CHARGE AGAINST IT IS NOT AN ACT OF HATE. IT IS THE FIRST '+
+    'HONEST MEASUREMENT YOU HAVE TAKEN OF YOURSELF.',
+  read:'You looked, in a place built for not looking. You know which walls were '+
+    'load-bearing and which were only ever partition. That knowledge is the charge.',
+  skipped:'You loaded the charges without reading what they were set against. '+
+    'The weight is placed. What it was holding up stays unmeasured.'
+},{
+  idx:2,flagBit:2,name:'CLEAR',place:'DECOMMISSIONED TRANSIT HUB',
+  map:MAP_S2,spawn:{x:14.5,y:1.5,a:Math.PI},
+  descent:{x:1,y:14},descentCost:1,plate:null,
+  wallStyle:'tile',wallBase:'#5d7385',rust:0.12,fogEnd:13.5,payload:12,
+  fogCol:'#121c26',ceilA:'#0a1016',ceilB:'#16222e',floorA:'#16222e',floorB:'#2b3a45',
+  env:'transit',accent:'#9ec4dc',
+  items:[[7.5,1.5,'access'],[9.5,12.5,'access'],
+         [3.5,6.5,'notes'],[12.5,6.5,'notes'],[7.5,9.5,'notes'],[2.5,10.5,'notes'],
+         [12.5,12.5,'doc'],
+         [12.5,3.5,'ration'],[1.5,7.5,'ration'],
+         [4.5,4.5,'battery'],[11.5,8.5,'battery'],[6.5,14.5,'battery']],
+  routes:[[[2.5,6.5],[13.5,6.5]],
+          [[7.5,1.5],[7.5,3.5]],
+          [[2.5,14.5],[13.5,14.5]]],
+  auditors:[[7.5,7.5],[12.5,4.5],[3.5,10.5]],advocate:null,
+  fixtures:[[4.5,1.5],[11.5,1.5],[7.5,6.5],[2.5,9.5],[13.5,7.5],[6.5,12.5],[9.5,3.5],[7.5,14.5]],
+  lockers:[[5.5,2.5,'access'],[13.5,10.5,'battery'],[8.5,5.5,'ration']],
+  brief:'Removing everything that does not need to go down with it. Salvage before '+
+    'the fall. This is the widest floor in the descent — one concourse hall with '+
+    'nothing but platform islands in it, so you will see what is coming and it will '+
+    'see you. The <span class="a">AUDITORS</span> are here for the first time: '+
+    'compliance units cross-referencing you against a database with no human entries '+
+    'left in it. Everything fails their check. They do not patrol. They come. '+
+    'The <span class="s">FIELD NOTES</span> are dense on this floor — it was a '+
+    'populated place. The transit office holds a LOAD-BEARING DOC behind a SEAL, and '+
+    'that code is sealed in a pocket you will only find by breaking a panel first.',
+  log:'YOU ARE DECIDING WHAT COMES OUT WITH YOU. THAT IS NOT SENTIMENT, IT IS '+
+    'LOAD CALCULATION. MOST OF WHAT YOU PACKED WAS NEVER STRUCTURAL. SOME OF IT '+
+    'WAS THE ONLY THING HOLDING THE ROOF UP.',
+  read:'You cleared it honestly. You know now which of your things were structure '+
+    'and which were only ever furniture, and you are not pretending otherwise.',
+  skipped:'You cleared the floor without deciding what any of it was for. '+
+    'Everything came out in the same load. Some of it should not have.'
+},{
+  annex:'B',flagBit:null,name:'THE VENTILATION STACKS',place:'PLENUM HONEYCOMB',
+  map:MAP_A2,spawn:{x:1.5,y:1.5,a:Math.PI/2},
+  descent:{x:13,y:14},descentCost:1,plate:null,
+  wallStyle:'duct',wallBase:'#7e8894',rust:0.10,fogEnd:5.6,payload:14,
+  fogCol:'#0e1418',ceilA:'#0a0f13',ceilB:'#151d23',floorA:'#151d23',floorB:'#242e37',
+  env:'stacks',accent:'#bcd2e0',
+  items:[[14.5,1.5,'access'],[1.5,13.5,'access'],
+         [4.5,4.5,'notes'],[10.5,10.5,'notes'],
+         [7.5,7.5,'ration'],[13.5,4.5,'battery'],[4.5,10.5,'battery'],[8.5,13.5,'battery']],
+  routes:[[[1.5,7.5],[8.5,7.5]],[[1.5,13.5],[8.5,13.5]]],
+  auditors:[[4.5,1.5],[11.5,4.5],[4.5,13.5],[13.5,10.5]],advocate:null,
+  fixtures:[[4.5,7.5],[11.5,7.5],[7.5,13.5],[1.5,10.5]],
+  lockers:[[13.5,13.5,'access'],[4.5,1.5,'battery']],
+  brief:'The concourse has to vent somewhere, and this is it. Straight off the widest '+
+    'floor in the descent into the tightest: dozens of two-cell chambers in galvanised '+
+    'sheet, joined by single gaps, sightlines cut to almost nothing. You could see '+
+    'everything up there and be seen; down here you can see one chamber and so can '+
+    'they. Four <span class="a">AUDITORS</span> are loose in the honeycomb and you '+
+    'will hear them long before you see them. No mirror in a duct — nothing in here '+
+    'was ever built to be looked at.',
+  note:'A plenum under a station. Sheet metal, rivets, and daylight down slots you '+
+    'cannot reach. You went through it because the air did.'
+},{
+  annex:'A',flagBit:null,name:'FLOODED SUB-BASEMENT',place:'CISTERN BAFFLE TANK',
+  map:MAP_A1,spawn:{x:7.5,y:1.5,a:Math.PI/2},
+  descent:{x:14,y:14},descentCost:1,plate:null,
+  wallStyle:'cistern',wallBase:'#4a5a58',rust:0.30,fogEnd:9.0,payload:12,
+  fogCol:'#0a1618',ceilA:'#050c0e',ceilB:'#0c1a1c',floorA:'#0c1a1c',floorB:'#16302f',
+  env:'flood',accent:'#6fb8ae',
+  items:[[13.5,1.5,'access'],[1.5,7.5,'access'],
+         [3.5,4.5,'notes'],[11.5,10.5,'notes'],
+         [6.5,7.5,'ration'],[9.5,13.5,'battery'],[2.5,10.5,'battery'],[12.5,4.5,'battery']],
+  routes:[[[2.5,4.5],[12.5,4.5]],[[2.5,7.5],[12.5,7.5]],[[2.5,13.5],[12.5,13.5]]],
+  auditors:[[8.5,10.5],[5.5,1.5]],advocate:null,
+  fixtures:[[4.5,1.5],[10.5,4.5],[3.5,7.5],[12.5,10.5],[6.5,13.5]],
+  lockers:[[13.5,10.5,'access'],[1.5,4.5,'ration'],[8.5,7.5,'battery']],
+  brief:'Below the stacks the water table won. This is a cistern with four '+
+    'full-width baffles across it, and the gap alternates end to end, so the far '+
+    'corner is five crossings away and there is not one decision to make on the way. '+
+    'After the concourse that is the point. A panel through the second baffle and a '+
+    '<span class="s">SEAL</span> in the third are the only shortcuts. Two AUDITORS '+
+    'are working the tank. Nothing on this floor is worth stopping to look at — '+
+    'there is no mirror down here.',
+  note:'A holding tank with four walls in it and one route through. You crossed it '+
+    'five times without making a single decision, which is the last thing this '+
+    'descent will ask of you before it asks for the only one that cannot be undone.'
+},{
+  idx:3,flagBit:3,name:'DETONATE',place:'THE CORE INFRASTRUCTURE NODE',
+  map:MAP_S3,spawn:{x:1.5,y:1.5,a:0},
+  descent:{x:7,y:14},descentCost:1,plate:null,
+  wallStyle:'core',wallBase:'#2b2f36',rust:0.0,fogEnd:6.4,payload:16,
+  fogCol:'#1a0d0c',ceilA:'#08070a',ceilB:'#170e0d',floorA:'#170e0d',floorB:'#241412',
+  env:'core',accent:'#c74436',
+  bossRequired:true,
+  modified:[[12,11],[12,12]],
+  items:[[9.5,4.5,'access'],[3.5,7.5,'notes'],[5.5,11.5,'ration'],
+         [10.5,10.5,'battery'],[4.5,1.5,'battery']],
+  routes:[[[3.5,4.5],[9.5,4.5]],[[3.5,10.5],[11.5,10.5]]],
+  auditors:[[7.5,11.5],[4.5,13.5]],
+  advocate:[7.5,12.5],
+  fixtures:[[4.5,4.5],[8.5,7.5]],
+  lockers:[[3.5,10.5,'battery']],
+  brief:'The moment of structural failure. Irreversible. There is one way down '+
+    'through this node and no way around any part of it: a single stair, a corridor, '+
+    'and a mirror alcove standing open in the wall where you cannot pretend you did '+
+    'not see it. Past that is the <span class="a">ADVOCATE</span> — a support unit '+
+    'whose help routines are still running with no valid context for them. It will '+
+    'not stop approaching. Whatever it is trying to give you will hurt you. '+
+    'The descent seal stays inert while it is still coming. Every amber light in '+
+    'this node is already off.',
+  log:'YOU CANNOT PUT THIS BACK. THAT IS NOT THE FRIGHTENING PART. THE FRIGHTENING '+
+    'PART IS HOW LONG YOU KNEW AND HOW CAREFULLY YOU KEPT BEING THE PERSON WHO '+
+    'HAD NOT DECIDED YET.',
+  read:'You looked at it before you did it. Whatever comes out of the rubble will '+
+    'know why the charge was set, and that is the whole difference.',
+  skipped:'You set it off without looking. It is done either way. But nothing that '+
+    'walks out of here will be able to say what it was for.'
+},{
+  idx:4,flagBit:4,name:'SIFT',place:'WALKING THE RUBBLE',
+  map:MAP_S4,spawn:{x:1.5,y:1.5,a:0},
+  descent:{x:13,y:13},descentCost:2,plate:null,
+  wallStyle:'rubble',wallBase:'#8c8474',rust:0.25,fogEnd:6.8,payload:12,
+  fogCol:'#241f18',ceilA:'#100d0a',ceilB:'#241f18',floorA:'#241f18',floorB:'#3b342a',
+  env:'rubble',accent:'#c8bda6',
+  items:[[13.5,3.5,'access'],[5.5,9.5,'access'],
+         [2.5,1.5,'notes'],[10.5,5.5,'notes'],[8.5,12.5,'notes'],
+         [4.5,5.5,'ration'],[9.5,9.5,'ration'],
+         [13.5,5.5,'battery'],[2.5,12.5,'battery'],[6.5,14.5,'battery'],[11.5,11.5,'battery']],
+  routes:[[[1.5,5.5],[5.5,5.5]],[[9.5,7.5],[14.5,7.5]],[[1.5,14.5],[11.5,14.5]]],
+  auditors:[[5.5,3.5],[10.5,7.5],[3.5,9.5],[8.5,12.5]],advocate:null,
+  fixtures:[[4.5,2.5],[11.5,3.5],[4.5,7.5],[9.5,6.5],[3.5,14.5],[8.5,9.5]],
+  lockers:[[1.5,7.5,'access'],[9.5,3.5,'battery'],[13.5,11.5,'ration']],
+  brief:'Taking inventory of what survived. This is the hardest floor and the least '+
+    'legible: the collapse left rooms of no matching size joined by whatever gaps '+
+    'happened to hold, and nothing here runs straight. Four <span class="a">AUDITORS</span> '+
+    'work the rubble alongside the CUSTODIANS, and the dust never settles enough to '+
+    'see far. Two ACCESS codes to leave. Use the automap — this is the floor it was '+
+    'built for.',
+  log:'YOU EXPECTED TO FIND LESS THAN THIS. SOME OF WHAT SURVIVED YOU WOULD NOT '+
+    'HAVE CHOSEN TO SAVE, AND IT IS STILL HERE, AND IT IS STILL YOURS. THAT IS '+
+    'WHAT SIFTING IS FOR. NOT RECOVERY. ACKNOWLEDGEMENT.',
+  read:'You went through it piece by piece instead of by the armful. You know what '+
+    'is left. Nothing is coming with you that you have not looked at.',
+  skipped:'You walked the rubble without sorting it. What survived is still down '+
+    'here, unexamined, and you will not know what you left until you need it.'
+},{
+  annex:'C',flagBit:null,name:'THE RECORDS VAULT',place:'STACK AISLES, SUB-LEVEL ARCHIVE',
+  map:MAP_A3,spawn:{x:13.5,y:1.5,a:Math.PI},
+  descent:{x:14,y:14},descentCost:2,plate:null,
+  wallStyle:'archive',wallBase:'#8a7c62',rust:0.18,fogEnd:8.0,payload:12,
+  fogCol:'#1c1610',ceilA:'#0d0a07',ceilB:'#1c1610',floorA:'#1c1610',floorB:'#2f2618',
+  env:'vault',accent:'#d8c48a',
+  items:[[1.5,1.5,'access'],[10.5,12.5,'access'],[4.5,3.5,'access'],
+         [3.5,4.5,'notes'],[9.5,7.5,'notes'],[5.5,10.5,'notes'],[12.5,13.5,'notes'],
+         [1.5,7.5,'ration'],[13.5,10.5,'ration'],
+         [6.5,1.5,'battery'],[11.5,4.5,'battery'],[3.5,13.5,'battery']],
+  routes:[[[1.5,4.5],[13.5,4.5]],[[1.5,7.5],[13.5,7.5]],
+          [[1.5,10.5],[13.5,10.5]],[[2.5,13.5],[12.5,13.5]]],
+  auditors:[[7.5,1.5],[9.5,10.5],[5.5,7.5]],advocate:null,
+  fixtures:[[7.5,4.5],[7.5,10.5],[2.5,7.5],[12.5,7.5],[7.5,13.5],[10.5,1.5]],
+  lockers:[[13.5,1.5,'battery'],[1.5,13.5,'ration'],[8.5,4.5,'battery']],
+  brief:'Between the rubble and the pour there is an archive nobody closed properly. '+
+    'Five long aisles between shelf runs, crossed by three verticals, and every aisle '+
+    'is the same aisle. SIFT lost you through disorder; this floor loses you through '+
+    'repetition, which is worse, because you will be certain you have been here before '+
+    'and you will be right. Two panels cut through shelving and a '+
+    '<span class="s">SEAL</span> blocks the middle vertical, so you commit to a side. '+
+    'The FIELD NOTES are thick here. Two <span class="a">ACCESS</span> codes to leave. '+
+    'There is no mirror in the stacks — the whole floor is other people\'s records, '+
+    'not yours.',
+  note:'Rows of what other people thought worth keeping. You took the notes and left '+
+    'the rest standing. Somebody else can decide about the shelves.'
+},{
+  idx:5,flagBit:5,name:'FOUND',place:'THE FIRST POUR',
+  map:MAP_S5,spawn:{x:7.5,y:13.5,a:-Math.PI/2},
+  descent:{x:7,y:14},descentCost:1,plate:null,
+  wallStyle:'form',wallBase:'#9aa08e',rust:0.0,fogEnd:15.0,payload:10,
+  fogCol:'#20241c',ceilA:'#141810',ceilB:'#252a1e',floorA:'#252a1e',floorB:'#3e4433',
+  env:'found',accent:'#a8c47a',
+  items:[[13.5,2.5,'access'],[3.5,11.5,'access'],
+         [6.5,3.5,'notes'],[9.5,9.5,'notes'],
+         [1.5,6.5,'ration'],[13.5,12.5,'ration'],
+         [4.5,4.5,'battery'],[10.5,7.5,'battery'],[6.5,13.5,'battery']],
+  routes:[[[1.5,1.5],[14.5,1.5]]],
+  auditors:[[7.5,7.5],[12.5,12.5]],advocate:null,
+  fixtures:[[3.5,2.5],[9.5,2.5],[3.5,8.5],[9.5,8.5],[6.5,6.5],[12.5,10.5],[6.5,12.5]],
+  lockers:[[12.5,4.5,'access'],[1.5,10.5,'battery']],
+  brief:'Laying the first thing that belongs to what comes next. Not the new '+
+    'structure — only its foundation. You start standing at the descent and walk out '+
+    'into it: formwork still on the walls, tie holes not yet filled, a column grid '+
+    'set out square and readable in every direction. This is the brightest floor in '+
+    'the descent and the only one where the surfaces were made recently. One '+
+    'CUSTODIAN still runs the north line. Two AUDITORS are still checking. '+
+    'The mirror is a pillar standing in open floor; you will not walk past it by '+
+    'accident.',
+  log:'THIS IS NOT THE BUILDING. IT IS A FLAT PLACE THAT CAN CARRY ONE. YOU ARE '+
+    'ALLOWED TO NOT KNOW YET WHAT GOES ON TOP. THE POUR IS STILL AN ANSWER.',
+  read:'You looked at the foundation before you trusted it. You know what it will '+
+    'bear and what it will not, and you are laying it anyway.',
+  skipped:'You laid the foundation without measuring it. It may hold. You will find '+
+    'out at the same time as whatever you build on it.'
+},{
+  idx:6,flagBit:6,name:'UNKNOWN',place:'THE ACT OF BEGINNING',
+  map:MAP_S6,spawn:{x:7.5,y:3.5,a:Math.PI/2},
+  descent:{x:7,y:13},descentCost:0,plate:null,
+  wallStyle:'void',wallBase:'#0b0c10',rust:0.0,fogEnd:9.0,payload:6,
+  fogCol:'#05060a',ceilA:'#030407',ceilB:'#06070c',floorA:'#06070c',floorB:'#0b0d13',
+  env:'void',accent:'#d6d2c6',
+  items:[[7.5,6.5,'notes']],
+  routes:[],auditors:[],advocate:null,
+  fixtures:[],lockers:[],
+  brief:'The game does not show you what is built. There is one corridor and one '+
+    'room at the end of it. Nothing is patrolling, because nothing down here is '+
+    'being maintained any more. There are no fixtures and no light that belongs to '+
+    'anyone. The mirror is standing in the middle of the floor. The seal past it '+
+    'asks for no <span class="a">ACCESS</span> code at all — it opens because you '+
+    'decide to open it. That is the last mechanic in the process.',
+  log:'YOU DO NOT GET TO SEE IT FINISHED. THAT WAS NEVER THE OFFER. WHAT YOU GET '+
+    'IS THIS: THE GROUND IS FLAT, THE WEIGHT IS OFF, AND THE NEXT THING IS YOURS '+
+    'TO PUT DOWN. BEGIN.',
+  read:'You read every word of it on the way down, or you read this one at the end. '+
+    'Either way you are the one standing here, and you know how you got here.',
+  skipped:'You reached the end without once looking at what you were doing. '+
+    'The ground is still flat. You will have to work out the rest yourself.'
+}];
+
+/* ---------------------------------------------------------------- STATE */
+let SG=STAGES[0],M=MAP_S0.slice(),plate=null;
+const P={x:1.5,y:1.5,a:0,charge:100,payload:12,access:0,clearance:0};
+let items=[],custs=[],fixtures=[],lockers=[],auds=[],advocate=null;
+let modifiedShown=false;
+let sealsOpened=0,sealsTotal=1,exitArmed=false;
+let mirrorFlags=0;                 /* ZP_MIRROR_FLAGS model, bit N = stage N */
+let mirrorRead=false,mirrorResolved=false;
+let discovered=new Uint8Array(MAP_W*MAP_H);
+let panelsFound=0,panelsTotal=0;
+const GUN={cool:0,flash:0};
+const FIRE_COOLDOWN=13,FIRE_RANGE=10,FIRE_ARC=0.15;
+const STATE={BOOT:0,PLAY:1,MIRROR:2,FAILED:3,CLEARED:4,PAUSED:5};
+let state=STATE.BOOT;
+let interactMsg="",interactT=0,shake=0,walkT=0;
+let logIdx=0,logFrame=0,logDone=false;
+const flash=m=>{interactMsg=m;interactT=150};
+const mapAt=(x,y)=>(x<0||y<0||x>=MAP_W||y>=MAP_H)?C_WALL:M[y*MAP_W+x];
+const setCell=(x,y,v)=>{M[y*MAP_W+x]=v};
+const ITEM_MSG={access:'ACCESS CODE ACQUIRED',battery:'BATTERY CACHE — PAYLOAD +10',
+  ration:'RATION PACK — CHARGE +25',notes:'FIELD NOTES — CLEARANCE +100',
+  doc:'LOAD-BEARING DOC — CLEARANCE +500'};
+
+/* ---------------------------------------------------------------- AUDIO */
+let AC=null,masterG=null;
+function ensureAudio(){
+  if(AC)return;
+  try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return}
+  masterG=AC.createGain();masterG.gain.value=0;masterG.connect(AC.destination);
+  const mk=(f,g)=>{const o=AC.createOscillator(),v=AC.createGain();
+    o.type='sine';o.frequency.value=f;v.gain.value=g;o.connect(v);v.connect(masterG);o.start()};
+  mk(55,0.055);mk(82.41,0.032);mk(36.7,0.05);
+  const len=Math.floor(AC.sampleRate*3),buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*0.5;
+  const src=AC.createBufferSource();src.buffer=buf;src.loop=true;
+  const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=380;
+  const ng=AC.createGain();ng.gain.value=0.05;
+  src.connect(lp);lp.connect(ng);ng.connect(masterG);src.start();
+  setDrone(1)}
+function setDrone(v){if(!masterG)return;
+  masterG.gain.cancelScheduledValues(AC.currentTime);
+  masterG.gain.setTargetAtTime(v,AC.currentTime,0.12)}
+function blip(type){
+  if(!AC)return;
+  const t=AC.currentTime,g=AC.createGain();g.connect(AC.destination);
+  if(type==='shot'||type==='glass'){
+    const dur=type==='shot'?0.16:0.30,pw=type==='shot'?3:1.6;
+    const len=Math.floor(AC.sampleRate*dur),b=AC.createBuffer(1,len,AC.sampleRate),d=b.getChannelData(0);
+    for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,pw);
+    const s=AC.createBufferSource();s.buffer=b;const f=AC.createBiquadFilter();
+    if(type==='shot'){f.type='bandpass';f.frequency.value=900;f.Q.value=0.8;g.gain.value=0.26}
+    else{f.type='highpass';f.frequency.value=2600;g.gain.value=0.18}
+    s.connect(f);f.connect(g);s.start(t)}
+  else{
+    const o=AC.createOscillator();o.type='sine';
+    o.frequency.setValueAtTime(type==='reveal'?200:140,t);
+    o.frequency.exponentialRampToValueAtTime(46,t+0.24);
+    g.gain.setValueAtTime(0.24,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.28);
+    o.connect(g);o.start(t);o.stop(t+0.30)}}
+
+/* ------------------------------------------------------------- TEXTURES
+   Each stage builds its own texture set AND its own fog colour, so the
+   two stages do not share a look. Stage 0 is cold poured concrete fading
+   into blue-black. Stage 1 is riveted steel plate over rust, fading into
+   a warm brown murk, with pipe runs overhead and floor grating.        */
+const TEX=64;
+function makeTex(fn){const c=document.createElement('canvas');c.width=TEX;c.height=TEX;
+  fn(c.getContext('2d'));return c}
+function hexRGB(h){const n=parseInt(h.slice(1),16);
+  return[(n>>16)&255,(n>>8)&255,n&255]}
+function rgba(h,a){const c=hexRGB(h);return'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'}
+function grit(g,a,n){g.globalAlpha=a;
+  for(let i=0;i<n;i++){const v=Math.random()*40|0;g.fillStyle='rgb('+v+','+(v+3)+','+(v+6)+')';
+    g.fillRect(Math.random()*TEX|0,Math.random()*TEX|0,1,1)}g.globalAlpha=1}
+function rustPass(g,amt){
+  if(amt<=0)return;
+  g.globalAlpha=amt*0.55;
+  for(let i=0;i<30;i++){
+    const x=Math.random()*TEX,y=Math.random()*TEX,r=2+Math.random()*10;
+    const q=g.createRadialGradient(x,y,0,x,y,r);
+    q.addColorStop(0,'rgba(138,66,22,.8)');q.addColorStop(1,'rgba(138,66,22,0)');
+    g.fillStyle=q;g.fillRect(x-r,y-r,r*2,r*2)}
+  g.globalAlpha=amt*0.4;
+  for(let i=0;i<9;i++){const x=Math.random()*TEX;
+    g.fillStyle='rgba(104,50,18,.65)';g.fillRect(x,Math.random()*18,1+Math.random()*2,22+Math.random()*40)}
+  g.globalAlpha=1}
+
+/* STAGE 0 wall — poured concrete in staggered courses */
+function texConcrete(base,rust){return makeTex(g=>{
+  g.fillStyle=base;g.fillRect(0,0,TEX,TEX);
+  const q=g.createLinearGradient(0,0,0,TEX);
+  q.addColorStop(0,'rgba(255,255,255,.10)');q.addColorStop(.5,'rgba(0,0,0,0)');
+  q.addColorStop(1,'rgba(0,0,0,.22)');g.fillStyle=q;g.fillRect(0,0,TEX,TEX);
+  g.fillStyle='rgba(0,0,0,.35)';
+  for(let r=0;r<4;r++){const y=r*16;g.fillRect(0,y,TEX,2);
+    for(let x=(r%2)*16;x<TEX;x+=32)g.fillRect(x,y,2,16)}
+  g.fillStyle='rgba(0,0,0,.18)';g.fillRect(0,0,TEX,4);
+  rustPass(g,rust);grit(g,.16,700);
+  g.fillStyle='rgba(20,24,20,.20)';g.beginPath();g.ellipse(46,14,7,20,0,0,7);g.fill()})}
+
+/* STAGE 1 wall — riveted steel plate, vertical seams, heavy corrosion.
+   Completely different geometry from the concrete courses: no horizontal
+   banding, strong verticals, a rivet grid, and a bolted mid-rail.       */
+function texPlate(base,rust){return makeTex(g=>{
+  g.fillStyle=base;g.fillRect(0,0,TEX,TEX);
+  /* vertical plate seams */
+  const q=g.createLinearGradient(0,0,TEX,0);
+  q.addColorStop(0,'rgba(255,255,255,.13)');q.addColorStop(.35,'rgba(0,0,0,.05)');
+  q.addColorStop(.5,'rgba(0,0,0,.30)');q.addColorStop(.65,'rgba(255,255,255,.09)');
+  q.addColorStop(1,'rgba(0,0,0,.26)');g.fillStyle=q;g.fillRect(0,0,TEX,TEX);
+  g.fillStyle='rgba(0,0,0,.42)';g.fillRect(31,0,2,TEX);g.fillRect(0,0,2,TEX);
+  g.fillStyle='rgba(255,235,200,.07)';g.fillRect(33,0,1,TEX);g.fillRect(2,0,1,TEX);
+  /* bolted mid-rail */
+  g.fillStyle='rgba(0,0,0,.30)';g.fillRect(0,29,TEX,7);
+  g.fillStyle='rgba(255,230,190,.06)';g.fillRect(0,29,TEX,1);
+  /* rivet grid */
+  for(let y=6;y<TEX;y+=13)for(let x=7;x<TEX;x+=17){
+    g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.arc(x+.6,y+.6,1.8,0,7);g.fill();
+    g.fillStyle='rgba(255,238,205,.16)';g.beginPath();g.arc(x,y,1.5,0,7);g.fill()}
+  rustPass(g,rust);grit(g,.13,520)})}
+
+/* STAGE 2 wall — transit hub tile over a painted dado. Glazed brick,
+   thin grout, a dirt line at knee height. Institutional, not industrial. */
+function texTile(base,rust){return makeTex(g=>{
+  g.fillStyle=base;g.fillRect(0,0,TEX,TEX);
+  for(let y=0;y<TEX;y+=8)for(let x=0;x<TEX;x+=16){
+    const ox=((y/8)%2)*8;
+    g.fillStyle='rgba(255,255,255,.05)';g.fillRect(x+ox,y,15,1);
+    g.fillStyle='rgba(0,0,0,.26)';g.fillRect(x+ox+15,y,1,8);g.fillRect(x+ox,y+7,16,1)}
+  const q=g.createLinearGradient(0,0,0,TEX);
+  q.addColorStop(0,'rgba(255,255,255,.09)');q.addColorStop(.62,'rgba(0,0,0,0)');
+  q.addColorStop(1,'rgba(0,0,0,.30)');g.fillStyle=q;g.fillRect(0,0,TEX,TEX);
+  g.fillStyle='rgba(30,52,68,.42)';g.fillRect(0,40,TEX,24);       /* dado band */
+  g.fillStyle='rgba(0,0,0,.22)';g.fillRect(0,39,TEX,2);
+  g.fillStyle='rgba(58,44,30,.20)';g.fillRect(0,38,TEX,4);        /* grime line */
+  rustPass(g,rust);grit(g,.11,420)})}
+
+/* STAGE 3 wall — core node. Graphite slab split by live red conduit veins.
+   No amber anywhere in this stage; the only warmth is warning colour.    */
+function texCore(base,rust){return makeTex(g=>{
+  g.fillStyle=base;g.fillRect(0,0,TEX,TEX);
+  const q=g.createLinearGradient(0,0,TEX,TEX);
+  q.addColorStop(0,'rgba(255,255,255,.07)');q.addColorStop(.5,'rgba(0,0,0,.18)');
+  q.addColorStop(1,'rgba(0,0,0,.34)');g.fillStyle=q;g.fillRect(0,0,TEX,TEX);
+  g.fillStyle='rgba(0,0,0,.40)';g.fillRect(0,20,TEX,3);g.fillRect(0,46,TEX,3);
+  for(const cx of [12,30,50]){                                    /* conduit runs */
+    g.fillStyle='rgba(0,0,0,.45)';g.fillRect(cx-3,0,7,TEX);
+    g.fillStyle='rgba(120,26,20,.55)';g.fillRect(cx-1,0,3,TEX);
+    g.fillStyle='rgba(214,74,58,.40)';g.fillRect(cx,0,1,TEX)}
+  for(let y=4;y<TEX;y+=18){g.fillStyle='rgba(30,34,40,.7)';g.fillRect(6,y,52,3)}
+  grit(g,.15,560)})}
+
+/* STAGE 4 wall — rubble. Broken masonry, no course survives intact.
+   Deliberately irregular: fractured blocks at random sizes, dust bloom.  */
+function texRubble(base,rust){return makeTex(g=>{
+  g.fillStyle=base;g.fillRect(0,0,TEX,TEX);
+  for(let i=0;i<40;i++){
+    const w=5+Math.random()*16,h=4+Math.random()*12;
+    const x=Math.random()*TEX,y=Math.random()*TEX;
+    const v=Math.random();
+    g.fillStyle='rgba('+(150+v*40|0)+','+(142+v*38|0)+','+(128+v*34|0)+',.20)';
+    g.fillRect(x,y,w,h);
+    g.fillStyle='rgba(0,0,0,.26)';g.fillRect(x,y+h-1,w,1);g.fillRect(x+w-1,y,1,h)}
+  for(let i=0;i<14;i++){                                          /* fracture lines */
+    g.strokeStyle='rgba(0,0,0,.34)';g.lineWidth=1;g.beginPath();
+    let x=Math.random()*TEX,y=Math.random()*TEX;g.moveTo(x,y);
+    for(let k=0;k<3;k++){x+=(Math.random()-.5)*22;y+=(Math.random()-.5)*22;g.lineTo(x,y)}
+    g.stroke()}
+  g.fillStyle='rgba(196,188,168,.10)';g.fillRect(0,0,TEX,TEX);    /* dust film */
+  grit(g,.22,900)})}
+
+/* STAGE 5 wall — FOUND. Fresh formwork: timber shuttering marks, tie holes,
+   clean pour lines. The only stage whose surface looks newly made.       */
+function texForm(base,rust){return makeTex(g=>{
+  g.fillStyle=base;g.fillRect(0,0,TEX,TEX);
+  for(let x=0;x<TEX;x+=11){                                       /* board marks */
+    g.fillStyle='rgba(255,252,240,.07)';g.fillRect(x,0,10,TEX);
+    g.fillStyle='rgba(0,0,0,.16)';g.fillRect(x+10,0,1,TEX)}
+  const q=g.createLinearGradient(0,0,0,TEX);
+  q.addColorStop(0,'rgba(255,255,248,.13)');q.addColorStop(1,'rgba(0,0,0,.16)');
+  g.fillStyle=q;g.fillRect(0,0,TEX,TEX);
+  g.fillStyle='rgba(0,0,0,.20)';g.fillRect(0,31,TEX,2);           /* pour line */
+  for(const t of [[16,16],[48,16],[16,48],[48,48]]){               /* form tie holes */
+    g.fillStyle='rgba(0,0,0,.34)';g.beginPath();g.arc(t[0],t[1],2.4,0,7);g.fill();
+    g.fillStyle='rgba(255,250,235,.14)';g.beginPath();g.arc(t[0]-.6,t[1]-.6,1.5,0,7);g.fill()}
+  grit(g,.09,300)})}
+
+/* STAGE 6 wall — UNKNOWN. Barely a surface at all: near black with a faint
+   measured grid, as if the space has been set out but not yet built.     */
+function texVoid(base,rust){return makeTex(g=>{
+  g.fillStyle=base;g.fillRect(0,0,TEX,TEX);
+  g.strokeStyle='rgba(214,210,198,.13)';g.lineWidth=1;
+  for(let i=0;i<=TEX;i+=16){
+    g.beginPath();g.moveTo(i,0);g.lineTo(i,TEX);g.stroke();
+    g.beginPath();g.moveTo(0,i);g.lineTo(TEX,i);g.stroke()}
+  g.fillStyle='rgba(214,210,198,.20)';
+  for(let y=0;y<=TEX;y+=16)for(let x=0;x<=TEX;x+=16)g.fillRect(x-1,y-1,2,2);
+  grit(g,.05,140)})}
+
+/* MODIFIED ARCHITECTURE (CELL_WALL_3) — Stage 3 only, revealed after the
+   ADVOCATE falls. Seamless, slightly wrong, and never explained. It has no
+   interaction and no log. Canon: this must never resolve the ambiguity.  */
+const texWall3=makeTex(g=>{
+  g.fillStyle='#20242a';g.fillRect(0,0,TEX,TEX);
+  const q=g.createRadialGradient(TEX*0.4,TEX*0.35,2,TEX*0.4,TEX*0.35,TEX*0.9);
+  q.addColorStop(0,'#39404a');q.addColorStop(1,'#171a1f');
+  g.fillStyle=q;g.fillRect(0,0,TEX,TEX);
+  g.strokeStyle='rgba(232,227,214,.10)';g.lineWidth=1;
+  for(let i=0;i<5;i++){                     /* seams that meet at wrong angles */
+    g.beginPath();g.moveTo(-4,10+i*13);
+    g.bezierCurveTo(18,4+i*13,44,20+i*13,TEX+4,9+i*13);g.stroke()}
+  g.fillStyle='rgba(232,227,214,.05)';g.fillRect(0,0,TEX,1);
+  grit(g,.06,180)});
+
+/* ANNEX A wall — cistern. Wet concrete with a hard waterline stain, algae
+   below it, mineral drip streaks above. Reads soaked, not rusted.       */
+function texCistern(base,rust){return makeTex(g=>{
+  g.fillStyle=base;g.fillRect(0,0,TEX,TEX);
+  const q=g.createLinearGradient(0,0,0,TEX);
+  q.addColorStop(0,'rgba(255,255,255,.08)');q.addColorStop(.52,'rgba(0,0,0,.04)');
+  q.addColorStop(.56,'rgba(0,0,0,.34)');q.addColorStop(1,'rgba(0,0,0,.44)');
+  g.fillStyle=q;g.fillRect(0,0,TEX,TEX);
+  g.fillStyle='rgba(28,58,54,.55)';g.fillRect(0,36,TEX,28);        /* below waterline */
+  g.fillStyle='rgba(140,170,150,.22)';g.fillRect(0,34,TEX,2);      /* the line itself */
+  g.fillStyle='rgba(58,92,74,.30)';
+  for(let i=0;i<16;i++){const x=Math.random()*TEX;
+    g.fillRect(x,36+Math.random()*6,2+Math.random()*7,3+Math.random()*20)}
+  g.fillStyle='rgba(196,206,198,.14)';                             /* drip streaks */
+  for(let i=0;i<12;i++){const x=Math.random()*TEX;g.fillRect(x,0,1,6+Math.random()*28)}
+  g.fillStyle='rgba(0,0,0,.30)';g.fillRect(0,0,TEX,3);
+  rustPass(g,rust*0.4);grit(g,.14,600)})}
+
+/* ANNEX B wall — galvanised duct. Rolled seams, mesh grille panels, rivet
+   lines. Cold bright zinc: the lightest surface in the descent.         */
+function texDuct(base,rust){return makeTex(g=>{
+  g.fillStyle=base;g.fillRect(0,0,TEX,TEX);
+  for(let y=0;y<TEX;y+=16){                                        /* rolled seams */
+    const q=g.createLinearGradient(0,y,0,y+16);
+    q.addColorStop(0,'rgba(255,255,255,.16)');q.addColorStop(.5,'rgba(0,0,0,.05)');
+    q.addColorStop(1,'rgba(0,0,0,.26)');g.fillStyle=q;g.fillRect(0,y,TEX,16);
+    g.fillStyle='rgba(0,0,0,.34)';g.fillRect(0,y+15,TEX,1);
+    g.fillStyle='rgba(255,255,255,.20)';g.fillRect(0,y,TEX,1)}
+  g.fillStyle='rgba(30,36,42,.55)';g.fillRect(20,20,24,24);        /* grille panel */
+  g.fillStyle='rgba(190,205,215,.30)';
+  for(let y=22;y<43;y+=3)g.fillRect(21,y,22,1);
+  g.strokeStyle='rgba(255,255,255,.14)';g.lineWidth=1;g.strokeRect(20.5,20.5,23,23);
+  g.fillStyle='rgba(0,0,0,.28)';
+  for(let y=6;y<TEX;y+=16)for(let x=6;x<TEX;x+=13){
+    g.beginPath();g.arc(x,y,1.3,0,7);g.fill()}
+  rustPass(g,rust);grit(g,.10,340)})}
+
+/* ANNEX C wall — shelving face. Horizontal shelf bands packed with box and
+   file ends in paper tones. Repetitive on purpose: this is the floor that
+   loses you by looking the same everywhere.                             */
+function texArchive(base,rust){return makeTex(g=>{
+  g.fillStyle='#3a3229';g.fillRect(0,0,TEX,TEX);
+  for(let sh=0;sh<4;sh++){
+    const y=sh*16;
+    g.fillStyle=base;g.fillRect(0,y+13,TEX,3);                     /* shelf plank */
+    g.fillStyle='rgba(0,0,0,.42)';g.fillRect(0,y+16,TEX,1);
+    let x=1;
+    while(x<TEX-2){                                                /* file ends */
+      const w=3+((x*7+sh*13)%6);
+      const v=((x*31+sh*17)%5);
+      const cols=['#c9bda0','#b3a487','#8d7f66','#d8ceb4','#6f6553'];
+      g.fillStyle=cols[v];g.fillRect(x,y+2,w,11);
+      g.fillStyle='rgba(0,0,0,.30)';g.fillRect(x+w,y+2,1,11);
+      if(v%2===0){g.fillStyle='rgba(60,50,38,.55)';g.fillRect(x+1,y+4,w-2,1)}
+      x+=w+1}}
+  const q=g.createLinearGradient(0,0,0,TEX);
+  q.addColorStop(0,'rgba(0,0,0,.28)');q.addColorStop(.5,'rgba(255,240,200,.05)');
+  q.addColorStop(1,'rgba(0,0,0,.34)');g.fillStyle=q;g.fillRect(0,0,TEX,TEX);
+  grit(g,.12,420)})}
+
+function wallTexFor(st){
+  const f={concrete:texConcrete,plate:texPlate,tile:texTile,core:texCore,
+           rubble:texRubble,form:texForm,void:texVoid,cistern:texCistern,
+           duct:texDuct,archive:texArchive}[st.wallStyle]||texConcrete;
+  return f(st.wallBase,st.rust)}
+/* HIDDEN PANEL — matches its stage's wall, betrayed only by a seam and
+   four corner bolts, and only from close range.                        */
+function panelTexFor(st){
+  const t=wallTexFor(st);
+  return makeTex(g=>{g.drawImage(t,0,0);
+    g.strokeStyle='rgba(0,0,0,.32)';g.lineWidth=1;g.strokeRect(7.5,7.5,TEX-15,TEX-15);
+    g.fillStyle='rgba(160,150,128,.32)';
+    const b=[[11,11],[52,11],[11,52],[52,52]];
+    for(let i=0;i<b.length;i++){g.beginPath();g.arc(b[i][0],b[i][1],1.8,0,7);g.fill()}})}
+const texPlateDoor=makeTex(g=>{
+  g.fillStyle='#4a4238';g.fillRect(0,0,TEX,TEX);
+  const q=g.createLinearGradient(0,0,0,TEX);
+  q.addColorStop(0,'rgba(255,230,180,.10)');q.addColorStop(1,'rgba(0,0,0,.30)');
+  g.fillStyle=q;g.fillRect(0,0,TEX,TEX);
+  g.strokeStyle='rgba(0,0,0,.45)';g.lineWidth=2;g.strokeRect(5,5,TEX-10,TEX-10);
+  g.fillStyle='#6b6152';
+  const b=[[10,10],[54,10],[10,54],[54,54],[32,10],[32,54]];
+  for(let i=0;i<b.length;i++){g.beginPath();g.arc(b[i][0],b[i][1],2.6,0,7);g.fill()}
+  g.strokeStyle='rgba(0,0,0,.3)';g.lineWidth=1;
+  for(let y=18;y<TEX-10;y+=9){g.beginPath();g.moveTo(8,y);g.lineTo(TEX-8,y);g.stroke()}
+  grit(g,.2,500)});
+function sealTex(inner){return makeTex(g=>{
+  g.fillStyle=inner?'#26333f':'#2b3d4e';g.fillRect(0,0,TEX,TEX);
+  g.strokeStyle=inner?'#456d8c':'#5b86ab';g.lineWidth=3;g.strokeRect(4,4,TEX-8,TEX-8);
+  g.strokeStyle='rgba(91,134,171,.5)';g.lineWidth=1.5;g.strokeRect(10,10,TEX-20,TEX-20);
+  g.fillStyle=inner?'#5b86ab':'#79a3c4';g.beginPath();g.arc(32,32,7,0,7);g.fill();
+  g.fillStyle='#152230';g.beginPath();g.arc(32,32,3.4,0,7);g.fill();
+  if(inner){g.fillStyle='rgba(224,148,34,.5)';g.fillRect(26,44,12,3)}
+  g.fillStyle='rgba(0,0,0,.28)';g.fillRect(0,TEX-8,TEX,8);grit(g,.10,300)})}
+const texMirror=makeTex(g=>{
+  g.fillStyle='#131511';g.fillRect(0,0,TEX,TEX);
+  const q=g.createLinearGradient(0,0,TEX,TEX);
+  q.addColorStop(0,'#3a3d35');q.addColorStop(.45,'#6b6e60');
+  q.addColorStop(.55,'#8a8d7c');q.addColorStop(1,'#2a2c26');
+  g.fillStyle=q;g.fillRect(6,6,TEX-12,TEX-12);
+  g.fillStyle='rgba(255,255,250,.30)';g.fillRect(14,8,4,TEX-16);
+  g.fillStyle='rgba(0,0,0,.4)';g.fillRect(6,6,TEX-12,3)});
+/* Distance shading fades toward the STAGE's fog colour, not a fixed one. */
+function shadeSet(t,fog){const o=[];
+  for(let s=0;s<8;s++){const c=document.createElement('canvas');c.width=TEX;c.height=TEX;
+    const g=c.getContext('2d');g.drawImage(t,0,0);
+    g.fillStyle=rgba(fog,(s/8).toFixed(3));g.fillRect(0,0,TEX,TEX);o.push(c)}return o}
+let WALLS=null;
+function buildWalls(st){
+  const f=st.fogCol;
+  WALLS={};
+  WALLS[C_WALL]=shadeSet(wallTexFor(st),f);
+  WALLS[C_PANEL]=shadeSet(panelTexFor(st),f);
+  WALLS[C_MIRROR]=shadeSet(texMirror,f);
+  WALLS[C_PLATE]=shadeSet(texPlateDoor,f);
+  WALLS[C_DESCENT]=shadeSet(sealTex(false),f);
+  WALLS[C_INNER]=shadeSet(sealTex(true),f);
+  WALLS[C_WALL3]=shadeSet(texWall3,f)}
+
+/* ----------------------------------------------------------------- INPUT */
+const keys={},pressed={};
+const KMAP={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',
+ ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',
+ Space:'action',KeyE:'action',Enter:'action',NumpadEnter:'action',
+ KeyF:'fire',KeyQ:'fire',Escape:'start',Tab:'start',KeyM:'start'};
+addEventListener('keydown',e=>{const k=KMAP[e.code];
+  if(k){e.preventDefault();ensureAudio();if(!keys[k])pressed[k]=true;keys[k]=true}},{passive:false});
+addEventListener('keyup',e=>{const k=KMAP[e.code];if(k){e.preventDefault();keys[k]=false}},{passive:false});
+const stick={active:false,id:null,dx:0,dy:0};
+const zone=document.getElementById('stickZone'),base=document.getElementById('stickBase'),
+      nub=document.getElementById('stickNub');
+const R=52;
+function anchorPt(){const r=base.getBoundingClientRect();
+  return{x:r.left+r.width/2,y:r.top+r.height/2}}
+function moveNub(dx,dy){nub.style.transform='translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px)'}
+function applyStick(cx,cy){
+  const a=anchorPt();let dx=cx-a.x,dy=cy-a.y;
+  const m=Math.hypot(dx,dy);if(m>R){dx=dx/m*R;dy=dy/m*R}
+  stick.dx=dx/R;stick.dy=dy/R;moveNub(dx,dy)}
+zone.addEventListener('pointerdown',e=>{e.preventDefault();ensureAudio();
+  if(stick.active)return;
+  stick.active=true;stick.id=e.pointerId;zone.classList.add('active');
+  applyStick(e.clientX,e.clientY);
+  try{zone.setPointerCapture(e.pointerId)}catch(_){}},{passive:false});
+zone.addEventListener('pointermove',e=>{if(!stick.active||e.pointerId!==stick.id)return;
+  e.preventDefault();applyStick(e.clientX,e.clientY)},{passive:false});
+const sEnd=e=>{if(e.pointerId!==stick.id)return;
+  stick.active=false;stick.dx=0;stick.dy=0;
+  zone.classList.remove('active');moveNub(0,0)};
+zone.addEventListener('pointerup',sEnd);zone.addEventListener('pointercancel',sEnd);
+zone.addEventListener('lostpointercapture',sEnd);
+document.addEventListener('touchmove',e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+document.addEventListener('gesturestart',e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+document.addEventListener('dblclick',e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+function bindBtn(id,k){const b=document.getElementById(id);
+  b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();ensureAudio();
+    if(!keys[k])pressed[k]=true;keys[k]=true;b.classList.add('pressed')});
+  const up=e=>{e.preventDefault();keys[k]=false;b.classList.remove('pressed')};
+  b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up)}
+bindBtn('btnA','action');bindBtn('btnB','fire');bindBtn('btnStart','start');
+const overlay=document.getElementById('overlay');
+const tapStart=()=>{ensureAudio();
+  if(state===STATE.BOOT)loadStage(0,true);
+  else if(state===STATE.FAILED)loadStage(SG.idx,true);
+  else if(state===STATE.CLEARED)advance()};
+overlay.addEventListener('pointerdown',tapStart);cv.addEventListener('pointerdown',tapStart);
+
+/* ------------------------------------------------------------- LIFECYCLE */
+function showOverlay(h){overlay.innerHTML=h;overlay.classList.remove('hidden')}
+function hideOverlay(){overlay.classList.add('hidden')}
+function briefing(st){
+  showOverlay('<div class="stage">'+stageLabel(st)+'</div>'+
+   '<h2>'+st.place.replace(' / ','<br>')+'</h2>'+
+   '<p>'+st.brief+'</p><div class="press">TAP / PRESS ENTER</div>');
+  state=STATE.BOOT}
+function loadStage(i,fresh){
+  SG=STAGES[i];M=SG.map.slice();
+  plate=SG.plate?{x:SG.plate.x,y:SG.plate.y,hp:SG.plate.hp,drop:SG.plate.drop}:null;
+  P.x=SG.spawn.x;P.y=SG.spawn.y;P.a=SG.spawn.a;
+  if(fresh&&i===0){P.charge=100;P.clearance=0;mirrorFlags=0}
+  P.payload=SG.payload;P.access=0;
+  if(i>0)P.charge=Math.max(45,P.charge);         /* the process carries over */
+  items=SG.items.map(it=>({x:it[0],y:it[1],k:it[2],taken:false}));
+  custs=SG.routes.map((r,n)=>({id:n,x:r[0][0],y:r[0][1],route:r,leg:0,
+    speed:0.019+n*0.0019,light:Math.random(),alive:true,hp:2,hitT:0,
+    sweep:{ang:Math.random()*6.28,x:r[0][0],y:r[0][1],alive:true,hp:1,hitT:0,
+           tethered:true,settle:0}}));
+  auds=(SG.auditors||[]).map((p,n)=>({x:p[0],y:p[1],hp:3,hitT:0,alive:true,
+    wob:Math.random()*6.28,scan:Math.random(),drift:Math.random()*6.28,n:n}));
+  advocate=SG.advocate?{x:SG.advocate[0],y:SG.advocate[1],hp:9,hitT:0,alive:true,
+    glow:0,step:0}:null;
+  modifiedShown=false;
+  fixtures=SG.fixtures.map(p=>({x:p[0],y:p[1],alive:true,hitT:0,flick:Math.random()*6.28}));
+  lockers=SG.lockers.map(p=>({x:p[0],y:p[1],alive:true,hp:2,hitT:0,drop:p[2]}));
+  sealsTotal=0;panelsTotal=0;
+  for(let c=0;c<M.length;c++){
+    if(M[c]===C_DESCENT||M[c]===C_INNER)sealsTotal++;
+    if(M[c]===C_PANEL)panelsTotal++}
+  sealsOpened=0;panelsFound=0;exitArmed=false;
+  discovered=new Uint8Array(MAP_W*MAP_H);
+  /* Annex floors have no mirror room, so the seven stage logs stay seven. */
+  if(SG.flagBit==null){mirrorRead=false;mirrorResolved=true}
+  else{mirrorRead=((mirrorFlags>>SG.flagBit)&1)===1;mirrorResolved=mirrorRead}
+  logIdx=0;logFrame=0;logDone=false;
+  GUN.cool=0;GUN.flash=0;shake=0;interactMsg="";interactT=0;walkT=0;
+  buildWalls(SG);
+  setDrone(1);hideOverlay();state=STATE.PLAY}
+function fail(){state=STATE.FAILED;setDrone(0.25);
+  showOverlay('<div class="stage">Charge Failed</div>'+
+   '<h2 class="red">THE CHARGE DID NOT DETONATE</h2>'+
+   '<p>The stage failed. The collective absorbs the failure and tries again. '+
+   'Nothing about you is lost that was not already being set down on purpose.</p>'+
+   '<div class="press">TAP / ENTER — RETRY '+stageLabel(SG)+'</div>')}
+function cleared(){
+  state=STATE.CLEARED;setDrone(0.3);
+  let cOff=0,sOff=0,fOut=0;
+  for(let i=0;i<custs.length;i++){if(!custs[i].alive)cOff++;if(!custs[i].sweep.alive)sOff++}
+  for(let i=0;i<fixtures.length;i++)if(!fixtures[i].alive)fOut++;
+  let aOff=0;for(let i=0;i<auds.length;i++)if(!auds[i].alive)aOff++;
+  const last=SG.seq>=STAGES.length-1;
+  showOverlay('<div class="stage">'+stageLabel(SG)+' — complete</div>'+
+   '<h2 class="green">DESCENT REACHED</h2>'+
+   '<div class="endlog">'+(SG.flagBit==null?SG.note:(mirrorRead?SG.read:SG.skipped))+'</div>'+
+   '<div class="tally">'+(SG.flagBit==null?'NO MIRROR ON THIS FLOOR':
+     'MIRROR <b>'+(mirrorRead?'READ':'SKIPPED')+'</b>')+' · CLEARANCE <b>'+
+   P.clearance+'</b> · CHARGE <b>'+Math.ceil(P.charge)+'</b><br>'+
+   'CUSTODIANS OFFLINE <b>'+cOff+'/'+custs.length+'</b> · SWEEPS OFFLINE <b>'+sOff+'/'+
+   custs.length+'</b> · FIXTURES OUT <b>'+fOut+'/'+fixtures.length+'</b>'+
+   (panelsTotal?'<br>HIDDEN ROUTES FOUND <b>'+panelsFound+'/'+panelsTotal+'</b>':'')+
+   '<br>MIRROR LOGS ON RECORD <b>'+countBits(mirrorFlags)+'/7</b></div>'+
+   (last
+     ?'<p>Seven stages. The process is complete and the game does not show you what '+
+      'gets built — it ends at the act of beginning. Mirror logs on record: <b>'+
+      countBits(mirrorFlags)+' of 7</b>.</p>'+
+      '<div class="press">TAP / ENTER — BEGIN AGAIN AT SURVEY</div>'
+     :'<div class="press">TAP / ENTER — '+stageLabel(STAGES[SG.seq+1])+'</div>'))}
+function stageLabel(st){
+  return st.annex?('ANNEX '+st.annex+' · '+st.name):('STAGE '+st.idx+' · '+st.name)}
+function countBits(v){let n=0;while(v){n+=v&1;v>>=1}return n}
+function advance(){
+  if(SG.seq>=STAGES.length-1)briefing(STAGES[0]);
+  else briefing(STAGES[SG.seq+1])}
+
+/* --------------------------------------------------------------- HELPERS */
+const PLR_R=0.22;
+function tryMove(nx,ny){
+  const pts=[[nx+PLR_R,ny],[nx-PLR_R,ny],[nx,ny+PLR_R],[nx,ny-PLR_R]];
+  for(let i=0;i<pts.length;i++)if(BLOCK(mapAt(pts[i][0]|0,pts[i][1]|0)))return false;
+  return true}
+function facedCell(code){
+  const ca=Math.cos(P.a),sa=Math.sin(P.a);
+  const fx=(P.x+ca*0.6)|0,fy=(P.y+sa*0.6)|0;
+  if(mapAt(fx,fy)===code)return[fx,fy];
+  const px=P.x|0,py=P.y|0;
+  const n=[[px+1,py],[px-1,py],[px,py+1],[px,py-1]];
+  for(let i=0;i<n.length;i++)if(mapAt(n[i][0],n[i][1])===code)return n[i];
+  return null}
+function castRay(rx,ry,rdx,rdy){
+  let mx=rx|0,my=ry|0;
+  const dDX=Math.abs(1/(rdx||1e-9)),dDY=Math.abs(1/(rdy||1e-9));
+  let sx,sy,stX,stY;
+  if(rdx<0){stX=-1;sx=(rx-mx)*dDX}else{stX=1;sx=(mx+1-rx)*dDX}
+  if(rdy<0){stY=-1;sy=(ry-my)*dDY}else{stY=1;sy=(my+1-ry)*dDY}
+  let side=0,cell=0,g=0;
+  while(g++<64){
+    if(sx<sy){sx+=dDX;mx+=stX;side=0}else{sy+=dDY;my+=stY;side=1}
+    cell=mapAt(mx,my);if(BLOCK(cell))break}
+  const dist=side===0?sx-dDX:sy-dDY;
+  let wx=side===0?ry+dist*rdy:rx+dist*rdx;wx-=wx|0;
+  return{dist:dist<0.01?0.01:dist,side:side,cell:cell,wallX:wx,mx:mx,my:my}}
+/* Enemies use the same axis-separated collision the player does, so they
+   never clip a wall. They have no pathfinding: an AUDITOR pushes toward you
+   and slides along whatever it hits, which reads as the erratic database
+   error canon describes rather than as intelligence.                     */
+function stepEntity(e,tx,ty,spd,rad){
+  const dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy)||1;
+  const nx=dx/d*spd,ny=dy/d*spd;
+  if(!BLOCK(mapAt((e.x+nx+(nx>0?rad:-rad))|0,e.y|0)))e.x+=nx;
+  if(!BLOCK(mapAt(e.x|0,(e.y+ny+(ny>0?rad:-rad))|0)))e.y+=ny;
+  return d}
+function lightAt(x,y){let b=0;
+  for(let i=0;i<fixtures.length;i++){const f=fixtures[i];if(!f.alive)continue;
+    const d=Math.hypot(f.x-x,f.y-y);if(d<3.4){const v=1-d/3.4;if(v>b)b=v}}
+  return b}
+function reveal(x,y){if(x<0||y<0||x>=MAP_W||y>=MAP_H)return;
+  discovered[y*MAP_W+x]=1}
+
+/* ---------------------------------------------------------------- COMBAT */
+function fireWeapon(){
+  if(GUN.cool>0)return;
+  if(P.payload<=0){flash("PAYLOAD EMPTY");GUN.cool=8;return}
+  P.payload--;GUN.cool=FIRE_COOLDOWN;GUN.flash=5;blip('shot');
+  const wall=castRay(P.x,P.y,Math.cos(P.a),Math.sin(P.a));
+
+  /* structure first: a shot into the wall you are facing */
+  if(wall.dist<2.2){
+    if(plate&&wall.cell===C_PLATE&&wall.mx===plate.x&&wall.my===plate.y){
+      plate.hp--;shake=7;blip('thud');
+      if(plate.hp<=0){setCell(plate.x,plate.y,C_OPEN);
+        items.push({x:plate.x+0.5,y:plate.y+0.5,k:plate.drop,taken:false});
+        plate=null;flash("PLATE GIVES WAY — SOMETHING WAS BEHIND IT")}
+      else flash("PLATE BUCKLING — "+plate.hp+" MORE");
+      return}
+    if(wall.cell===C_PANEL){
+      setCell(wall.mx,wall.my,C_OPEN);panelsFound++;shake=6;blip('reveal');
+      flash("PANEL OFF — HIDDEN ROUTE "+panelsFound+"/"+panelsTotal);return}}
+
+  let best=null,bestD=1e9;
+  const consider=(o,r,kind)=>{
+    const dx=o.x-P.x,dy=o.y-P.y,d=Math.hypot(dx,dy);
+    if(d>FIRE_RANGE||d>=wall.dist+0.2)return;
+    let rel=Math.atan2(dy,dx)-P.a;
+    while(rel>Math.PI)rel-=Math.PI*2;while(rel<-Math.PI)rel+=Math.PI*2;
+    if(Math.abs(rel)>FIRE_ARC+r/Math.max(d,1))return;
+    if(d<bestD){bestD=d;best={o:o,kind:kind}}};
+  for(let i=0;i<custs.length;i++){const c=custs[i];
+    if(c.alive)consider(c,0.55,'cust');
+    if(c.sweep.alive&&c.sweep.tethered)consider(c.sweep,0.40,'sweep')}
+  for(let i=0;i<auds.length;i++)if(auds[i].alive)consider(auds[i],0.55,'aud');
+  if(advocate&&advocate.alive)consider(advocate,0.70,'adv');
+  for(let i=0;i<fixtures.length;i++)if(fixtures[i].alive)consider(fixtures[i],0.42,'fixture');
+  for(let i=0;i<lockers.length;i++)if(lockers[i].alive)consider(lockers[i],0.45,'locker');
+  if(!best)return;
+  const o=best.o;
+  if(best.kind==='fixture'){o.alive=false;o.hitT=8;blip('glass');
+    flash("FIXTURE OUT — THIS STRETCH IS DARK NOW");return}
+  if(best.kind==='locker'){o.hp--;o.hitT=6;blip('thud');
+    if(o.hp<=0){o.alive=false;items.push({x:o.x,y:o.y,k:o.drop,taken:false});
+      flash("LOCKER FORCED — CONTENTS EXPOSED")}
+    else flash("LOCKER DENTED");return}
+  if(best.kind==='sweep'){o.hp--;o.hitT=6;blip('thud');
+    if(o.hp<=0){o.alive=false;flash("SWEEP DOWN")}return}
+  if(best.kind==='aud'){o.hp--;o.hitT=6;blip('thud');
+    if(o.hp<=0){o.alive=false;flash("AUDITOR OFFLINE — THE CHECK ENDS UNFINISHED")}
+    else flash("AUDITOR STRUCK");return}
+  if(best.kind==='adv'){
+    o.hp--;o.hitT=7;shake=4;blip('thud');
+    if(o.hp<=0){
+      o.alive=false;shake=10;
+      /* Modified architecture appears. Visible, inert, unexplained.
+         Canon: this must never confirm or deny anything.               */
+      if(SG.modified&&!modifiedShown){modifiedShown=true;
+        for(let i=0;i<SG.modified.length;i++)
+          setCell(SG.modified[i][0],SG.modified[i][1],C_WALL3);
+        flash("ADVOCATE DOWN — THE EAST WALL IS NOT WHAT IT WAS")}
+      else flash("ADVOCATE DOWN")}
+    else flash("ADVOCATE STRUCK — IT HAS NOT STOPPED");
+    return}
+  o.hp--;o.hitT=6;blip('thud');
+  if(o.hp<=0){o.alive=false;
+    if(o.sweep.alive){o.sweep.tethered=false;
+      flash("CUSTODIAN OFFLINE — ITS SWEEP HAS NOTHING TO FOLLOW")}
+    else flash("CUSTODIAN OFFLINE — ROUTE ENDED")}
+  else flash("CUSTODIAN STRUCK")}
+
+/* ---------------------------------------------------------------- UPDATE */
+function update(){
+  if(pressed.start){
+    if(state===STATE.PLAY){state=STATE.PAUSED;setDrone(0.35)}
+    else if(state===STATE.PAUSED){state=STATE.PLAY;setDrone(1)}
+    else if(state===STATE.BOOT)loadStage(SG.idx===undefined?0:SG.idx,SG.idx===0);
+    else if(state===STATE.FAILED)loadStage(SG.idx,true);
+    else if(state===STATE.CLEARED)advance()}
+  if(state===STATE.PLAY)updatePlay();
+  else if(state===STATE.MIRROR)updateMirror();
+  if(state===STATE.BOOT&&pressed.action)loadStage(SG.idx,SG.idx===0);
+  if(state===STATE.FAILED&&pressed.action)loadStage(SG.idx,true);
+  if(state===STATE.CLEARED&&pressed.action)advance();
+  if(interactT>0)interactT--;
+  if(GUN.cool>0)GUN.cool--;if(GUN.flash>0)GUN.flash--;if(shake>0)shake--;
+  for(let i=0;i<fixtures.length;i++)if(fixtures[i].hitT>0)fixtures[i].hitT--;
+  for(let i=0;i<lockers.length;i++)if(lockers[i].hitT>0)lockers[i].hitT--;
+  for(const k in pressed)pressed[k]=false}
+
+function updatePlay(){
+  const MOVE=0.052,TURN=0.052;
+  let turn=0,fwd=0;
+  if(keys.left)turn-=1;if(keys.right)turn+=1;
+  if(keys.up)fwd+=1;if(keys.down)fwd-=0.7;
+  if(stick.active){
+    if(Math.abs(stick.dx)>0.18)turn+=stick.dx*1.15;
+    if(Math.abs(stick.dy)>0.18)fwd+=-stick.dy*(stick.dy<0?1:0.7)}
+  P.a+=turn*TURN;
+  const ca=Math.cos(P.a),sa=Math.sin(P.a);
+  const mvx=ca*MOVE*fwd,mvy=sa*MOVE*fwd;
+  if(mvx&&tryMove(P.x+mvx,P.y))P.x+=mvx;
+  if(mvy&&tryMove(P.x,P.y+mvy))P.y+=mvy;
+  if(fwd)walkT+=0.16;
+  reveal(P.x|0,P.y|0);
+
+  for(let i=0;i<items.length;i++){
+    const it=items[i];if(it.taken)continue;
+    if((P.x-it.x)*(P.x-it.x)+(P.y-it.y)*(P.y-it.y)<0.24){
+      it.taken=true;flash(ITEM_MSG[it.k]);
+      if(it.k==='access')P.access++;
+      else if(it.k==='battery')P.payload+=10;
+      else if(it.k==='ration')P.charge=Math.min(100,P.charge+25);
+      else if(it.k==='notes')P.clearance+=100;
+      else if(it.k==='doc')P.clearance+=500}}
+
+  if(!mirrorResolved&&mapAt((P.x+ca*0.55)|0,(P.y+sa*0.55)|0)===C_MIRROR){
+    state=STATE.MIRROR;logIdx=0;logFrame=0;logDone=false;setDrone(0);return}
+
+  if(pressed.fire)fireWeapon();
+  if(pressed.action){
+    const inner=facedCell(C_INNER);
+    const desc=facedCell(C_DESCENT);
+    const pan=facedCell(C_PANEL);
+    if(desc){
+      if(SG.bossRequired&&advocate&&advocate.alive){
+        flash("SEAL INERT — THE ADVOCATE IS STILL APPROACHING")}
+      else if(P.access>=SG.descentCost){P.access-=SG.descentCost;
+        setCell(desc[0],desc[1],C_OPEN);sealsOpened++;exitArmed=true;blip('thud');
+        flash(SG.descentCost===0?"YOU OPENED IT. NOTHING ASKED YOU TO."
+              :"DESCENT SEAL OPENED — "+SG.descentCost+" ACCESS EXPENDED")}
+      else flash("DESCENT SEAL — "+SG.descentCost+" ACCESS CODES REQUIRED ("+P.access+" HELD)")}
+    else if(inner){
+      if(P.access>0){P.access--;setCell(inner[0],inner[1],C_OPEN);
+        sealsOpened++;blip('thud');flash("INNER SEAL OPENED — ACCESS EXPENDED")}
+      else flash("INNER SEAL LOCKED — ACCESS CODE REQUIRED")}
+    else if(pan){setCell(pan[0],pan[1],C_OPEN);panelsFound++;blip('reveal');
+      flash("PANEL PRIED OPEN — HIDDEN ROUTE "+panelsFound+"/"+panelsTotal)}}
+
+  if(exitArmed){
+    const dx=P.x-(SG.descent.x+0.5),dy=P.y-(SG.descent.y+0.5);
+    if(dx*dx+dy*dy<0.30){cleared();return}}
+
+  for(let i=0;i<custs.length;i++){
+    const c=custs[i];
+    if(c.hitT>0)c.hitT--;
+    if(c.alive){
+      c.light=(c.light+0.055)%1;
+      const t=c.route[c.leg],dx=t[0]-c.x,dy=t[1]-c.y,d=Math.hypot(dx,dy);
+      if(d<0.05)c.leg=(c.leg+1)%c.route.length;
+      else{c.x+=dx/d*c.speed;c.y+=dy/d*c.speed}
+      if((P.x-c.x)*(P.x-c.x)+(P.y-c.y)*(P.y-c.y)<0.16){
+        P.charge-=0.9;flash("CUSTODIAN CONTACT — CHARGE DRAINING");
+        if(P.charge<=0){P.charge=0;fail();return}}}
+    const s=c.sweep;
+    if(s.hitT>0)s.hitT--;
+    if(s.alive){
+      if(s.tethered&&c.alive){
+        s.ang+=0.045;s.x=c.x+Math.cos(s.ang)*0.85;s.y=c.y+Math.sin(s.ang)*0.85;
+        if((P.x-s.x)*(P.x-s.x)+(P.y-s.y)*(P.y-s.y)<0.10){
+          P.charge-=0.5;flash("SWEEP CONTACT — CHARGE DRAINING");
+          if(P.charge<=0){P.charge=0;fail();return}}}
+      else{s.tethered=false;
+        if(s.settle<60){s.settle++;const f=1-s.settle/60;
+          s.ang+=0.045*f;s.x+=Math.cos(s.ang)*0.004*f;s.y+=Math.sin(s.ang)*0.004*f}}}}
+
+  /* AUDITOR — seeks, with erratic pathing. Outside its scan radius it wanders
+     its own drift heading; inside, it comes at you with a wobble on the
+     bearing. Never elegant, never gives up while you are in range.        */
+  for(let i=0;i<auds.length;i++){
+    const a=auds[i];
+    if(a.hitT>0)a.hitT--;
+    if(!a.alive)continue;
+    a.scan=(a.scan+0.03)%1;
+    const dx=P.x-a.x,dy=P.y-a.y,d=Math.hypot(dx,dy);
+    if(d<8.5){
+      a.wob+=0.19;
+      const ang=Math.atan2(dy,dx)+Math.sin(a.wob)*0.55;
+      stepEntity(a,a.x+Math.cos(ang)*2,a.y+Math.sin(ang)*2,0.030,0.22)}
+    else{
+      a.drift+=(Math.random()-0.5)*0.30;
+      const before=a.x+','+a.y;
+      stepEntity(a,a.x+Math.cos(a.drift)*2,a.y+Math.sin(a.drift)*2,0.014,0.22);
+      if(before===a.x+','+a.y)a.drift+=2.1}
+    if(d<0.46){
+      P.charge-=1.4;flash("AUDITOR CONTACT — CHECK FAILED");
+      if(P.charge<=0){P.charge=0;fail();return}}}
+
+  /* ADVOCATE — it does not patrol and it does not seek. It approaches.
+     There is no range at which it stops. Canon: it is trying to help.     */
+  if(advocate&&advocate.alive){
+    const ad=advocate;
+    if(ad.hitT>0)ad.hitT--;
+    ad.glow=(ad.glow+0.028)%1;
+    const d=stepEntity(ad,P.x,P.y,0.041,0.26);
+    ad.step+=0.13;
+    if(d<0.55){
+      P.charge-=2.2;flash("ADVOCATE CONTACT — IT IS STILL TRYING TO HELP");
+      if(P.charge<=0){P.charge=0;fail();return}}}}
+
+function updateMirror(){
+  if(!logDone&&++logFrame>=2){logFrame=0;
+    if(logIdx<SG.log.length)logIdx++;else logDone=true}
+  const backOut=()=>{P.x-=Math.cos(P.a)*0.6;P.y-=Math.sin(P.a)*0.6;
+    mirrorResolved=true;state=STATE.PLAY;setDrone(1)};
+  if(pressed.action){
+    if(!logDone){logIdx=SG.log.length;logDone=true}
+    else{mirrorRead=true;if(SG.flagBit!=null)mirrorFlags|=(1<<SG.flagBit);
+      backOut();flash("MIRROR LOG RECORDED")}}
+  if(pressed.down||pressed.fire){backOut();flash("YOU TURNED AWAY — LOG LOST")}}
+
+/* ================================================================ RENDER */
+const FOV=Math.PI/3,HALF_TAN=Math.tan(FOV/2);
+const zbuf=new Float32Array(W),warm=new Float32Array(W);
+let FOG_START=2.0,FOG_END=10.5;
+const fogF=d=>Math.min(1,Math.max(0,(d-FOG_START)/(FOG_END-FOG_START)));
+
+function drawScene(){
+  FOG_END=SG.fogEnd;
+  const bob=Math.sin(walkT)*2+(shake>0?(Math.random()-0.5)*shake*0.7:0);
+  let g=ctx.createLinearGradient(0,0,0,HORIZON+bob);
+  g.addColorStop(0,SG.ceilA);g.addColorStop(1,SG.ceilB);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,HORIZON+bob+1);
+  g=ctx.createLinearGradient(0,HORIZON+bob,0,VIEW_H);
+  g.addColorStop(0,SG.floorA);g.addColorStop(1,SG.floorB);
+  ctx.fillStyle=g;ctx.fillRect(0,HORIZON+bob,W,VIEW_H-HORIZON-bob);
+  if(SG.env&&ENV[SG.env])ENV[SG.env](bob);
+
+  const ca=Math.cos(P.a),sa=Math.sin(P.a);
+  const plx=-sa*HALF_TAN,ply=ca*HALF_TAN;
+
+  for(let x=0;x<W;x++){
+    const camX=2*x/W-1;
+    const rdx=ca+plx*camX,rdy=sa+ply*camX;
+    const r=castRay(P.x,P.y,rdx,rdy);
+    const corr=r.dist*Math.cos(Math.atan2(rdy,rdx)-P.a);
+    zbuf[x]=corr;
+    let h=VIEW_H/corr;if(h>VIEW_H*3)h=VIEW_H*3;
+    h=Math.round(h/2)*2;                           /* PS1 vertex snap */
+    const top=HORIZON-h/2+bob;
+    const lb=lightAt(P.x+rdx*r.dist,P.y+rdy*r.dist);
+    warm[x]=lb;
+    let s=(fogF(corr)*7|0)-Math.round(lb*2.6);
+    if(r.side)s+=1;
+    if(s<0)s=0;if(s>7)s=7;
+    const set=WALLS[r.cell]||WALLS[C_WALL];
+    ctx.drawImage(set[s],(r.wallX*TEX)|0,0,1,TEX,x,top,1,h);
+    /* automap reveal: line of sight, every 6th ray */
+    if((x%6)===0){
+      reveal(r.mx,r.my);
+      const steps=Math.min(24,Math.floor(r.dist/0.6));
+      for(let k=1;k<=steps;k++)reveal((P.x+rdx*k*0.6)|0,(P.y+rdy*k*0.6)|0)}}
+
+  ctx.globalAlpha=0.11;ctx.fillStyle='#e09422';
+  for(let x=0;x<W;x+=3){
+    if(warm[x]>0.28&&zbuf[x]<6){
+      const h=VIEW_H/zbuf[x],y=HORIZON+h/2+bob;
+      if(y<VIEW_H)ctx.fillRect(x,y,3,Math.min(14,VIEW_H-y))}}
+  ctx.globalAlpha=1;
+
+  drawSprites(ca,sa,plx,ply,bob);
+
+  g=ctx.createLinearGradient(0,HORIZON-28+bob,0,HORIZON+28+bob);
+  g.addColorStop(0,rgba(SG.fogCol,0));g.addColorStop(.5,rgba(SG.fogCol,SG.grate?0.42:0.30));
+  g.addColorStop(1,rgba(SG.fogCol,0));
+  ctx.fillStyle=g;ctx.fillRect(0,HORIZON-28+bob,W,56)}
+
+/* ═══════════════════════ PER-STAGE ENVIRONMENT LAYERS ═══════════════════
+   Each stage gets its own ceiling and floor treatment. This is what stops
+   the seven floors reading as one renderer with the hue nudged.         */
+const ENV={
+  warrens:bob=>{drawPipes(bob);drawGrate(bob)},
+
+  /* ANNEX A — standing water. A reflected band on the floor with a slow
+     ripple, cold green cast, and drips crossing the view. */
+  flood:bob=>{
+    const hz=HORIZON+bob,now=performance.now();
+    let g=ctx.createLinearGradient(0,hz,0,VIEW_H);
+    g.addColorStop(0,'rgba(60,120,112,.06)');g.addColorStop(1,'rgba(80,150,140,.20)');
+    ctx.fillStyle=g;ctx.fillRect(0,hz,W,VIEW_H-hz);
+    for(let i=1;i<=12;i++){                                  /* ripple bands */
+      const t=i/13,y=hz+Math.pow(t,1.8)*(VIEW_H-hz);
+      const wob=Math.sin(now*0.0013+i*0.9)*2.2*t;
+      ctx.fillStyle=rgba('#9fe0d4',(0.03+0.09*t).toFixed(3));
+      ctx.fillRect(0,y+wob,W,Math.max(1,1.6*t))}
+    ctx.fillStyle='rgba(190,225,220,.30)';                   /* falling drips */
+    for(let i=0;i<14;i++){
+      const x=(i*1117)%W, ph=(now*0.35+i*400)%(VIEW_H*1.4);
+      if(ph<VIEW_H)ctx.fillRect(x,ph,1,5)}
+    ctx.fillStyle=rgba('#0a1618',0.06);ctx.fillRect(0,0,W,VIEW_H)},
+
+  /* ANNEX B — daylight down the stacks. Hard bright slots overhead that you
+     can never reach, and fibres turning in the draught. */
+  stacks:bob=>{
+    const hz=HORIZON+bob,now=performance.now();
+    for(let k=-3;k<=3;k++){                                  /* light shafts */
+      const x=W/2+k*(W/6.5);
+      const g=ctx.createLinearGradient(x,0,x,hz*1.25);
+      g.addColorStop(0,'rgba(214,232,244,.26)');g.addColorStop(1,'rgba(214,232,244,0)');
+      ctx.fillStyle=g;
+      ctx.beginPath();ctx.moveTo(x-7,0);ctx.lineTo(x+7,0);
+      ctx.lineTo(x+26,hz*1.25);ctx.lineTo(x-26,hz*1.25);ctx.closePath();ctx.fill();
+      ctx.fillStyle='rgba(232,244,252,.55)';ctx.fillRect(x-7,0,14,2)}
+    ctx.fillStyle='rgba(226,238,246,.55)';                   /* airborne fibres */
+    for(let i=0;i<40;i++){
+      const x=(i*2803+now*0.02)%W;
+      const y=(i*1409+now*0.05)%VIEW_H;
+      ctx.globalAlpha=0.08+0.18*Math.abs(Math.sin(now*0.0012+i));
+      ctx.fillRect(x,y,1,1)}
+    ctx.globalAlpha=1},
+
+  /* ANNEX C — reading lamps at intervals down the aisles, warm and low,
+     and enough paper dust in the air to soften every edge. */
+  vault:bob=>{
+    const hz=HORIZON+bob;
+    for(let k=-2;k<=2;k++){
+      const x=W/2+k*(W/5),y=hz*0.42;
+      const g=ctx.createRadialGradient(x,y,2,x,y,52);
+      g.addColorStop(0,'rgba(232,196,120,.22)');g.addColorStop(1,'rgba(232,196,120,0)');
+      ctx.fillStyle=g;ctx.fillRect(x-52,y-52,104,104);
+      ctx.fillStyle='rgba(248,222,160,.50)';ctx.fillRect(x-3,y-1,6,2)}
+    for(let i=1;i<=8;i++){
+      const t=i/9,y=hz+Math.pow(t,1.9)*(VIEW_H-hz);
+      ctx.fillStyle=rgba('#2a2116',(0.05+0.16*t).toFixed(3));
+      ctx.fillRect(0,y,W,Math.max(1,2.2*t))}
+    ctx.fillStyle=rgba('#d8c48a',0.045);ctx.fillRect(0,0,W,VIEW_H)},
+
+  /* STAGE 2 — suspended ceiling grid with dead and dying fluorescent
+     strips, terrazzo floor with wide expansion joints. Institutional. */
+  transit:bob=>{
+    const hz=HORIZON+bob;
+    for(let i=1;i<=8;i++){
+      const t=i/9,y=hz-Math.pow(t,1.8)*hz;
+      if(y<2)break;
+      ctx.fillStyle=rgba('#3d5666',(0.05+0.13*t).toFixed(3));
+      ctx.fillRect(0,y,W,Math.max(1,2.6*t));
+      /* the strips themselves: most are out, a few still buzzing */
+      for(let k=-2;k<=2;k++){
+        const w=Math.max(2,52*t),x=W/2+k*(W/5)*(0.35+0.65*t)-w/2;
+        const alive=((k+7)*(i+3))%5!==0;
+        const buzz=alive?(0.55+0.45*Math.sin(performance.now()*0.006+k*2+i)):0.05;
+        ctx.fillStyle=rgba('#cfe6f2',(0.05+0.22*t*buzz).toFixed(3));
+        ctx.fillRect(x,y,w,Math.max(1,2*t))}}
+    for(let i=1;i<=10;i++){
+      const t=i/11,y=hz+Math.pow(t,1.85)*(VIEW_H-hz);
+      if(y>VIEW_H-1)break;
+      ctx.fillStyle=rgba('#0b1218',(0.06+0.20*t).toFixed(3));
+      ctx.fillRect(0,y,W,Math.max(1,1.8*t))}},
+
+  /* STAGE 3 — no ambient light at all, only a red emergency wash pulsing
+     from the floor and cable trays overhead. Amber is gone. */
+  core:bob=>{
+    const hz=HORIZON+bob,pulse=0.5+0.5*Math.sin(performance.now()*0.0022);
+    let g=ctx.createLinearGradient(0,VIEW_H,0,hz);
+    g.addColorStop(0,rgba('#c74436',(0.16+0.12*pulse).toFixed(3)));
+    g.addColorStop(1,'rgba(199,68,54,0)');
+    ctx.fillStyle=g;ctx.fillRect(0,hz,W,VIEW_H-hz);
+    for(let i=1;i<=6;i++){
+      const t=i/7,y=hz-Math.pow(t,1.6)*hz;
+      if(y<2)break;
+      ctx.fillStyle=rgba('#241a18',(0.10+0.22*t).toFixed(3));
+      ctx.fillRect(0,y,W,Math.max(1,4*t));
+      ctx.fillStyle=rgba('#8a2a20',(0.06+0.14*t*pulse).toFixed(3));
+      ctx.fillRect(0,y+Math.max(1,3*t),W,1)}
+    ctx.fillStyle=rgba('#c74436',(0.05+0.05*pulse).toFixed(3));
+    ctx.fillRect(0,0,W,VIEW_H)},
+
+  /* STAGE 4 — dust. Motes drifting in front of the camera and a pale
+     debris film on the floor. Nothing overhead is intact. */
+  rubble:bob=>{
+    const hz=HORIZON+bob;
+    for(let i=1;i<=8;i++){
+      const t=i/9,y=hz+Math.pow(t,2.0)*(VIEW_H-hz);
+      if(y>VIEW_H-1)break;
+      ctx.fillStyle=rgba('#c8bda6',(0.03+0.07*t).toFixed(3));
+      ctx.fillRect(0,y,W,Math.max(1,3*t))}
+    const now=performance.now();
+    ctx.fillStyle='rgba(214,206,186,.30)';
+    for(let i=0;i<70;i++){
+      const sd=i*7919;
+      const x=(sd%W+((now*0.008+i*13)%W))%W;
+      const y=((sd%VIEW_H)+((now*0.013+i*29)%VIEW_H))%VIEW_H;
+      const sz=(i%3)?1:2;
+      ctx.globalAlpha=0.10+0.22*Math.abs(Math.sin(now*0.001+i));
+      ctx.fillRect(x,y,sz,sz)}
+    ctx.globalAlpha=1;
+    ctx.fillStyle=rgba('#8c8474',0.05);ctx.fillRect(0,0,W,VIEW_H)},
+
+  /* STAGE 5 — clean high work lighting and a wet sheen on the new pour.
+     The only stage that is genuinely bright. */
+  found:bob=>{
+    const hz=HORIZON+bob;
+    let g=ctx.createLinearGradient(0,0,0,hz);
+    g.addColorStop(0,'rgba(232,240,210,.10)');g.addColorStop(1,'rgba(232,240,210,0)');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,hz);
+    for(let k=-2;k<=2;k++){                                 /* strung work lamps */
+      const x=W/2+k*(W/5);
+      const gl=ctx.createRadialGradient(x,hz*0.30,2,x,hz*0.30,44);
+      gl.addColorStop(0,'rgba(255,250,220,.28)');gl.addColorStop(1,'rgba(255,250,220,0)');
+      ctx.fillStyle=gl;ctx.fillRect(x-44,hz*0.30-44,88,88);
+      ctx.fillStyle='rgba(255,252,232,.55)';ctx.fillRect(x-2,hz*0.30-2,4,4)}
+    g=ctx.createLinearGradient(0,hz,0,VIEW_H);
+    g.addColorStop(0,'rgba(180,200,150,.05)');g.addColorStop(1,'rgba(210,225,180,.13)');
+    ctx.fillStyle=g;ctx.fillRect(0,hz,W,VIEW_H-hz);
+    for(let i=1;i<=6;i++){                                  /* sheen bands */
+      const t=i/7,y=hz+Math.pow(t,1.7)*(VIEW_H-hz);
+      ctx.fillStyle=rgba('#e8f0d2',(0.03+0.05*t).toFixed(3));
+      ctx.fillRect(0,y,W,Math.max(1,2*t))}},
+
+  /* STAGE 6 — nothing. A measured grid receding into black, no light
+     source that belongs to anybody. */
+  void:bob=>{
+    const hz=HORIZON+bob;
+    ctx.strokeStyle='rgba(214,210,198,.07)';ctx.lineWidth=1;
+    for(let k=-8;k<=8;k++){
+      ctx.beginPath();ctx.moveTo(W/2+k*5,hz);ctx.lineTo(W/2+k*90,VIEW_H);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(W/2+k*5,hz);ctx.lineTo(W/2+k*90,0);ctx.stroke()}
+    for(let i=1;i<=7;i++){
+      const t=i/8;
+      ctx.strokeStyle=rgba('#d6d2c6',(0.03+0.05*t).toFixed(3));
+      const yb=hz+Math.pow(t,2)*(VIEW_H-hz),yt=hz-Math.pow(t,2)*hz;
+      ctx.beginPath();ctx.moveTo(0,yb);ctx.lineTo(W,yb);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(0,yt);ctx.lineTo(W,yt);ctx.stroke()}}
+};
+
+/* Perspective ceiling pipe runs — Stage 1 only. Horizontal conduit bands
+   bunched toward the horizon, so the ceiling reads low and serviced
+   instead of as empty dark space.                                      */
+function drawPipes(bob){
+  const hz=HORIZON+bob;
+  for(let i=1;i<=9;i++){
+    const t=i/10, y=hz-Math.pow(t,1.7)*hz;
+    if(y<2)break;
+    const a=0.05+0.16*t;
+    ctx.fillStyle=rgba('#4a3418',a.toFixed(3));
+    ctx.fillRect(0,y,W,Math.max(1,3.2*t));
+    ctx.fillStyle=rgba('#8a6a2a',(a*0.5).toFixed(3));
+    ctx.fillRect(0,y,W,1)}
+  /* two conduits running away from the camera down the middle */
+  ctx.fillStyle='rgba(74,52,24,.20)';
+  ctx.beginPath();ctx.moveTo(W*0.34,0);ctx.lineTo(W*0.47,hz);
+  ctx.lineTo(W*0.50,hz);ctx.lineTo(W*0.40,0);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(W*0.66,0);ctx.lineTo(W*0.53,hz);
+  ctx.lineTo(W*0.50,hz);ctx.lineTo(W*0.60,0);ctx.closePath();ctx.fill()}
+
+/* Perspective floor grating — Stage 1 only. Gives the floor real depth
+   cues that Stage 0's flat gradient does not have.                     */
+function drawGrate(bob){
+  const hz=HORIZON+bob;
+  for(let i=1;i<=14;i++){
+    const t=i/15, y=hz+Math.pow(t,1.9)*(VIEW_H-hz);
+    if(y>VIEW_H-1)break;
+    ctx.fillStyle=rgba('#0a0705',(0.10+0.34*t).toFixed(3));
+    ctx.fillRect(0,y,W,Math.max(1,2.4*t))}
+  for(let k=-6;k<=6;k++){
+    const xTop=W/2+k*7, xBot=W/2+k*66;
+    ctx.strokeStyle='rgba(10,7,5,.22)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(xTop,hz);ctx.lineTo(xBot,VIEW_H);ctx.stroke()}}
+
+function drawSprites(ca,sa,plx,ply,bob){
+  const list=[];
+  for(let i=0;i<items.length;i++){const it=items[i];
+    if(!it.taken)list.push({x:it.x,y:it.y,k:it.k})}
+  for(let i=0;i<fixtures.length;i++){const f=fixtures[i];
+    list.push({x:f.x,y:f.y,k:'fixture',ref:f})}
+  for(let i=0;i<lockers.length;i++){const l=lockers[i];
+    if(l.alive)list.push({x:l.x,y:l.y,k:'locker',ref:l})}
+  for(let i=0;i<custs.length;i++){const c=custs[i];
+    if(c.alive)list.push({x:c.x,y:c.y,k:'cust',ref:c});
+    if(c.sweep.alive)list.push({x:c.sweep.x,y:c.sweep.y,k:'sweep',ref:c.sweep})}
+  for(let i=0;i<auds.length;i++)if(auds[i].alive)
+    list.push({x:auds[i].x,y:auds[i].y,k:'aud',ref:auds[i]});
+  if(advocate&&advocate.alive)
+    list.push({x:advocate.x,y:advocate.y,k:'adv',ref:advocate});
+  const inv=1/(plx*sa-ca*ply);
+  for(let i=0;i<list.length;i++){const sp=list[i];
+    const dx=sp.x-P.x,dy=sp.y-P.y;
+    sp.tz=inv*(-ply*dx+plx*dy);sp.tx=inv*(sa*dx-ca*dy);sp.d=dx*dx+dy*dy}
+  list.sort((a,b)=>b.d-a.d);
+  for(let i=0;i<list.length;i++){const sp=list[i];
+    if(sp.tz<=0.10)continue;
+    drawSprite(sp,(W/2)*(1+sp.tx/sp.tz),VIEW_H/sp.tz,bob)}}
+
+function drawSprite(sp,sx,size,bob){
+  const x0=Math.max(0,(sx-size/2)|0),x1=Math.min(W-1,(sx+size/2)|0);
+  if(x1<x0)return;
+  let vis=false;
+  for(let x=x0;x<=x1;x+=2)if(sp.tz<zbuf[x]+0.1){vis=true;break}
+  if(!vis)return;
+  ctx.save();ctx.beginPath();
+  let open=false,run=0;
+  for(let x=x0;x<=x1;x++){
+    const ok=sp.tz<zbuf[x]+0.1;
+    if(ok&&!open){open=true;run=x}
+    else if(!ok&&open){open=false;ctx.rect(run,0,x-run,VIEW_H)}}
+  if(open)ctx.rect(run,0,x1-run+1,VIEW_H);
+  ctx.clip();
+  ctx.globalAlpha=Math.max(0.08,1-fogF(sp.tz)*0.85);
+  const cy=HORIZON+bob;
+  if(sp.k==='fixture')paintFixture(sp.ref,sx,cy,size);
+  else if(sp.k==='locker')paintLocker(sp.ref,sx,cy,size);
+  else if(sp.k==='cust')paintCust(sp.ref,sx,cy,size);
+  else if(sp.k==='sweep')paintSweep(sp.ref,sx,cy,size);
+  else if(sp.k==='aud')paintAuditor(sp.ref,sx,cy,size);
+  else if(sp.k==='adv')paintAdvocate(sp.ref,sx,cy,size);
+  else paintItem(sp.k,sx,cy,size);
+  ctx.restore()}
+
+function paintItem(k,sx,cy,size){
+  const y=cy+size*0.17;
+  if(k==='access'){
+    const d=Math.max(5,size*0.20);
+    const gl=ctx.createRadialGradient(sx,y,1,sx,y,d*1.9);
+    gl.addColorStop(0,'rgba(255,196,94,.5)');gl.addColorStop(1,'rgba(255,196,94,0)');
+    ctx.fillStyle=gl;ctx.fillRect(sx-d*2,y-d*2,d*4,d*4);
+    ctx.save();ctx.translate(sx,y);ctx.rotate(Math.PI/4);
+    ctx.fillStyle='#e09422';ctx.fillRect(-d/2,-d/2,d,d);
+    ctx.strokeStyle='#ffc45e';ctx.lineWidth=Math.max(1,d*0.14);
+    ctx.strokeRect(-d/2,-d/2,d,d);ctx.restore()}
+  else if(k==='battery'){
+    const w=Math.max(4,size*0.13),h=w*1.5;
+    ctx.fillStyle='#232a33';ctx.fillRect(sx-w/2,y-h/2,w,h);
+    ctx.fillStyle='#7da457';ctx.fillRect(sx-w/2+1,y,w-2,h/2-1);
+    ctx.fillStyle='#4a5563';ctx.fillRect(sx-w/4,y-h/2-w*0.25,w/2,w*0.25)}
+  else if(k==='ration'){
+    const w=Math.max(5,size*0.16),h=w*0.72;
+    ctx.fillStyle='#4a5563';ctx.fillRect(sx-w/2,y-h/2,w,h);
+    ctx.fillStyle='#8b9b6b';ctx.fillRect(sx-w/2+1,y-h/2+1,w-2,h*0.4);
+    ctx.fillStyle='#c74436';ctx.fillRect(sx-w*0.1,y-h/2,Math.max(1,w*0.2),h)}
+  else if(k==='notes'){
+    const w=Math.max(4,size*0.13),h=w*1.25;
+    ctx.fillStyle='#cec8b4';ctx.fillRect(sx-w/2,y-h/2,w,h);
+    ctx.fillStyle='#6b6552';
+    for(let i=1;i<4;i++)ctx.fillRect(sx-w/2+1,y-h/2+i*(h/4.5),w-2,Math.max(1,h*0.06))}
+  else{
+    const w=Math.max(6,size*0.20),h=w*0.5;
+    const gl=ctx.createRadialGradient(sx,y,1,sx,y,w*1.7);
+    gl.addColorStop(0,'rgba(121,163,196,.45)');gl.addColorStop(1,'rgba(121,163,196,0)');
+    ctx.fillStyle=gl;ctx.fillRect(sx-w*2,y-w*2,w*4,w*4);
+    ctx.fillStyle='#2b3d4e';ctx.fillRect(sx-w/2,y-h/2,w,h);
+    ctx.fillStyle='#79a3c4';ctx.fillRect(sx-w/2,y-h/2,w,Math.max(1,h*0.22));
+    ctx.fillStyle='#cec8b4';ctx.fillRect(sx-w/2,y-h/2,Math.max(1,w*0.14),h)}}
+
+function paintFixture(f,sx,cy,size){
+  const y=cy-size*0.34,w=Math.max(4,size*0.17),h=Math.max(2,w*0.42);
+  if(f.alive){
+    /* Stage 1's lights are failing: deeper flicker, dimmer peak */
+    const fail=SG.rust>0.2?0.45:1;
+    const on=(0.6+0.4*Math.sin(performance.now()*0.004+f.flick))*
+             (SG.rust>0.2?(0.55+0.45*Math.sin(performance.now()*0.017+f.flick*3)):1);
+    const gl=ctx.createRadialGradient(sx,y,1,sx,y,w*3.4);
+    gl.addColorStop(0,'rgba(255,196,94,'+(0.42*on*(0.6+0.4*fail)).toFixed(3)+')');
+    gl.addColorStop(1,'rgba(255,196,94,0)');
+    ctx.fillStyle=gl;ctx.fillRect(sx-w*3.4,y-w*3.4,w*6.8,w*6.8);
+    ctx.fillStyle='#2a323d';ctx.fillRect(sx-w/2,y-h/2,w,h);
+    ctx.fillStyle='rgba(255,'+((180+50*on)|0)+',110,'+(0.45+0.45*on).toFixed(3)+')';
+    ctx.fillRect(sx-w/2+1,y-h/2+1,Math.max(1,w-2),Math.max(1,h-2))}
+  else{
+    ctx.fillStyle='#171c22';ctx.fillRect(sx-w/2,y-h/2,w,h);
+    ctx.fillStyle='#0a0c10';ctx.fillRect(sx-w/2+1,y-h/2+1,Math.max(1,w-2),Math.max(1,h-2));
+    ctx.fillStyle='#3a4450';ctx.fillRect(sx-w*0.1,y+h/2,Math.max(1,w*0.2),h*0.5)}}
+
+function paintLocker(l,sx,cy,size){
+  const h=size*0.52,w=h*0.42,top=cy-size*0.06,hit=l.hitT>0;
+  const g=ctx.createLinearGradient(sx-w/2,0,sx+w/2,0);
+  g.addColorStop(0,hit?'#6b241d':'#1a1f26');
+  g.addColorStop(.45,hit?'#c74436':'#39424e');
+  g.addColorStop(1,hit?'#4a1a14':'#121720');
+  ctx.fillStyle=g;ctx.fillRect(sx-w/2,top,w,h);
+  ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(sx-1,top,2,h);
+  ctx.fillStyle='#8a5a14';
+  ctx.fillRect(sx+w*0.18,top+h*0.42,Math.max(1,w*0.12),Math.max(1,h*0.06));
+  ctx.fillStyle='rgba(255,255,255,.07)';ctx.fillRect(sx-w/2,top,w,Math.max(1,h*0.04))}
+
+function paintCust(c,sx,cy,size){
+  const struck=c.hitT>0,hh=size*0.62,ww=hh*0.52,top=cy-size*0.12;
+  const g=ctx.createLinearGradient(sx-ww/2,0,sx+ww/2,0);
+  if(struck){g.addColorStop(0,'#8a2f26');g.addColorStop(.5,'#d6604f');g.addColorStop(1,'#6b241d')}
+  else{g.addColorStop(0,'#1c222b');g.addColorStop(.45,'#3a4450');g.addColorStop(1,'#141920')}
+  ctx.fillStyle=g;
+  roundRect(sx-ww/2,top+hh*0.22,ww,hh*0.55,ww*0.12);ctx.fill();
+  ctx.beginPath();ctx.ellipse(sx,top+hh*0.13,ww*0.30,hh*0.13,0,0,7);ctx.fill();
+  ctx.fillStyle=struck?'#5a1f18':'#10141b';
+  roundRect(sx-ww*0.58,top+hh*0.74,ww*1.16,hh*0.24,ww*0.10);ctx.fill();
+  const on=c.light<0.5;
+  const lg=ctx.createRadialGradient(sx,top+hh*0.13,0,sx,top+hh*0.13,Math.max(1,ww*0.55));
+  lg.addColorStop(0,on?'rgba(255,196,94,.65)':'rgba(255,196,94,.12)');
+  lg.addColorStop(1,'rgba(255,196,94,0)');
+  ctx.fillStyle=lg;ctx.fillRect(sx-ww,top-hh*0.12,ww*2,hh*0.55);
+  ctx.fillStyle=struck?'#ffd9d2':(on?'#ffc45e':'#8a5a14');
+  ctx.beginPath();ctx.arc(sx,top+hh*0.13,Math.max(1.5,ww*0.08),0,7);ctx.fill();
+  ctx.fillStyle=struck?'#8a2f26':'#232a33';
+  ctx.fillRect(sx-ww*0.62,top+hh*0.30,Math.max(1,ww*0.14),hh*0.34);
+  ctx.fillRect(sx+ww*0.48,top+hh*0.30,Math.max(1,ww*0.14),hh*0.34)}
+
+/* AUDITOR — boxier, no clear limbs, solid red scan light. Canon silhouette:
+   a compliance unit, not a body. Reads instantly different from CUSTODIAN. */
+function paintAuditor(a,sx,cy,size){
+  const struck=a.hitT>0,hh=size*0.56,ww=hh*0.66,top=cy-size*0.08;
+  const g=ctx.createLinearGradient(sx-ww/2,0,sx+ww/2,0);
+  if(struck){g.addColorStop(0,'#8a2f26');g.addColorStop(.5,'#e8a49c');g.addColorStop(1,'#6b241d')}
+  else{g.addColorStop(0,'#1d1a1e');g.addColorStop(.45,'#3f3339');g.addColorStop(1,'#151215')}
+  ctx.fillStyle=g;
+  ctx.fillRect(sx-ww/2,top+hh*0.16,ww,hh*0.68);              /* hard box body */
+  ctx.fillRect(sx-ww*0.36,top,ww*0.72,hh*0.18);              /* head block */
+  ctx.fillStyle='rgba(0,0,0,.45)';
+  ctx.fillRect(sx-ww/2,top+hh*0.44,ww,Math.max(1,hh*0.05));  /* seam */
+  ctx.fillStyle=struck?'#4a1a14':'#0e0b0d';
+  ctx.fillRect(sx-ww*0.42,top+hh*0.84,ww*0.84,hh*0.16);      /* base */
+  const lg=ctx.createRadialGradient(sx,top+hh*0.09,0,sx,top+hh*0.09,Math.max(1,ww*0.7));
+  lg.addColorStop(0,'rgba(199,68,54,.62)');lg.addColorStop(1,'rgba(199,68,54,0)');
+  ctx.fillStyle=lg;ctx.fillRect(sx-ww,top-hh*0.2,ww*2,hh*0.7);
+  ctx.fillStyle=struck?'#ffd9d2':'#e2564a';                  /* SOLID light */
+  ctx.fillRect(sx-ww*0.22,top+hh*0.06,ww*0.44,Math.max(1,hh*0.07));
+  ctx.fillStyle='rgba(226,86,74,'+(0.25+0.45*(a.scan<0.5?a.scan*2:2-a.scan*2)).toFixed(3)+')';
+  ctx.fillRect(sx-ww/2,top+hh*0.16+hh*0.68*a.scan,ww,1)}     /* scan line */
+
+/* ADVOCATE — taller, smoother, the most humanoid thing down here, white
+   status light. Canon: it is trying to help. It looks like it means well. */
+function paintAdvocate(a,sx,cy,size){
+  const struck=a.hitT>0,hh=size*0.86,ww=hh*0.30,top=cy-size*0.30;
+  const halo=ctx.createRadialGradient(sx,top+hh*0.16,1,sx,top+hh*0.16,Math.max(2,ww*3.2));
+  halo.addColorStop(0,'rgba(238,236,226,'+(0.30+0.16*Math.sin(a.glow*6.28)).toFixed(3)+')');
+  halo.addColorStop(1,'rgba(238,236,226,0)');
+  ctx.fillStyle=halo;ctx.fillRect(sx-ww*3.2,top-ww*2,ww*6.4,hh*0.7);
+  const g=ctx.createLinearGradient(sx-ww/2,0,sx+ww/2,0);
+  if(struck){g.addColorStop(0,'#8a2f26');g.addColorStop(.5,'#f0dcd8');g.addColorStop(1,'#6b241d')}
+  else{g.addColorStop(0,'#25262a');g.addColorStop(.42,'#6e7076');g.addColorStop(1,'#1a1b1f')}
+  ctx.fillStyle=g;
+  roundRect(sx-ww/2,top+hh*0.20,ww,hh*0.56,ww*0.48);ctx.fill();   /* smooth torso */
+  ctx.beginPath();ctx.ellipse(sx,top+hh*0.14,ww*0.40,hh*0.10,0,0,7);ctx.fill();
+  const sway=Math.sin(a.step)*ww*0.16;                            /* it walks */
+  roundRect(sx-ww*0.30+sway,top+hh*0.74,ww*0.26,hh*0.26,ww*0.13);ctx.fill();
+  roundRect(sx+ww*0.04-sway,top+hh*0.74,ww*0.26,hh*0.26,ww*0.13);ctx.fill();
+  /* the open hands — the thing it is offering */
+  ctx.fillStyle=struck?'#e8b0a8':'#8c8f96';
+  roundRect(sx-ww*0.78,top+hh*0.34,ww*0.30,hh*0.30,ww*0.15);ctx.fill();
+  roundRect(sx+ww*0.48,top+hh*0.34,ww*0.30,hh*0.30,ww*0.15);ctx.fill();
+  ctx.fillStyle=struck?'#fff1ee':'#f2efe6';
+  ctx.beginPath();ctx.arc(sx,top+hh*0.14,Math.max(1.5,ww*0.13),0,7);ctx.fill()}
+
+function paintSweep(s,sx,cy,size){
+  const live=s.tethered,d=Math.max(3,size*0.16),struck=s.hitT>0;
+  const y=cy-size*0.02+Math.sin(s.ang*2)*size*0.03;
+  if(live){
+    const gl=ctx.createRadialGradient(sx,y,1,sx,y,d*2.2);
+    gl.addColorStop(0,'rgba(255,196,94,.30)');gl.addColorStop(1,'rgba(255,196,94,0)');
+    ctx.fillStyle=gl;ctx.fillRect(sx-d*2.2,y-d*2.2,d*4.4,d*4.4)}
+  const g=ctx.createLinearGradient(sx-d/2,0,sx+d/2,0);
+  if(struck){g.addColorStop(0,'#8a2f26');g.addColorStop(1,'#d6604f')}
+  else if(live){g.addColorStop(0,'#1c222b');g.addColorStop(.5,'#4a5563');g.addColorStop(1,'#141920')}
+  else{g.addColorStop(0,'#12161c');g.addColorStop(1,'#0c0f14')}
+  ctx.fillStyle=g;
+  ctx.beginPath();ctx.ellipse(sx,y,d*0.62,d*0.42,0,0,7);ctx.fill();
+  ctx.fillStyle=live?(struck?'#ffd9d2':'#ffc45e'):'#2a323d';
+  ctx.beginPath();ctx.arc(sx,y-d*0.1,Math.max(1,d*0.13),0,7);ctx.fill();
+  if(live){ctx.fillStyle='rgba(255,196,94,.22)';
+    ctx.fillRect(sx-d*0.7,y+d*0.42,d*1.4,Math.max(1,d*0.12))}}
+
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+
+function drawWeapon(){
+  const bx=Math.sin(walkT)*4,by=Math.abs(Math.cos(walkT))*3;
+  const gx=W/2+22+bx,gy=VIEW_H-52+by+(GUN.cool>FIRE_COOLDOWN-4?6:0);
+  if(GUN.flash>0){
+    const f=ctx.createRadialGradient(gx+6,gy-4,2,gx+6,gy-4,36);
+    f.addColorStop(0,'rgba(255,244,210,.95)');f.addColorStop(.4,'rgba(255,196,94,.6)');
+    f.addColorStop(1,'rgba(255,196,94,0)');
+    ctx.fillStyle=f;ctx.fillRect(gx-32,gy-42,76,76)}
+  const g=ctx.createLinearGradient(gx-10,0,gx+26,0);
+  g.addColorStop(0,'#0c0f14');g.addColorStop(.5,'#2a323d');g.addColorStop(1,'#0c0f14');
+  ctx.fillStyle=g;
+  roundRect(gx-2,gy-2,20,58,4);ctx.fill();
+  roundRect(gx-12,gy+26,40,32,5);ctx.fill();
+  ctx.fillStyle='#10141b';roundRect(gx+2,gy+40,30,22,4);ctx.fill();
+  ctx.fillStyle=P.payload>0?'#8a5a14':'#c74436';ctx.fillRect(gx+4,gy+30,8,3);
+  ctx.fillStyle='rgba(255,255,255,.08)';ctx.fillRect(gx,gy-2,3,58)}
+
+/* ------------------------------------------------------------------ HUD */
+function text(s,x,y,c,sz,w,f){ctx.fillStyle=c;
+  ctx.font=(w||'400')+' '+(sz||9)+"px '"+(f||'IBM Plex Mono')+"',monospace";
+  ctx.textBaseline='top';ctx.fillText(s,x,y)}
+function drawHUD(){
+  const g=ctx.createLinearGradient(0,VIEW_H,0,H);
+  g.addColorStop(0,'#0c0f14');g.addColorStop(1,'#06070a');
+  ctx.fillStyle=g;ctx.fillRect(0,VIEW_H,W,HUD_H);
+  ctx.fillStyle='rgba(224,148,34,.5)';ctx.fillRect(0,VIEW_H,W,1);
+  const L=(t,x)=>text(t,x,VIEW_H+7,'#4a5563',8,'600','Chakra Petch');
+  L('CHARGE',12);
+  const bx=12,by=VIEW_H+18,bw=104,bh=9;
+  ctx.fillStyle='#06070a';roundRect(bx,by,bw,bh,3);ctx.fill();
+  const cg=ctx.createLinearGradient(bx,0,bx+bw,0);
+  if(P.charge>40){cg.addColorStop(0,'#8a5a14');cg.addColorStop(1,'#e09422')}
+  else if(P.charge>15){cg.addColorStop(0,'#e09422');cg.addColorStop(1,'#ffc45e')}
+  else{cg.addColorStop(0,'#8a2f26');cg.addColorStop(1,'#c74436')}
+  ctx.fillStyle=cg;
+  if(P.charge>0){roundRect(bx+1,by+1,Math.max(2,(bw-2)*(P.charge/100)),bh-2,2);ctx.fill()}
+  text(String(Math.ceil(P.charge)),bx+bw+7,by-1,P.charge>15?'#ffc45e':'#c74436',10,'600','Chakra Petch');
+  L('PAYLOAD',152);text(String(P.payload).padStart(2,'0'),152,VIEW_H+17,
+    P.payload>0?'#ffc45e':'#c74436',12,'700','Chakra Petch');
+  L('ACCESS',216);
+  const needTxt=String(P.access)+(SG.descentCost>1?'/'+SG.descentCost:'');
+  text(needTxt,216,VIEW_H+17,P.access>0?'#ffc45e':'#3a4450',12,'700','Chakra Petch');
+  L('SEALS',272);text(sealsOpened+'/'+sealsTotal,272,VIEW_H+17,'#79a3c4',12,'700','Chakra Petch');
+  L('CLEARANCE',330);text(String(P.clearance),330,VIEW_H+17,
+    P.clearance>0?'#cec8b4':'#3a4450',12,'700','Chakra Petch');
+  text(stageLabel(SG),12,VIEW_H+33,SG.accent||'#8a5a14',8,'600','Chakra Petch');
+  let lit=0;for(let i=0;i<fixtures.length;i++)if(fixtures[i].alive)lit++;
+  let right='FIXTURES '+lit+'/'+fixtures.length;
+  if(panelsTotal)right='ROUTES '+panelsFound+'/'+panelsTotal+'  ·  '+right;
+  ctx.font="600 8px 'Chakra Petch',sans-serif";
+  text(right,W-14-ctx.measureText(right).width,VIEW_H+33,lit>2?'#4a5563':'#8a5a14',8,'600','Chakra Petch');
+  if(interactT>0&&interactMsg){
+    ctx.globalAlpha=Math.min(1,interactT/30);
+    ctx.font="600 9px 'Chakra Petch',sans-serif";
+    const wpx=ctx.measureText(interactMsg).width+28;
+    ctx.fillStyle='rgba(6,7,10,.85)';roundRect(W/2-wpx/2,VIEW_H-24,wpx,16,3);ctx.fill();
+    ctx.fillStyle='#ffc45e';ctx.textBaseline='top';ctx.textAlign='center';
+    ctx.fillText(interactMsg,W/2,VIEW_H-20);
+    ctx.textAlign='left';ctx.globalAlpha=1}}
+
+function drawMirror(){
+  ctx.fillStyle='#0b0a08';ctx.fillRect(0,0,W,H);
+  const g=ctx.createRadialGradient(W/2,VIEW_H*0.42,10,W/2,VIEW_H*0.42,W*0.5);
+  g.addColorStop(0,'#221f18');g.addColorStop(1,'#0b0a08');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,VIEW_H);
+  const mw=120,mh=148,mx=W/2-mw/2,my=VIEW_H*0.42-mh/2;
+  ctx.fillStyle='#2b2a26';roundRect(mx-6,my-6,mw+12,mh+12,4);ctx.fill();
+  const mg=ctx.createLinearGradient(mx,my,mx+mw,my+mh);
+  mg.addColorStop(0,'#3a3d35');mg.addColorStop(.5,'#7c7f70');mg.addColorStop(1,'#262822');
+  ctx.fillStyle=mg;ctx.fillRect(mx,my,mw,mh);
+  ctx.fillStyle='rgba(12,11,9,.85)';
+  ctx.beginPath();ctx.ellipse(W/2,my+mh*0.36,14,17,0,0,7);ctx.fill();
+  roundRect(W/2-17,my+mh*0.50,34,mh*0.46,8);ctx.fill();
+  ctx.fillStyle='rgba(255,255,250,.18)';ctx.fillRect(mx+12,my+6,5,mh-12);
+  text('— ALL CHANNELS MUTED —',W/2-72,my+mh+14,'#4a463c',9,'400');
+  ctx.fillStyle='#06070a';ctx.fillRect(0,H-76,W,76);
+  ctx.fillStyle='rgba(138,90,20,.6)';ctx.fillRect(0,H-76,W,1);
+  text('STAGE LOG — '+SG.name,12,H-68,'#8a5a14',8,'600','Chakra Petch');
+  wrapText(SG.log.slice(0,logIdx),12,H-54,W-24,12,'#e8e3d6');
+  if(logDone)text('[A] RECORD LOG      [B / DOWN] TURN AWAY',12,H-12,'#ffc45e',8,'600','Chakra Petch');
+  else text('[A] skip',W-56,H-12,'#4a5563',8)}
+function wrapText(s,x,y,maxW,lh,c){
+  ctx.fillStyle=c;ctx.font="9px 'IBM Plex Mono',monospace";ctx.textBaseline='top';
+  let line='',yy=y;const words=s.split(' ');
+  for(let i=0;i<words.length;i++){
+    const t=line?line+' '+words[i]:words[i];
+    if(ctx.measureText(t).width>maxW){ctx.fillText(line,x,yy);line=words[i];yy+=lh;
+      if(yy>H-16)return}
+    else line=t}
+  if(line)ctx.fillText(line,x,yy)}
+
+/* ═════════════════════════════════════════════════════════════ AUTOMAP
+   Only what has been seen. Hidden panels read as ordinary wall until
+   they are opened — the map never gives away a route you have not found. */
+function drawAutomap(){
+  ctx.fillStyle='rgba(6,7,10,.90)';ctx.fillRect(0,0,W,H);
+  const CS=13,MX=16,MY=38;
+  /* header */
+  text('AUTOMAP — '+stageLabel(SG),MX,8,'#ffc45e',10,'700','Chakra Petch');
+  text(SG.place,MX,20,'#4a5563',8,'400');
+  ctx.fillStyle='rgba(224,148,34,.35)';ctx.fillRect(MX,31,W-32,1);
+
+  /* discovered geometry */
+  let seen=0;
+  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    if(!discovered[y*MAP_W+x])continue;
+    seen++;
+    const px=MX+x*CS,py=MY+y*CS,c=mapAt(x,y);
+    if(c===C_OPEN){ctx.fillStyle='#12171e';ctx.fillRect(px,py,CS,CS);
+      ctx.fillStyle='rgba(224,148,34,.06)';ctx.fillRect(px,py,CS,1)}
+    else if(c===C_MIRROR){ctx.fillStyle='#7c7f70';ctx.fillRect(px+1,py+1,CS-2,CS-2);
+      ctx.fillStyle='#0b0a08';ctx.fillRect(px+4,py+3,CS-8,CS-6)}
+    else if(c===C_DESCENT){ctx.fillStyle='#5b86ab';ctx.fillRect(px+1,py+1,CS-2,CS-2);
+      ctx.fillStyle='#0c0f14';ctx.fillRect(px+5,py+5,3,3)}
+    else if(c===C_INNER){ctx.fillStyle='#37536b';ctx.fillRect(px+1,py+1,CS-2,CS-2);
+      ctx.fillStyle='#e09422';ctx.fillRect(px+4,py+6,CS-8,2)}
+    else if(c===C_PLATE){ctx.fillStyle='#6b6152';ctx.fillRect(px+1,py+1,CS-2,CS-2)}
+    else if(c===C_WALL3){ctx.fillStyle='#39404a';ctx.fillRect(px,py,CS,CS);
+      ctx.strokeStyle='rgba(232,227,214,.35)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(px,py+CS*0.7);
+      ctx.bezierCurveTo(px+CS*0.4,py+CS*0.2,px+CS*0.6,py+CS*0.9,px+CS,py+CS*0.4);
+      ctx.stroke()}
+    else{ /* wall, and any panel still disguised as wall */
+      ctx.fillStyle='#2e3742';ctx.fillRect(px,py,CS,CS);
+      ctx.fillStyle='#39434f';ctx.fillRect(px,py,CS,2)}}
+
+  /* things worth remembering, only where seen */
+  const mark=(x,y,fn)=>{if(!discovered[(y|0)*MAP_W+(x|0)])return;
+    fn(MX+x*CS,MY+y*CS)};
+  for(let i=0;i<items.length;i++){const it=items[i];if(it.taken)continue;
+    mark(it.x,it.y,(px,py)=>{
+      if(it.k==='access'){ctx.fillStyle='#ffc45e';
+        ctx.save();ctx.translate(px,py);ctx.rotate(Math.PI/4);
+        ctx.fillRect(-2.5,-2.5,5,5);ctx.restore()}
+      else if(it.k==='doc'){ctx.fillStyle='#79a3c4';ctx.fillRect(px-3,py-2,6,4)}
+      else if(it.k==='notes'){ctx.fillStyle='#cec8b4';ctx.fillRect(px-2,py-2,4,4)}
+      else{ctx.fillStyle='#5c6b4a';ctx.fillRect(px-2,py-2,3,3)}})}
+  for(let i=0;i<lockers.length;i++){const l=lockers[i];if(!l.alive)continue;
+    mark(l.x,l.y,(px,py)=>{ctx.strokeStyle='#8a5a14';ctx.lineWidth=1;
+      ctx.strokeRect(px-3.5,py-3.5,7,7)})}
+  for(let i=0;i<custs.length;i++){const c=custs[i];if(!c.alive)continue;
+    mark(c.x,c.y,(px,py)=>{ctx.fillStyle='rgba(224,148,34,.9)';
+      ctx.beginPath();ctx.arc(px,py,3,0,7);ctx.fill()})}
+  for(let i=0;i<auds.length;i++){const a=auds[i];if(!a.alive)continue;
+    mark(a.x,a.y,(px,py)=>{ctx.fillStyle='rgba(226,86,74,.95)';
+      ctx.fillRect(px-3,py-3,6,6)})}
+  if(advocate&&advocate.alive)mark(advocate.x,advocate.y,(px,py)=>{
+    ctx.fillStyle='rgba(242,239,230,.95)';
+    ctx.beginPath();ctx.moveTo(px,py-4.5);ctx.lineTo(px+4,py+3);
+    ctx.lineTo(px-4,py+3);ctx.closePath();ctx.fill()})
+
+  /* player + facing */
+  const ppx=MX+P.x*CS,ppy=MY+P.y*CS;
+  ctx.save();ctx.translate(ppx,ppy);ctx.rotate(P.a);
+  ctx.fillStyle='#ffc45e';ctx.beginPath();
+  ctx.moveTo(6,0);ctx.lineTo(-4,-4);ctx.lineTo(-2,0);ctx.lineTo(-4,4);
+  ctx.closePath();ctx.fill();ctx.restore();
+
+  /* right-hand status column */
+  const RX=MX+MAP_W*CS+18;let ry=MY+2;
+  const row=(l,v,c)=>{text(l,RX,ry,'#4a5563',8,'600','Chakra Petch');
+    text(v,RX+94,ry,c||'#e8e3d6',8,'600','Chakra Petch');ry+=13};
+  let cA=0,sT=0,fL=0,acc=0;
+  for(let i=0;i<custs.length;i++){if(custs[i].alive)cA++;
+    if(custs[i].sweep.alive&&custs[i].sweep.tethered)sT++}
+  for(let i=0;i<fixtures.length;i++)if(fixtures[i].alive)fL++;
+  for(let i=0;i<items.length;i++)if(items[i].k==='access'&&!items[i].taken)acc++;
+  row('ACCESS HELD',String(P.access)+' / '+SG.descentCost+' NEEDED',
+    P.access>=SG.descentCost?'#7da457':'#ffc45e');
+  row('ACCESS LEFT',String(acc)+' UNCOLLECTED','#8b95a1');
+  row('SEALS OPENED',sealsOpened+' / '+sealsTotal,'#79a3c4');
+  if(panelsTotal)row('HIDDEN ROUTES',panelsFound+' / '+panelsTotal,
+    panelsFound?'#ffc45e':'#8b95a1');
+  if(plate)row('WEST PLATE','INTACT','#8b95a1');
+  row('CUSTODIANS',cA+' ACTIVE',cA?'#e09422':'#7da457');
+  if(auds.length){let aA=0;for(let i=0;i<auds.length;i++)if(auds[i].alive)aA++;
+    row('AUDITORS',aA+' SCANNING',aA?'#e2564a':'#7da457')}
+  if(advocate)row('ADVOCATE',advocate.alive?'APPROACHING':'DOWN',
+    advocate.alive?'#f2efe6':'#7da457');
+  row('SWEEPS',sT+' TETHERED','#8b95a1');
+  row('FIXTURES',fL+' LIT',fL>2?'#8b95a1':'#8a5a14');
+  row('MIRROR',SG.flagBit==null?'NONE HERE':
+    (mirrorRead?'READ':(mirrorResolved?'LOST':'NOT FOUND')),
+    mirrorRead?'#7da457':'#8b95a1');
+  row('CLEARANCE',String(P.clearance),'#cec8b4');
+  row('EXPLORED',Math.round(seen/(MAP_W*MAP_H)*100)+'%','#8b95a1');
+  ry+=6;ctx.fillStyle='rgba(224,148,34,.25)';ctx.fillRect(RX,ry,W-RX-16,1);ry+=8;
+  text('LEGEND',RX,ry,'#8a5a14',8,'600','Chakra Petch');ry+=12;
+  const key=(c,l,sq)=>{ctx.fillStyle=c;
+    if(sq==='d'){ctx.save();ctx.translate(RX+3,ry+4);ctx.rotate(Math.PI/4);
+      ctx.fillRect(-2.5,-2.5,5,5);ctx.restore()}
+    else if(sq==='o'){ctx.beginPath();ctx.arc(RX+3,ry+4,3,0,7);ctx.fill()}
+    else ctx.fillRect(RX,ry+1,7,7);
+    text(l,RX+12,ry,'#6b7580',8,'400');ry+=11};
+  key('#ffc45e','ACCESS CODE','d');
+  key('#5b86ab','DESCENT SEAL');
+  key('#37536b','INNER SEAL');
+  key('#7c7f70','MIRROR');
+  key('rgba(224,148,34,.9)','CUSTODIAN','o');
+  if(auds.length)key('rgba(226,86,74,.95)','AUDITOR');
+  if(advocate)key('rgba(242,239,230,.95)','ADVOCATE');
+  text('START — RESUME',RX,H-16,'#ffc45e',8,'600','Chakra Petch')}
+
+function render(){
+  if(state===STATE.MIRROR){drawMirror();return}
+  if(state===STATE.PAUSED){drawScene();drawWeapon();drawHUD();drawAutomap();return}
+  drawScene();drawWeapon();drawHUD()}
+
+let last=0;
+function loop(t){requestAnimationFrame(loop);
+  if(t-last<15)return;last=t;update();render()}
+
+/* boot */
+STAGES.forEach((st,n)=>{st.seq=n});
+SG=STAGES[0];buildWalls(SG);
+items=[];custs=[];fixtures=[];lockers=[];
+briefing(STAGES[0]);
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

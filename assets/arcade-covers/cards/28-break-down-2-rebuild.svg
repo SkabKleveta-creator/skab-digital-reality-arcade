@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 576" role="img" aria-labelledby="title desc">
+  <title id="title">Break Down 2 Rebuild</title>
+  <desc id="desc">A rusted amber industrial descent shaft seen through a first-person display.</desc>
+  <defs>
+    <linearGradient id="void" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#06070a"/>
+      <stop offset=".55" stop-color="#16130e"/>
+      <stop offset="1" stop-color="#090a0c"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ffc45e"/>
+      <stop offset=".5" stop-color="#e09422"/>
+      <stop offset="1" stop-color="#8a3f1d"/>
+    </linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="9" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="768" height="576" fill="url(#void)"/>
+  <g stroke="#2a323d" stroke-width="9" fill="none" opacity=".85">
+    <path d="M0 50H768M0 147H768M0 290H768M0 430H768M0 524H768"/>
+    <path d="M42 0V576M180 0V576M315 0V576M453 0V576M590 0V576M726 0V576"/>
+  </g>
+  <path d="M180 576 282 116h204l102 460Z" fill="#0b0f13" stroke="#5b86ab" stroke-width="5"/>
+  <path d="M210 576 300 142h168l90 434Z" fill="none" stroke="#4a5563" stroke-width="11"/>
+  <path d="M384 114V515M250 514H518" stroke="url(#amber)" stroke-width="12" filter="url(#glow)"/>
+  <g fill="#e09422" filter="url(#glow)">
+    <circle cx="384" cy="114" r="20"/>
+    <circle cx="250" cy="514" r="14"/>
+    <circle cx="518" cy="514" r="14"/>
+  </g>
+  <path d="M90 440 250 384M678 440 518 384" stroke="#c74436" stroke-width="8" opacity=".75"/>
+  <text x="48" y="74" fill="#e8e3d6" font-family="monospace" font-size="18" letter-spacing="5">SKAB DIGITAL ARCADE</text>
+  <text x="48" y="462" fill="#ffc45e" font-family="monospace" font-size="44" font-weight="700">BREAK DOWN</text>
+  <text x="48" y="510" fill="#e8e3d6" font-family="monospace" font-size="44" font-weight="700">2 REBUILD</text>
+  <text x="50" y="544" fill="#6f7b88" font-family="monospace" font-size="16" letter-spacing="3">32-BIT FIRST-PERSON DESCENT</text>
+</svg>
