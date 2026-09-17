@@ -1,0 +1,6 @@
+{
+  "name": "neon-shinobi", "version": "2.0.0", "private": true,
+  "description": "Midnight Protocol — a dependency-free Canvas action campaign",
+  "scripts": {"test": "node --test tests/*.test.cjs", "check": "node --check js/store.js && node --check js/game.js && node --check js/campaign.js && node --check js/controls.js && node --check js/ui.js && node --check sw.js"},
+  "engines": {"node": ">=22"}
+}

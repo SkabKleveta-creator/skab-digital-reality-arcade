@@ -1,0 +1,7 @@
+{
+  "id": "./", "name": "Neon Shinobi · Midnight Protocol", "short_name": "Neon Shinobi",
+  "description": "Six districts. Three guardians. One city to free.",
+  "start_url": "./", "scope": "./", "display": "standalone",
+  "background_color": "#080c18", "theme_color": "#080c18",
+  "icons": [{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+}
