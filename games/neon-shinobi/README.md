@@ -1,6 +1,6 @@
 # Neon Shinobi: Midnight Protocol
 
-Version 2.0.1 turns the original continuous-field prototype into a complete, replayable browser campaign while retaining its Canvas artwork, sword combat, one ground plane, and optional elevated routes.
+Version 2.0.2 turns the original continuous-field prototype into a complete, replayable browser campaign while retaining its Canvas artwork, sword combat, one ground plane, and optional elevated routes.
 
 ## Play
 
