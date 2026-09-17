@@ -573,7 +573,7 @@ function update(rdt){
 
   const L=held('KeyA','ArrowLeft','TL'), R=held('KeyD','ArrowRight','TR');
   const jPress=pr('Space','TJ','KeyW','ArrowUp','TU');
-  const aPress=held('KeyJ','KeyK','TA');
+  const aPress=held('KeyJ','KeyK','TA')||pr('KeyJ','KeyK','TA');
   const dPress=pr('ShiftLeft','ShiftRight','KeyL','KeyS','ArrowDown','TD','TDN');
   const gPress=pr('KeyR','TG');
   const jHeld=held('Space','TJ','KeyW','ArrowUp','TU');

@@ -1,8 +1,8 @@
 'use strict';
 const ROOT=new URL('./',self.registration.scope);
 const PREFIX='neon-shinobi:'+encodeURIComponent(ROOT.pathname)+':';
-const CACHE=PREFIX+'2.0.0';
-const ASSETS=['./','index.html','css/game.css?v=2.0.0','js/store.js?v=2.0.0','js/game.js?v=2.0.0','js/campaign.js?v=2.0.0','js/controls.js?v=2.0.0','js/ui.js?v=2.0.0','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png'].map(path=>new URL(path,ROOT).href);
+const CACHE=PREFIX+'2.0.1';
+const ASSETS=['./','index.html','css/game.css?v=2.0.1','js/store.js?v=2.0.1','js/game.js?v=2.0.1','js/campaign.js?v=2.0.1','js/controls.js?v=2.0.1','js/ui.js?v=2.0.1','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png'].map(path=>new URL(path,ROOT).href);
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS))));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{for(const key of await caches.keys())if(key.startsWith(PREFIX)&&key!==CACHE)await caches.delete(key);await self.clients.claim();})()));
 self.addEventListener('fetch',event=>{

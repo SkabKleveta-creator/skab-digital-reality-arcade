@@ -44,7 +44,7 @@ window.NSUI=(()=>{
     const s=NSCampaign.state,b=NSCampaign.boss,inRun=mode!=='title';
     if(inRun){$('objective').textContent=NSCampaign.objective;$('routeProgress').style.width=(NSCampaign.progress*100)+'%';$('runClock').textContent=time(s.stats.time);$('difficultyTag').textContent=s.difficulty.toUpperCase()+(s.cycle?' +'+s.cycle:'');heartsEl.setAttribute('aria-label',`${Math.ceil(P.hp)} of ${P.maxhp} hearts`);}
     else{$('routeProgress').style.width='0%';$('runClock').textContent='00:00';}
-    const visible=mode==='playing'&&b?.active&&!b.dead;bossVisibility(visible);
+    const visible=mode==='playing'&&b?.active&&!b.dead;bossVisibility(visible);waveEl.style.top=visible?'48px':'';
     if(visible){$('bossName').textContent=b.name.toUpperCase();$('bossPhase').textContent='PHASE '+b.phase;$('bossHealth').style.width=(b.hp/b.maxhp*100)+'%';}
     let hint='';if(mode==='playing'&&s.district===0&&s.stats.time<38){const seconds=s.stats.time;hint=seconds<9?'Move: A / D or ◀ ▶ · Hold J / B to slash':seconds<18?'Space / A: double jump · Yellow diamonds reward the high route':seconds<27?'Shift / X: dash on the ground, slam in the air':'Cut all 3 relay cores, then reach the exit →';}
     if(hint!==lastHint){$('tutorialHint').textContent=hint;$('tutorialHint').hidden=!hint;lastHint=hint;}
