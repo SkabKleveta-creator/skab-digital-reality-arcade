@@ -1,0 +1,19 @@
+name: Cave Run checks
+on:
+  push:
+    paths: ['games/cave-run/**', '.github/workflows/cave-run.yml']
+  pull_request:
+    paths: ['games/cave-run/**', '.github/workflows/cave-run.yml']
+permissions:
+  contents: read
+jobs:
+  gameplay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test games/cave-run/tests/*.test.mjs
+      - run: |
+          for file in games/cave-run/js/*.mjs; do node --check "$file"; done
