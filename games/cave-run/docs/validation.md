@@ -21,7 +21,21 @@ Parallax scenery, relics, camp saves, evasion, and the exact final-beast artwork
 
 Earlier discussion raised inaccessible platforms, adjacent pits, narrow landings and knockback. The inspected previous file had flattened its terrain, so those historical concerns were not reported as current confirmed defects. This version restores optional elevated routes with reachable rewards and tests route traversal. Earlier claims of “129/129 tests” were not reused as evidence.
 
-## Completed checks
+## Expedition expansion validation
+
+- **33/33 Node tests pass** across gameplay, input, progression and environmental hazards. All application modules pass syntax checking. This count supersedes the original rebuild count below.
+- The normal-input ten-stage campaign and the fists-only final fight pass with the alternating charge/slam boss. The campaign receives no teleports, resource injections or survival overrides.
+- Real version 2 fixtures validate automatic migration. The saved health, club, enemies, items and stage are retained. Only a reliably identifiable current-stage relic receives a name; earlier totals remain explicitly unidentified. Corrupt legacy and version 3 saves reject without altering the active hunt.
+- Skills use secured relics. Selection changes only the equipped skill, cannot secure carried finds, and cannot overwrite camp supplies with later resources. Tests cover each actual mechanical benefit and retry/import persistence.
+- Hazard tests cover all actual level placements, full warnings before damage, active collision, wait-and-cross and held-jump movement through real physics, pause, retreat cancellation and strict saved identity/timing validation. Seven sites fit the safety criteria across four lands; unsafe candidate sites are skipped.
+- Independent review reproduced an early jump instruction that would land the hunter before the slam. The interface now distinguishes early preparation from the final 0.28-second **HOLD JUMP NOW** cue. Grounded evasion takes slam damage; a correctly timed held jump clears it.
+- Keyboard event handling preserves native button/checkbox activation while keeping gameplay responsive after HUD/menu use.
+- **21/21 expansion browser checks pass**, with no runtime, console or failed-request errors. Checks include native button/checkbox keyboard activation, HUD-to-game focus, exact camp reload, legacy migration, skill persistence, rejected forged progression/hazards, simultaneous touch, both phone layouts and the three distinct boss cue states. Rendering measured 57.6 FPS at 1440×900 in the test environment.
+- Reviewed the journal at 390×844 and 844×390, including scrolling to the final relic while Close, tabs and Resume remain visible. Desktop/portrait warning and active hazard scenes and prepare/jump/impact boss scenes were also inspected. Scene fixtures are not campaign playthrough evidence.
+- New rockfall/steam/slam audio effects executed without runtime errors. Gesture gating, nonzero audio output, pause, mute, re-enable and disposal passed the audio check.
+- The final browser run used multi-process Chromium after intermittent input-dispatch failures in the packaged single-process configuration. Continue used the native focused button with keyboard activation and a temporary test-only frame freeze; exact restored state and supplies were required to pass. Failed adapter runs were retained separately during review, not counted as successful runs.
+
+## Original rebuild checks
 
 - **17/17 Node tests pass:** 13 gameplay/save tests and four input tests. All six application modules pass `node --check`.
 - The campaign test traverses all ten routes with ordinary movement, jump, strike and evade inputs. It does not teleport the hunter or inject resources. It defeats the final boss and round-trips saves at every reached camp and stage transition. This is deterministic simulation coverage, not a human blind playthrough.

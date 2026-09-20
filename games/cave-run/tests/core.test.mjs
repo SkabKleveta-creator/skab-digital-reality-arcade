@@ -11,8 +11,9 @@ function bossInput(game) {
   const dx = beast.x + beast.w / 2 - (p.x + p.w / 2), dir = Math.sign(dx) || 1;
   const inRange = Math.abs(dx) < (p.club ? 38 : 35);
   let right = dir > 0 && (!inRange || p.facing !== dir), left = dir < 0 && (!inRange || p.facing !== dir), dodge = false;
-  if (beast.phase === 'windup' && beast.tell < 0.045 && Math.abs(dx) < 80 && p.dodgeCooldown <= 0) { right = dir > 0; left = dir < 0; dodge = true; }
-  return { right, left, dodge, attack: true };
+  if (beast.phase === 'windup' && beast.move === 'charge' && beast.tell < 0.045 && Math.abs(dx) < 80 && p.dodgeCooldown <= 0) { right = dir > 0; left = dir < 0; dodge = true; }
+  const jump = beast.move === 'slam' && ((beast.phase === 'windup' && beast.tell < 0.23) || beast.phase === 'slam');
+  return { right, left, dodge, jump, attack: true };
 }
 
 test('ten authored routes retain names, varied terrain, safe footing and one unique final boss', () => {
@@ -165,7 +166,7 @@ test('optional elevated Cold Climb relic is reachable with two input jumps', () 
   assert.equal(game.relics, 1); assert.equal(game.state, 'playing'); assert.ok(game.player.y + game.player.h < 64);
 });
 
-test('empty club cannot softlock the final fight: fists and timed dodges defeat Great Beast', () => {
+test('empty club cannot softlock the final fight: fists, timed dodges and jumps defeat Great Beast', () => {
   const game = fresh(9), beast = game.level.enemies.find(enemy => enemy.boss);
   game.player.x = beast.x - 50; game.player.club = 0;
   // Isolate the final arena; the fight itself uses only normal inputs and normal HP.
@@ -198,7 +199,7 @@ test('entire ten-route campaign is traversable and beatable through normal input
     const input = beast && Math.abs(beast.x - p.x) < 150 ? bossInput(game) : { right: true, attack: true };
     // Brake over a safe ledge if a stomp bounce would carry a late landing into a pit.
     if (!beast && !p.onGround && p.vy > 0 && game.level.cols[Math.floor((p.x + p.w) / TILE)]?.[6] && gapAhead) input.right = false;
-    game.step(DT, { ...input, jump });
+    game.step(DT, { ...input, jump: jump || input.jump });
     if (game.drainEvents().some(event => event.type === 'checkpoint')) {
       campSaves++; const saved = game.snapshot(), resumed = new Game();
       assert.equal(resumed.restore(saved), true, `stage ${game.levelIndex + 1} ${game.checkpointLabel} restore`);

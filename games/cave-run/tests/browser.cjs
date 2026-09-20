@@ -6,6 +6,7 @@
  * Optional: CAVE_CHROMIUM_EXECUTABLE=/path/to/chromium
  * Optional: CAVE_CHROMIUM_ARGS='["--no-sandbox", ...]'
  * Optional: CODEX_PRIMARY_RUNTIME_NODE_MODULES=/path/to/node_modules
+ * Optional: CAVE_QA_FILTER='Rockfall|No runtime' for isolated scene refreshes
  *
  * Checks use real DOM controls and browser keyboard/touch dispatch. A debug
  * fixture relocates the hunter to a camp to test persisted progress without
@@ -19,12 +20,17 @@ const http = require('node:http');
 const { chromium } = require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES
   ? path.join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES, 'playwright') : 'playwright');
 const root = path.resolve(__dirname, '..');
+const legacyCampPath = path.join(__dirname, 'fixtures', 'legacy-v2-camp.json');
 const output = path.resolve(process.argv[2] || path.join(root, 'qa'));
 const mime = { '.html':'text/html', '.css':'text/css', '.mjs':'application/javascript', '.js':'application/javascript', '.json':'application/json', '.svg':'image/svg+xml', '.png':'image/png' };
-const report = { suite:'Cave Run browser integration', browser:'', environment:'Headless Chromium; viewport and touch emulation, not physical devices', checks:[], errors:[], consoleErrors:[], failedRequests:[], screenshots:[] };
+const filter = process.env.CAVE_QA_FILTER ? new RegExp(process.env.CAVE_QA_FILTER) : null;
+const report = { filter: process.env.CAVE_QA_FILTER || null, suite:'Cave Run browser integration', browser:'', environment:'Headless Chromium; viewport and touch emulation, not physical devices', checks:[], errors:[], consoleErrors:[], failedRequests:[], screenshots:[] };
 let browser, server, page;
+// Poll state on a timer, not RAF: software Chromium may starve Playwright's RAF waiter.
+const waitFor = predicate => page.waitForFunction(predicate, null, {polling:100});
 const state = () => page.evaluate(() => window.__CAVE__.game.state);
 const check = async (name, fn) => {
+  if(filter&&!filter.test(name))return;
   try { const detail = await fn(); report.checks.push({name,pass:true,...(detail ? {detail} : {})}); console.log(`PASS ${name}`); }
   catch (error) {
     let diagnostic;
@@ -39,17 +45,26 @@ const screenshot = async name => {
   try {await page.waitForTimeout(80);await page.screenshot({path:path.join(output,name),fullPage:true,timeout:20000});report.screenshots.push(name);}
   finally {await page.evaluate(()=>{window.__qaFreezeFrames=false;});}
 };
+const continueAfterReload = async () => {
+  // Test-only pause of painting avoids compositor starvation during input dispatch
+  // in single-process software Chromium. The visible native button is still used.
+  await page.bringToFront();await page.evaluate(()=>{window.__qaFreezeFrames=true;});
+  try {
+    await page.locator('#continue').focus();await page.keyboard.press('Enter');
+    await waitFor(()=>__CAVE__.game.state==='playing');
+  } finally {await page.evaluate(()=>{window.__qaFreezeFrames=false;});}
+};
 const menu = async (tab='journey') => {
   if (!await page.locator('#menu').evaluate(e=>e.open)) await page.locator('#pause').click();
   await page.locator(`[data-tab="${tab}"]`).click();
 };
 const resume = async () => {
   if (await page.locator('#menu').evaluate(e=>e.open)) await page.locator('#resume').click();
-  await page.waitForFunction(()=>window.__CAVE__.game.state==='playing');
+  await waitFor(()=>window.__CAVE__.game.state==='playing');
 };
 const digest = () => page.evaluate(() => {
   const {game}=window.__CAVE__, s=game.snapshot().data;
-  return {levelIndex:s.levelIndex,checkpointLabel:s.checkpointLabel,hp:s.player.hp,club:s.player.club,x:s.player.x,kills:s.kills,relics:s.relics,items:s.items.map(i=>[i.id,i.alive]),enemies:s.enemies.map(e=>[e.id,e.hp,e.alive])};
+  return {levelIndex:s.levelIndex,checkpointLabel:s.checkpointLabel,hp:s.player.hp,club:s.player.club,x:s.player.x,kills:s.kills,relics:s.relics,relicLog:s.relicLog,unidentifiedRelics:s.unidentifiedRelics,craft:s.craft,items:s.items.map(i=>[i.id,i.alive]),enemies:s.enemies.map(e=>[e.id,e.hp,e.alive])};
 });
 (async()=>{
   fs.mkdirSync(output,{recursive:true});
@@ -83,14 +98,28 @@ const digest = () => page.evaluate(() => {
   page.on('console',message=>{if(message.type()==='error')report.consoleErrors.push(message.text());});
   page.on('requestfailed',request=>report.failedRequests.push({url:request.url(),error:request.failure()?.errorText}));
   await page.goto(`http://127.0.0.1:${server.address().port}/?debug`,{waitUntil:'networkidle'});
-  await page.waitForFunction(()=>window.__CAVE__);
+  await waitFor(()=>window.__CAVE__);
+
+  await check('Native guide button Enter and settings checkbox Space remain accessible',async()=>{
+    await page.locator('#how').focus();await page.keyboard.press('Enter');
+    assert.equal(await state(),'title');assert.equal(await page.locator('#panel-help').isVisible(),true);
+    await menu('settings');
+    const initial=await page.locator('#motion').isChecked();
+    await page.locator('#motion').focus();await page.keyboard.press('Space');
+    assert.equal(await page.locator('#motion').isChecked(),!initial);
+    assert.equal(await page.evaluate(()=>__CAVE__.settings.motion),!initial);
+    await page.keyboard.press('Space');assert.equal(await page.locator('#motion').isChecked(),initial);
+    assert.deepEqual(await page.evaluate(()=>[...__CAVE__.input.keys]),[]);
+    await page.locator('#resume').click();assert.equal(await state(),'title');
+  });
 
   await check('Title renders and begins through UI',async()=>{
     assert.equal(await state(),'title');assert.equal(await page.locator('#begin').isVisible(),true);
     await screenshot('desktop-title.png');await page.locator('#begin').click();
-    await page.waitForFunction(()=>window.__CAVE__.game.state==='playing');
+    await waitFor(()=>window.__CAVE__.game.state==='playing');
     assert.equal(await page.locator('#hud').isVisible(),true);
     assert.equal(await page.locator('#front').isVisible(),false);
+    assert.equal(await page.evaluate(()=>document.activeElement.id),'scene');
     await screenshot('desktop-gameplay.png');
   });
 
@@ -114,23 +143,38 @@ const digest = () => page.evaluate(() => {
     assert.deepEqual(released.keys,[]);assert.equal(released.vx,0);
   });
 
-  await check('Pause freezes world and route/guide/settings support keyboard navigation',async()=>{
-    await page.keyboard.press('Escape');await page.waitForFunction(()=>__CAVE__.game.state==='paused');
+  await check('Pause freezes world and all four tabs support keyboard navigation',async()=>{
+    await page.keyboard.press('Escape');await waitFor(()=>__CAVE__.game.state==='paused');
     const before=await page.evaluate(()=>({time:__CAVE__.game.time,x:__CAVE__.game.player.x}));
     await page.waitForTimeout(250);assert.deepEqual(await page.evaluate(()=>({time:__CAVE__.game.time,x:__CAVE__.game.player.x})),before);
     assert.equal(await page.locator('#route-list li').count(),10);
     await page.locator('[data-tab="journey"]').focus();await page.keyboard.press('ArrowRight');
+    assert.equal(await page.locator('[data-tab="journal"]').getAttribute('aria-selected'),'true');assert.equal(await page.locator('#panel-journal').isVisible(),true);
+    await page.keyboard.press('ArrowRight');
     assert.equal(await page.locator('[data-tab="help"]').getAttribute('aria-selected'),'true');assert.equal(await page.locator('#panel-help').isVisible(),true);
     await page.keyboard.press('ArrowRight');assert.equal(await page.locator('#panel-settings').isVisible(),true);
     assert.equal(await page.evaluate(()=>document.activeElement.dataset.tab),'settings');
     await page.keyboard.press('ArrowLeft');assert.equal(await page.locator('#panel-help').isVisible(),true);
-    await page.keyboard.press('Escape');await page.waitForFunction(()=>__CAVE__.game.state==='playing');
+    await page.keyboard.press('Escape');await waitFor(()=>__CAVE__.game.state==='playing');
+  });
+
+  await check('Sound and pause/resume clicks return keyboard movement to the game',async()=>{
+    await page.locator('#sound').click();
+    assert.equal(await page.evaluate(()=>document.activeElement.id),'scene');
+    let x=await page.evaluate(()=>__CAVE__.game.player.x);
+    await page.keyboard.down('ArrowRight');await page.waitForTimeout(100);await page.keyboard.up('ArrowRight');
+    assert.ok(await page.evaluate(()=>__CAVE__.game.player.x)>x,'Movement after sound click');
+    await page.locator('#pause').click();await page.locator('#resume').click();
+    assert.equal(await page.evaluate(()=>document.activeElement.id),'scene');
+    x=await page.evaluate(()=>__CAVE__.game.player.x);
+    await page.keyboard.down('ArrowRight');await page.waitForTimeout(100);await page.keyboard.up('ArrowRight');
+    assert.ok(await page.evaluate(()=>__CAVE__.game.player.x)>x,'Movement after pause/resume');
   });
 
   await check('Focus loss clears held inputs and leaves the world paused',async()=>{
     await page.keyboard.down('d');await page.waitForTimeout(40);
     await page.evaluate(()=>window.dispatchEvent(new Event('blur')));
-    await page.keyboard.up('d');await page.waitForFunction(()=>__CAVE__.game.state==='paused');
+    await page.keyboard.up('d');await waitFor(()=>__CAVE__.game.state==='paused');
     const before=await page.evaluate(()=>({time:__CAVE__.game.time,x:__CAVE__.game.player.x,keys:[...__CAVE__.input.keys],pointers:__CAVE__.input.pointers.size}));
     assert.deepEqual(before.keys,[]);assert.equal(before.pointers,0);await page.waitForTimeout(250);
     assert.equal(await page.evaluate(()=>__CAVE__.game.time),before.time);assert.equal(await page.evaluate(()=>__CAVE__.game.player.x),before.x);
@@ -151,11 +195,11 @@ const digest = () => page.evaluate(() => {
     await menu('settings');expectedSave=await digest();
     const downloading=page.waitForEvent('download');await page.locator('#export').click();const download=await downloading;
     exportedPath=path.join(output,'exported-journey.json');await download.saveAs(exportedPath);
-    const file=JSON.parse(fs.readFileSync(exportedPath,'utf8'));assert.equal(file.game,'cave-run-modern');assert.equal(file.data.checkpointLabel,checkpoint.expected);
-    await page.locator('#restart').click();await page.locator('#confirm-new').click();await page.waitForFunction(()=>__CAVE__.game.state==='playing');
+    const file=JSON.parse(fs.readFileSync(exportedPath,'utf8'));assert.equal(file.version,3);assert.equal(file.game,'cave-run-modern');assert.equal(file.data.checkpointLabel,checkpoint.expected);
+    await page.locator('#restart').click();await page.locator('#confirm-new').click();await waitFor(()=>__CAVE__.game.state==='playing');
     assert.equal(await page.evaluate(()=>__CAVE__.game.checkpointLabel),'Trailhead');
     await menu('settings');await page.locator('#import').setInputFiles(exportedPath);
-    await page.waitForFunction(()=>document.getElementById('import-status').textContent.includes('Journey imported'));
+    await waitFor(()=>document.getElementById('import-status').textContent.includes('Journey imported'));
     assert.deepEqual(await digest(),expectedSave);assert.equal(await state(),'paused');
     return `Camp fixture: ${checkpoint.expected}; export, fresh hunt, and import all use the visible UI.`;
   });
@@ -164,24 +208,24 @@ const digest = () => page.evaluate(() => {
     await menu('settings');
     const before=await page.evaluate(()=>({snapshot:JSON.stringify(__CAVE__.game.snapshot()),stored:localStorage.getItem(__CAVE__.saveKey)}));
     await page.locator('#import').setInputFiles({name:'broken-journey.json',mimeType:'application/json',buffer:Buffer.from('{"version":2,"game":"cave-run-modern","data":{"levelIndex":999}}')});
-    await page.waitForFunction(()=>document.getElementById('import-status').textContent.includes('not a valid'));
+    await waitFor(()=>document.getElementById('import-status').textContent.includes('not a valid'));
     assert.deepEqual(await page.evaluate(()=>({snapshot:JSON.stringify(__CAVE__.game.snapshot()),stored:localStorage.getItem(__CAVE__.saveKey)})),before);
   });
 
   await check('Reload restores saved camp and selected settings through Continue',async()=>{
     await menu('settings');await page.locator('#touch-setting').check();await page.locator('#motion').check();
-    await page.reload({waitUntil:'networkidle'});await page.waitForFunction(()=>window.__CAVE__);
+    await page.reload({waitUntil:'networkidle'});await waitFor(()=>window.__CAVE__);
     assert.equal(await page.locator('#continue').isVisible(),true);
     // Use keyboard activation for Continue: software Chromium can starve a
     // post-reload mouse hit-test even while the page and save are healthy.
-    await page.evaluate(()=>document.getElementById('continue').focus());
-    await page.keyboard.press('Enter');
+    await continueAfterReload();
     report.adapterNotes ||= [];
-    report.adapterNotes.push('Reload/Continue checked through focused keyboard activation. Post-reload mouse CDP dispatch was intermittent in this single-process software Chromium; initial Begin and other UI pointer actions were tested normally.');
-    await page.waitForFunction(()=>__CAVE__.game.state==='playing');
+    report.adapterNotes.push('Reload/Continue checked through focused native keyboard activation with test-only RAF freeze and bringToFront. Post-reload CDP dispatch was intermittent in single-process software Chromium; initial Begin and other pointer actions were tested normally.');
+    await waitFor(()=>__CAVE__.game.state==='playing');
     assert.ok(expectedSave,'Checkpoint export fixture must have succeeded');assert.deepEqual(await digest(),expectedSave);
     assert.equal(await page.locator('#touch-controls').isVisible(),true);
     assert.equal(await page.evaluate(()=>__CAVE__.settings.motion),true);
+    assert.equal(await page.evaluate(()=>document.activeElement.id),'scene');
   });
 
   await check('Hovering a touch button does not activate it',async()=>{
@@ -218,19 +262,139 @@ const digest = () => page.evaluate(() => {
     });
   }
 
+  await check('Collected relic remains provisional until the next camp, then unlocks a skill',async()=>{
+    await resume();
+    const found=await page.evaluate(()=>{
+      const {game}=__CAVE__;game.newRun();__CAVE__.input.clear();
+      const relic=game.level.items.find(item=>item.type==='relic');
+      // Reach the nearby camp before taking the relic, as a normal forward walk does.
+      const priorCamp=game.level.checkpoints.filter(c=>c.x<relic.x).at(-1);
+      Object.assign(game.player,{x:priorCamp.x,y:96-game.player.h,vx:0,vy:0,onGround:true});game.step(1/120,{});
+      Object.assign(game.player,{x:relic.x,y:96-game.player.h,vx:0,vy:0,onGround:true});
+      game.step(1/120,{});game.pause();__CAVE__.sync();
+      return {relics:game.relics,secured:game.securedRelics,log:game.relicLog};
+    });
+    assert.deepEqual(found,{relics:1,secured:0,log:[0]});
+    await menu('journal');
+    assert.equal(await page.locator('[data-craft="forager"]').isDisabled(),true);
+    assert.match(await page.locator('[data-relic="0"]').innerText(),/Sunstone[\s\S]*Carried · secure at the next camp/);
+    await resume();
+    await page.evaluate(()=>{
+      const {game}=__CAVE__,camp=game.level.checkpoints.find(c=>!c.reached&&c.x>game.player.x);
+      if(!camp)throw Error('No later camp after the relic fixture');
+      Object.assign(game.player,{x:camp.x,y:96-game.player.h,vx:0,vy:0,onGround:true});
+      game.step(1/120,{});game.pause();__CAVE__.sync();
+    });
+    await menu('journal');assert.equal(await page.locator('[data-craft="forager"]').isDisabled(),false);
+    assert.equal(await page.locator('[data-craft="wind"]').isDisabled(),true);
+    assert.match(await page.locator('[data-relic="0"]').innerText(),/Found · secured/);
+    await page.locator('[data-craft="forager"]').click();
+    assert.equal(await page.locator('[data-craft="forager"]').getAttribute('aria-pressed'),'true');
+    assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem(__CAVE__.saveKey)).data.craft),'forager');
+    return 'Direct pickup/camp setup exercises the normal simulation pickup and checkpoint paths; it is not a played route.';
+  });
+
+  let migratedSave;
+  await check('Legacy v2 camp imports with exact supplies, honest relic identities, and earned unlocks',async()=>{
+    await menu('settings');await page.locator('#import').setInputFiles(legacyCampPath);
+    await waitFor(()=>document.getElementById('import-status').textContent.includes('Journey imported'));
+    const carried=await page.evaluate(()=>{const {game}=__CAVE__;return {hp:game.player.hp,club:game.player.club,levelIndex:game.levelIndex,relics:game.relics,secured:game.securedRelics,log:game.relicLog,unknown:game.unidentifiedRelics,camp:game.checkpointLabel};});
+    assert.deepEqual(carried,{hp:7,club:9,levelIndex:4,relics:4,secured:4,log:[4],unknown:3,camp:'Camp 1'});
+    await menu('journal');assert.equal(await page.locator('#relic-list [data-relic]').count(),10);
+    assert.match(await page.locator('#journal-summary').innerText(),/4 \/ 10 found · 4 secured/);
+    assert.match(await page.locator('#journal-memory').innerText(),/3 earlier finds.*identities are unknown/);
+    assert.equal(await page.locator('#relic-list .found').count(),1);
+    assert.match(await page.locator('[data-relic="4"]').innerText(),/Paired Fangs[\s\S]*Found · secured/);
+    assert.match(await page.locator('[data-relic="0"]').innerText(),/Identity not recorded in earlier save/);
+    for(const craft of ['none','forager','wind'])assert.equal(await page.locator(`[data-craft="${craft}"]`).isDisabled(),false);
+    assert.equal(await page.locator('[data-craft="edge"]').isDisabled(),true);
+    await page.locator('[data-craft="wind"]').click();
+    assert.equal(await page.locator('[data-craft="wind"]').getAttribute('aria-pressed'),'true');
+    assert.deepEqual(await page.evaluate(()=>({hp:__CAVE__.game.player.hp,club:__CAVE__.game.player.club})),{hp:7,club:9});
+    for(const size of [{width:844,height:390,name:'landscape'},{width:390,height:844,name:'portrait'}]){
+      await page.setViewportSize({width:size.width,height:size.height});
+      await page.locator('#panel-journal').evaluate(e=>{e.scrollTop=0;});
+      const layout=await page.locator('#menu,.menu-head,.menu-tabs,#close-menu,#resume').evaluateAll(elements=>elements.map(e=>{const r=e.getBoundingClientRect();return {name:e.id||e.className,fits:r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight};}));
+      assert.ok(layout.every(e=>e.fits),JSON.stringify(layout));
+      await screenshot(`${size.name}-relic-journal.png`);
+      await page.locator('[data-relic="9"]').scrollIntoViewIfNeeded();
+      const bottom=await page.locator('[data-relic="9"]').boundingBox();assert.ok(bottom&&bottom.y>=0&&bottom.y+bottom.height<=size.height,'Final relic can be reached inside the scrolling panel');
+      assert.equal(await page.locator('#close-menu').isVisible(),true);assert.equal(await page.locator('#resume').isVisible(),true);
+      await screenshot(`${size.name}-journal-last-relic.png`);
+    }
+    await menu('settings');
+    const downloading=page.waitForEvent('download');await page.locator('#export').click();const download=await downloading;
+    const file=path.join(output,'migrated-v3-journey.json');await download.saveAs(file);migratedSave=JSON.parse(fs.readFileSync(file,'utf8'));
+    assert.equal(migratedSave.version,3);assert.equal(migratedSave.data.craft,'wind');assert.equal(migratedSave.data.unidentifiedRelics,3);assert.deepEqual(migratedSave.data.relicLog,[4]);
+  });
+
+  await check('Selected trail skill and migrated supplies persist through Reload and Continue',async()=>{
+    assert.ok(migratedSave,'Legacy migration export must have succeeded');
+    await page.reload({waitUntil:'networkidle'});await waitFor(()=>window.__CAVE__);
+    await continueAfterReload();
+    assert.equal(await page.evaluate(()=>document.activeElement.id),'scene');
+    const restored=await page.evaluate(()=>{const s=__CAVE__.game.snapshot().data;return {hp:s.player.hp,club:s.player.club,levelIndex:s.levelIndex,craft:s.craft,relics:s.relics,unknown:s.unidentifiedRelics,log:s.relicLog};});
+    assert.deepEqual(restored,{hp:7,club:9,levelIndex:4,craft:'wind',relics:4,unknown:3,log:[4]});
+    await menu('journal');assert.equal(await page.locator('[data-craft="wind"]').getAttribute('aria-pressed'),'true');
+  });
+
+  await check('Inconsistent v3 progression and forged hazards are rejected without replacing progress',async()=>{
+    await menu('settings');
+    const before=await page.evaluate(()=>({snapshot:JSON.stringify(__CAVE__.game.snapshot()),stored:localStorage.getItem(__CAVE__.saveKey)}));
+    for(const mutation of [s=>s.data.relicLog.push(4),s=>s.data.unidentifiedRelics=4,s=>s.data.craft='edge',s=>s.data.hazards.push({id:'forged',type:'steam',x:40,y:72,w:18,h:24,phase:'idle',timer:0})]){
+      const broken=structuredClone(migratedSave);mutation(broken);
+      await page.locator('#import-status').evaluate(e=>e.textContent='');
+      await page.locator('#import').setInputFiles({name:'inconsistent-v3.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(broken))});
+      await waitFor(()=>document.getElementById('import-status').textContent.includes('not a valid'));
+      assert.deepEqual(await page.evaluate(()=>({snapshot:JSON.stringify(__CAVE__.game.snapshot()),stored:localStorage.getItem(__CAVE__.saveKey)})),before);
+    }
+  });
+
   await check('Cave and final boss render without runtime errors (scene fixtures)',async()=>{
-    await page.setViewportSize({width:1440,height:900});
+    await resume();await page.setViewportSize({width:1440,height:900});
     for(const fixture of [{index:2,name:'cave-fixture.png'},{index:9,name:'boss-fixture.png'}]){
       await page.evaluate(({index})=>{
         const {game,renderer}=__CAVE__;game.levelIndex=index;game._loadLevel();
-        if(index===9){const beast=game.level.enemies.find(e=>e.boss);game.player.x=beast.x-85;beast.phase='windup';beast.tell=.3;beast.phaseTimer=.3;}
+        if(index===9){const beast=game.level.enemies.find(e=>e.boss);game.player.x=beast.x-85;beast.phase='windup';beast.move='charge';beast.tell=.3;beast.phaseTimer=.3;}
         else{const col=game.level.caveFlags.findIndex(Boolean);if(col<0)throw Error('Cave fixture missing');game.player.x=(col+4)*16;}
         __CAVE__.sync();game.pause();__CAVE__.sync();renderer.cameraStage=-1;renderer.render(game,0);
       },fixture);
-      if(fixture.index===9){assert.equal(await page.locator('#boss').isVisible(),true);assert.equal(await page.locator('#boss-phase').innerText(),'BRACE FOR THE LUNGE');}
+      if(fixture.index===9){assert.equal(await page.locator('#boss').isVisible(),true);assert.equal(await page.locator('#boss-phase').innerText(),'EVADE — CHARGING');}
       await screenshot(fixture.name);
     }
     return 'Direct scene setup only; these screenshots are not evidence of campaign completion.';
+  });
+
+  await check('Rockfall, steam, and slam warnings remain visible on desktop and mobile (scene fixtures)',async()=>{
+    for(const size of [{width:1440,height:900,name:'desktop'},{width:390,height:844,name:'portrait'}]){
+      await page.setViewportSize({width:size.width,height:size.height});
+      for(const fixture of [{index:2,type:'rockfall'},{index:5,type:'steam'}]){
+        for(const phase of ['warning','active']){
+          const drawn=await page.evaluate(({index,type,phase})=>{
+            const {game,renderer}=__CAVE__;game.newRun();game.levelIndex=index;game._loadLevel();
+            const hazard=game.level.hazards.find(h=>h.type===type);if(!hazard)throw Error(`Missing ${type} site`);
+            hazard.phase=phase;hazard.timer=phase==='warning'?.5:type==='rockfall'?.15:.35;
+            Object.assign(game.player,{x:hazard.x-45,y:96-game.player.h,vx:0,vy:0,onGround:true});
+            __CAVE__.sync();game.pause();__CAVE__.sync();renderer.cameraStage=-1;renderer.lastFrozenKey=null;renderer.render(game,0);
+            return {type:hazard.type,phase:hazard.phase,width:hazard.w,height:hazard.h};
+          },{...fixture,phase});
+          assert.equal(drawn.type,fixture.type);assert.equal(drawn.phase,phase);assert.ok(drawn.width>0&&drawn.height>0);
+          await screenshot(`${size.name}-${fixture.type}-${phase}.png`);
+        }
+      }
+      for(const phase of ['prepare','jump','slam']){
+        await page.evaluate(({phase})=>{
+          const {game,renderer}=__CAVE__;game.newRun();game.levelIndex=9;game._loadLevel();
+          const beast=game.level.enemies.find(e=>e.boss);
+          Object.assign(beast,{move:'slam',phase:phase==='slam'?'slam':'windup',phaseTimer:phase==='prepare'?.7:phase==='jump'?.2:.12,tell:phase==='prepare'?.7:phase==='jump'?.2:0});
+          Object.assign(game.player,{x:beast.x-45,y:phase==='slam'?45:74,vx:0,vy:0,onGround:phase!=='slam'});
+          __CAVE__.sync();game.pause();__CAVE__.sync();renderer.cameraStage=-1;renderer.lastFrozenKey=null;renderer.render(game,0);
+        },{phase});
+        assert.equal(await page.locator('#boss-phase').innerText(),phase==='prepare'?'GROUND SLAM — GET READY':phase==='jump'?'HOLD JUMP NOW':'STAY ABOVE THE SHOCKWAVE');
+        await screenshot(`${size.name}-boss-${phase}.png`);
+      }
+    }
+    return 'Paused scene fixtures cover both danger phases and the timed slam cues; screenshots do not establish full-campaign playability.';
   });
 
   await check('No runtime, console, or failed-request errors',async()=>{

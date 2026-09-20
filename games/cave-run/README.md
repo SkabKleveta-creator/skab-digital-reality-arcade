@@ -4,6 +4,22 @@ A modern illustrated 2.5D caveman action adventure. Ten authored wildlands form 
 
 [Play Cave Run](https://skabkleveta-creator.github.io/skab-digital-reality-arcade/games/cave-run/).
 
+## Expedition expansion
+
+Every land now has a named relic with its own illustrated journal entry. Discoveries travel with you until the next camp; only secured relics unlock trail skills. Choose one skill in **Pause → Relics & skills**. Relics are kept rather than spent:
+
+| Skill | Secured relics | Effect |
+| --- | --- | --- |
+| Forager | 1 | Meat restores up to 6 health instead of 4. |
+| Long Breath | 3 | Stamina recovers at 32 per second instead of 23. |
+| Stone Edge | 6 | Armed strike reach increases by 6 world units; damage and club wear are unchanged. |
+
+Seven environmental hazards occupy clear ground across Deep Dark, River of Stone, Long Night, and The Narrows. Loose stone and steam give a 1.05-second warning before their brief active period. Leave the marked rockfall column; jump over steam or wait for a safe crossing. Camps, nearby supplies, narrow pit landings, and the final arena remain clear of these hazards.
+
+The Great Beast alternates charges and ground slams. Evade a charge. During a slam warning, wait for **HOLD JUMP NOW**, then hold Jump to clear the low shockwave. A grounded evade cannot avoid the slam. Both moves leave a recovery opening.
+
+The journal, trail skills, hazards and second boss move extend the approved game; they are new design decisions, not claims about earlier requirements. Stage names, route geometry, enemy/item identities and carried supplies remain stable.
+
 ## What changed
 
 The 160×144 handheld presentation has been replaced with a full-window, antialiased canvas scene: layered landscapes, illustrated animated people and animals, stage-specific lighting, caves, campfires, and a responsive interface. The game remains a side-on adventure. Its 2.5D depth is illustration and parallax, not a freely navigable 3D world.
@@ -32,7 +48,7 @@ The game saves at a new hunt, reached campfires, stage completion, and stage ent
 
 Returning to camp grants 1.1 seconds of protection so a saved nearby attack cannot cause an immediate death; supplies remain exactly as saved.
 
-Settings provides JSON export and import. Imported data is fully validated before replacing the active journey. Storage failures leave the game playable and display an export reminder. Progress is local to the browser and device. This is the first persistent save format for Cave Run; the earlier game had no persistent campaign saves.
+Settings provides JSON export and import. Imported data is fully validated before replacing the active journey. Storage failures leave the game playable and display an export reminder. Progress is local to the browser and device. Version 3 saves add the relic journal, equipped skill, hazard timing and boss attack sequence. Existing version 2 saves are validated and migrated automatically, keeping their actual supplies and world state. Version 2 recorded only a relic total: the current land’s find can be identified from its saved pickup, while earlier finds remain explicitly unidentified and still count toward skill unlocks. The original handheld game had no persistent campaign saves.
 
 Focus loss and hidden tabs pause simulation and clear held input. Resume is deliberate. A failed module load or render loop shows a recovery control without overwriting the saved camp.
 
@@ -52,6 +68,8 @@ No package installation, build step, CDN, or external asset requests are needed 
 | `js/data.mjs` | Ten authored routes, themes, enemy definitions |
 | `js/core.mjs` | Fixed-step simulation, combat, progression, checkpoints, save validation |
 | `js/render.mjs` | Original Canvas2D artwork, camera, lighting and animation |
+| `js/progression.mjs` | Ten named relics and selectable trail skills |
+| `js/hazards.mjs` | Safe placement, warnings, collision and save validation for environmental hazards |
 | `js/input.mjs` | Separate keyboard, pointer, and gamepad input sources |
 | `js/app.mjs` | Interface, persistence, lifecycle, accessibility and fixed-step loop |
 | `js/audio.mjs` | Original procedural music and effects |
@@ -59,4 +77,4 @@ No package installation, build step, CDN, or external asset requests are needed 
 | `docs/validation.md` | Findings, completed checks and limits |
 | `classic.html` | Unmodified previous version retained for comparison |
 
-The GitHub workflow checks simulation/input regressions and module syntax on game changes. It does not claim physical-phone or Safari verification.
+The GitHub workflow checks simulation, progression, hazard and input regressions and module syntax on game changes. It does not claim physical-phone or Safari verification.
