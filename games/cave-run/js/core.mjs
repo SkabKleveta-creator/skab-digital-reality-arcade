@@ -1,8 +1,10 @@
-import { LEVELS, ENEMY_TYPES } from './data.mjs';
-export { LEVELS } from './data.mjs';
+import { LEVELS, ENEMY_TYPES } from './data.mjs?build=expedition-2';
+import { RELICS, CRAFTS } from './progression.mjs?build=expedition-2';
+import { buildHazards, stepHazards, validateHazards } from './hazards.mjs?build=expedition-2';
+export { LEVELS } from './data.mjs?build=expedition-2';
 export const TILE = 16;
 export const GROUND = 96;
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 const GRAVITY = 460;
 const SPEED = 80;
 const PLAYER_W = 12;
@@ -10,7 +12,8 @@ const PLAYER_H = 22;
 const MAX_HP = 12;
 const CLUB_MAX = 24;
 const STATES = ['playing', 'paused', 'dead', 'stageclear', 'complete'];
-const PHASES = ['idle', 'windup', 'lunge', 'recovery'];
+const LEGACY_PHASES = ['idle', 'windup', 'lunge', 'recovery'];
+const PHASES = [...LEGACY_PHASES, 'slam'];
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const clone = value => JSON.parse(JSON.stringify(value));
 const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
@@ -73,7 +76,7 @@ export function buildLevel(index) {
       hp: cfg.hp, maxHp: cfg.hp, alive: true, boss: spec.type === 'greatbeast',
       dir: -1, vx: 0, vy: 0, phase: 'idle', phaseTimer: 0, tell: 0,
       flash: 0, attackCooldown: 0.4, homeX: x, homeY: y, t: n * 0.83,
-      lungeDir: -1, minX: Math.max(8, x - 60), maxX: Math.min(width - cfg.w - 8, x + 60)
+      lungeDir: -1, move: 'charge', attackCount: 0, minX: Math.max(8, x - 60), maxX: Math.min(width - cfg.w - 8, x + 60)
     };
   });
   const items = rawItems.map((spec, n) => ({ id: `i${index}-${n}`, ...spec, w: spec.type === 'meat' ? 9 : 10, h: spec.type === 'meat' ? 8 : 9, alive: true }));
@@ -103,7 +106,9 @@ export function buildLevel(index) {
     if (shelfCol >= 0) { relicX = (shelfCol + 1) * TILE; relicY = 3 * TILE - 14; }
   }
   items.push({ id: `r${index}`, type: 'relic', x: relicX, y: relicY, w: 8, h: 10, alive: true });
-  return { ...definition, cols, caveFlags, totalCols: cursor, width, goalX, arenaStart, enemies, items, checkpoints, segments };
+  const level = { ...definition, cols, caveFlags, totalCols: cursor, width, goalX, arenaStart, enemies, items, checkpoints, segments };
+  level.hazards = buildHazards(level, index);
+  return level;
 }
 
 function makePlayer() {
@@ -116,11 +121,11 @@ function makePlayer() {
 export class Game {
   constructor() {
     this.state = 'title'; this.levelIndex = 0; this.level = buildLevel(0); this.player = makePlayer();
-    this.time = 0; this.deaths = 0; this.kills = 0; this.relics = 0; this.message = 'The path is yours.';
+    this.time = 0; this.deaths = 0; this.kills = 0; this.relics = 0; this.relicLog = []; this.unidentifiedRelics = 0; this.craft = 'none'; this.message = 'The path is yours.';
     this.checkpointLabel = 'Trailhead'; this.events = []; this._previous = {}; this._checkpoint = null;
   }
   newRun() {
-    this.levelIndex = 0; this.time = 0; this.deaths = 0; this.kills = 0; this.relics = 0;
+    this.levelIndex = 0; this.time = 0; this.deaths = 0; this.kills = 0; this.relics = 0; this.relicLog = []; this.unidentifiedRelics = 0; this.craft = 'none';
     this.player = makePlayer(); this._loadLevel(false); this.state = 'playing';
     this._checkpoint = this._capture('playing'); this.events = []; return true;
   }
@@ -130,6 +135,14 @@ export class Game {
     if (keepProgress) Object.assign(this.player, carry);
     this.state = 'playing'; this.checkpointLabel = 'Trailhead'; this.message = LEVELS[this.levelIndex].description;
     this._previous = {}; this._bossAnnounced = false; this._checkpoint = this._capture('playing');
+  }
+  get securedRelics() { return ['stageclear', 'complete'].includes(this.state) ? this.relics : (this._checkpoint?.relics ?? 0); }
+  selectCraft(id) {
+    const craft = CRAFTS.find(entry => entry.id === id);
+    if (!['paused', 'stageclear', 'complete'].includes(this.state) || !craft || this.securedRelics < craft.unlock) return false;
+    this.craft = id;
+    if (this._checkpoint) this._checkpoint.craft = id;
+    return true;
   }
   pause() { if (this.state !== 'playing') return false; this.state = 'paused'; this._previous = {}; return true; }
   resume() { if (this.state !== 'paused') return false; this.state = 'playing'; this._previous = {}; return true; }
@@ -152,9 +165,9 @@ export class Game {
   _event(type, text = '', x = this.player.x, y = this.player.y) { this.events.push({ type, text, x, y }); }
   _floorAt(x) { return Boolean(this.level.cols[Math.floor(x / TILE)]?.[6]); }
   _safeFeet(x, w) { return this._floorAt(x + 2) && this._floorAt(x + w - 2); }
-  _damage(amount) {
+  _damage(amount, ignoreDodge = false) {
     const p = this.player;
-    if (p.invuln > 0 || p.dodgeTimer > 0 || this.state !== 'playing') return;
+    if (p.invuln > 0 || (!ignoreDodge && p.dodgeTimer > 0) || this.state !== 'playing') return;
     p.hp = Math.max(0, p.hp - amount); p.invuln = 1.1;
     // Never displace the hunter into a nearby pit when taking damage.
     this._event('hurt', `−${amount}`);
@@ -168,7 +181,7 @@ export class Game {
     const p = this.player;
     const armed = p.club > 0;
     p.attackTimer = 0.24; p.attackCooldown = armed ? 0.37 : 0.29; p.attackSerial++;
-    const reach = armed ? 23 : 17;
+    const reach = armed ? 23 + (this.craft === 'edge' ? 6 : 0) : 17;
     const hitbox = { x: p.facing > 0 ? p.x + p.w - 2 : p.x - reach + 2, y: p.y - 5, w: reach, h: p.h + 9 };
     let connected = false;
     for (const e of this.level.enemies) {
@@ -242,14 +255,19 @@ export class Game {
       if (e.phase === 'windup') {
         e.phaseTimer -= dt; e.tell = Math.max(0, e.phaseTimer);
         if (e.phaseTimer <= 0) {
-          e.phase = 'lunge'; e.phaseTimer = e.boss ? 0.42 : e.type === 'tiger' ? 0.33 : 0.34;
+          e.phase = e.boss && e.move === 'slam' ? 'slam' : 'lunge';
+          e.phaseTimer = e.phase === 'slam' ? 0.25 : e.boss ? 0.42 : e.type === 'tiger' ? 0.33 : 0.34;
           e.lungeDir = e.dir; e.tell = 0;
+          if (e.phase === 'slam') this._event('slam', 'Ground shock', e.x + e.w / 2, GROUND);
         }
       } else if (e.phase === 'lunge') {
         e.phaseTimer -= dt;
         e.vx = e.lungeDir * (e.boss ? 116 : e.type === 'tiger' ? 93 : cfg.flying ? 68 : 52);
         if (cfg.flying) e.y += clamp(dy, -50, 50) * dt * 2;
         if (e.phaseTimer <= 0) { e.phase = 'recovery'; e.phaseTimer = e.boss ? 1.05 : e.type === 'tiger' ? 0.86 : 0.58; e.vx = 0; }
+      } else if (e.phase === 'slam') {
+        e.phaseTimer -= dt;
+        if (e.phaseTimer <= 0) { e.phase = 'recovery'; e.phaseTimer = 1.05; }
       } else if (e.phase === 'recovery') {
         e.phaseTimer -= dt; e.tell = 0;
         if (e.phaseTimer <= 0) { e.phase = 'idle'; e.attackCooldown = 0.22; }
@@ -257,9 +275,11 @@ export class Game {
       } else {
         if (Math.abs(dx) > 1) e.dir = Math.sign(dx);
         if (close && e.attackCooldown <= 0 && Math.abs(dy) < (cfg.flying ? 65 : 47)) {
-          e.phase = 'windup'; e.phaseTimer = e.boss ? (e.hp <= e.maxHp / 2 ? 0.58 : 0.78) : e.type === 'tiger' ? 0.62 : cfg.flying ? 0.53 : 0.4;
+          if (e.boss) { e.move = e.attackCount % 2 === 0 ? 'charge' : 'slam'; e.attackCount++; }
+          e.phase = 'windup'; e.phaseTimer = e.boss ? (e.move === 'slam' ? 1 : e.hp <= e.maxHp / 2 ? 0.58 : 0.78) : e.type === 'tiger' ? 0.62 : cfg.flying ? 0.53 : 0.4;
+          if (e.boss && e.move === 'slam') this._event('slam-warning', 'Jump the ground shock', e.x + e.w / 2, GROUND);
           e.tell = e.phaseTimer;
-          if (e.boss && !this._bossAnnounced) { this._bossAnnounced = true; this.message = 'Great Beast: evade its charge, then strike during recovery.'; this._event('boss', 'The Great Beast', e.x, e.y); }
+          if (e.boss && !this._bossAnnounced) { this._bossAnnounced = true; this.message = 'Great Beast: evade the charge, jump the ground shock, then strike.'; this._event('boss', 'The Great Beast', e.x, e.y); }
         } else if (Math.abs(dx) > (e.boss ? 65 : 36) && Math.abs(dx) < (e.boss ? 190 : 130)) {
           e.vx = e.dir * cfg.speed;
         } else if (cfg.flying) {
@@ -278,6 +298,7 @@ export class Game {
         if (e.hp === 0) { e.alive = false; this.kills++; }
         this._event('hit', 'Stomp', e.x + e.w / 2, e.y); this._event('jump');
       } else if (e.phase === 'lunge' && touching) this._damage(cfg.damage);
+      if (e.boss && e.phase === 'slam' && overlap(p, { x: e.x + e.w / 2 - 75, y: GROUND - 8, w: 150, h: 8 })) this._damage(cfg.damage, true);
       if (this.state !== 'playing') return;
     }
   }
@@ -290,9 +311,9 @@ export class Game {
       if (item.type === 'club' && p.club >= p.clubMax) continue;
       item.alive = false;
       let text;
-      if (item.type === 'meat') { const gain = Math.min(4, p.maxHp - p.hp); p.hp += gain; text = `+${gain} health`; }
+      if (item.type === 'meat') { const gain = Math.min(this.craft === 'forager' ? 6 : 4, p.maxHp - p.hp); p.hp += gain; text = `+${gain} health`; }
       else if (item.type === 'club') { p.club = p.clubMax; text = 'Fresh club'; }
-      else { this.relics++; text = 'Ancient relic'; }
+      else { this.relicLog.push(this.levelIndex); this.relicLog.sort((a, b) => a - b); this.relics++; text = RELICS[this.levelIndex].name; }
       this._event('pickup', text, item.x, item.y);
     }
   }
@@ -317,11 +338,13 @@ export class Game {
     this.time += dt;
     const p = this.player;
     for (const key of ['attackTimer', 'attackCooldown', 'dodgeTimer', 'dodgeCooldown', 'invuln']) p[key] = Math.max(0, p[key] - dt);
-    if (p.dodgeTimer <= 0) p.stamina = Math.min(p.maxStamina, p.stamina + 23 * dt);
+    if (p.dodgeTimer <= 0) p.stamina = Math.min(p.maxStamina, p.stamina + (this.craft === 'wind' ? 32 : 23) * dt);
     this._movePlayer(dt, input);
     if (this.state !== 'playing') { this._previous = { ...input }; return; }
     if (input.attack && p.attackCooldown <= 0 && p.dodgeTimer <= 0) this._strike();
     this._moveEnemies(dt);
+    if (this.state !== 'playing') { this._previous = { ...input }; return; }
+    stepHazards(this, dt);
     if (this.state !== 'playing') { this._previous = { ...input }; return; }
     this._collectItems(); this._checkCamp();
     if (p.x >= this.level.goalX && p.onGround) {
@@ -339,8 +362,8 @@ export class Game {
   }
   _capture(state = this.state) {
     return { state: state === 'paused' ? 'playing' : state, levelIndex: this.levelIndex, time: this.time, deaths: this.deaths,
-      kills: this.kills, relics: this.relics, checkpointLabel: this.checkpointLabel, message: this.message,
-      player: clone(this.player), enemies: clone(this.level.enemies), items: clone(this.level.items), checkpoints: clone(this.level.checkpoints) };
+      kills: this.kills, relics: this.relics, relicLog: [...this.relicLog], unidentifiedRelics: this.unidentifiedRelics, craft: this.craft, checkpointLabel: this.checkpointLabel, message: this.message,
+      player: clone(this.player), enemies: clone(this.level.enemies), items: clone(this.level.items), checkpoints: clone(this.level.checkpoints), hazards: clone(this.level.hazards) };
   }
   snapshot() {
     const transition = this.state === 'stageclear' || this.state === 'complete';
@@ -360,13 +383,15 @@ export class Game {
     } catch { return false; }
   }
   _validate(snapshot) {
-    if (!snapshot || snapshot.version !== SAVE_VERSION || snapshot.game !== 'cave-run-modern') return null;
+    if (!snapshot || ![2, SAVE_VERSION].includes(snapshot.version) || snapshot.game !== 'cave-run-modern') return null;
+    const legacy = snapshot.version === 2;
     const data = snapshot.data;
     if (!data || !Number.isInteger(data.levelIndex) || data.levelIndex < 0 || data.levelIndex >= LEVELS.length) return null;
     if (!['playing', 'stageclear', 'complete'].includes(data.state)) return null;
     if (!finite(data.time, 0, 864000) || !Number.isInteger(data.deaths) || !finite(data.deaths, 0, 100000) || !Number.isInteger(data.kills) || !finite(data.kills, 0, 1000) || !Number.isInteger(data.relics) || !finite(data.relics, 0, 10)) return null;
     if (typeof data.message !== 'string' || data.message.length > 300 || typeof data.checkpointLabel !== 'string' || data.checkpointLabel.length > 30) return null;
     const level = buildLevel(data.levelIndex), p = data.player;
+    if (!legacy && !validateHazards(data.hazards, level.hazards)) return null;
     if (!p || p.w !== PLAYER_W || p.h !== PLAYER_H || p.maxHp !== MAX_HP || p.clubMax !== CLUB_MAX || p.maxStamina !== 100) return null;
     for (const [key, range] of Object.entries({ x: [0, level.width - PLAYER_W], y: [-50, GROUND - PLAYER_H], vx: [-132, 132], vy: [-182, 255], hp: [1, MAX_HP], club: [0, CLUB_MAX], stamina: [0, 100], attackTimer: [0, 0.24], attackCooldown: [0, 0.37], dodgeTimer: [0, 0.3], dodgeCooldown: [0, 0.64], invuln: [0, 1.1], coyote: [0, 0.11], jumpBuffer: [0, 0.13], attackSerial: [0, 1000000] })) if (!finite(p[key], ...range)) return null;
     if (!Number.isInteger(p.hp) || !Number.isInteger(p.club) || !Number.isInteger(p.attackSerial) || ![-1, 1].includes(p.facing) || typeof p.onGround !== 'boolean' || typeof p.jumpHeld !== 'boolean') return null;
@@ -374,8 +399,14 @@ export class Game {
     for (let i = 0; i < level.enemies.length; i++) {
       const original = level.enemies[i], saved = data.enemies[i];
       if (!saved || ['id', 'type', 'w', 'h', 'maxHp', 'boss', 'homeX', 'homeY', 'minX', 'maxX'].some(key => original[key] !== saved[key])) return null;
-      if (!finite(saved.x, 0, level.width - saved.w) || !finite(saved.y, -30, GROUND) || !Number.isInteger(saved.hp) || !finite(saved.hp, 0, original.maxHp) || saved.alive !== (saved.hp > 0) || !PHASES.includes(saved.phase) || ![-1, 1].includes(saved.dir) || ![-1, 1].includes(saved.lungeDir)) return null;
-      for (const [key, range] of Object.entries({ vx: [-120, 120], vy: [-200, 200], phaseTimer: [-0.02, 1.1], tell: [0, 0.8], flash: [0, 0.18], attackCooldown: [0, 0.4], t: [0, 864100] })) if (!finite(saved[key], ...range)) return null;
+      if (!finite(saved.x, 0, level.width - saved.w) || !finite(saved.y, -30, GROUND) || !Number.isInteger(saved.hp) || !finite(saved.hp, 0, original.maxHp) || saved.alive !== (saved.hp > 0) || !(legacy ? LEGACY_PHASES : PHASES).includes(saved.phase) || ![-1, 1].includes(saved.dir) || ![-1, 1].includes(saved.lungeDir)) return null;
+      if (!legacy && ((!['charge', 'slam'].includes(saved.move)) || !Number.isInteger(saved.attackCount) || !finite(saved.attackCount, 0, 1000000) || (!saved.boss && (saved.move !== 'charge' || saved.attackCount !== 0 || saved.phase === 'slam')) || (saved.phase === 'slam' && saved.move !== 'slam'))) return null;
+      if (!legacy && saved.boss) {
+        if (saved.attackCount === 0 && (saved.move !== 'charge' || saved.phase !== 'idle')) return null;
+        if (saved.attackCount > 0 && saved.move !== (saved.attackCount % 2 === 1 ? 'charge' : 'slam')) return null;
+        if ((saved.phase === 'slam' && saved.phaseTimer > 0.25) || (saved.phase === 'lunge' && saved.move !== 'charge')) return null;
+      }
+      for (const [key, range] of Object.entries({ vx: [-120, 120], vy: [-200, 200], phaseTimer: [-0.02, 1.1], tell: [0, legacy ? 0.8 : 1], flash: [0, 0.18], attackCooldown: [0, 0.4], t: [0, 864100] })) if (!finite(saved[key], ...range)) return null;
     }
     for (let i = 0; i < level.items.length; i++) {
       const original = level.items[i], saved = data.items[i];
@@ -400,14 +431,30 @@ export class Game {
     const beast = data.enemies.find(e => e.boss);
     if (data.state === 'complete' && (data.levelIndex !== 9 || !beast || beast.alive || p.x < level.goalX)) return null;
     if (data.state === 'stageclear' && (data.levelIndex >= 9 || p.x < level.goalX)) return null;
-    // Serialized worlds are copied only after every field is accepted.
-    return clone(data);
+    // Validate the complete legacy schema before adding any new fields.
+    const accepted = clone(data);
+    if (legacy) {
+      const foundHere = data.items.some(item => item.type === 'relic' && !item.alive);
+      accepted.relicLog = foundHere ? [data.levelIndex] : [];
+      accepted.unidentifiedRelics = data.relics - accepted.relicLog.length;
+      accepted.craft = 'none';
+      accepted.hazards = clone(level.hazards);
+      for (const enemy of accepted.enemies) { enemy.move = 'charge'; enemy.attackCount = enemy.boss && ['windup', 'lunge', 'recovery'].includes(enemy.phase) ? 1 : 0; }
+    }
+    if (!Array.isArray(accepted.relicLog) || !accepted.relicLog.every(index => Number.isInteger(index) && index >= 0 && index <= data.levelIndex) || new Set(accepted.relicLog).size !== accepted.relicLog.length) return null;
+    if (!Number.isInteger(accepted.unidentifiedRelics) || accepted.unidentifiedRelics < 0 || accepted.relicLog.length + accepted.unidentifiedRelics !== data.relics) return null;
+    const foundHere = accepted.items.some(item => item.type === 'relic' && !item.alive);
+    if (accepted.relicLog.includes(data.levelIndex) !== foundHere || accepted.unidentifiedRelics > data.levelIndex - accepted.relicLog.filter(index => index < data.levelIndex).length) return null;
+    const craft = CRAFTS.find(entry => entry.id === accepted.craft);
+    if (!craft || data.relics < craft.unlock) return null;
+    return accepted;
   }
   _apply(data) {
     this.levelIndex = data.levelIndex; this.level = buildLevel(data.levelIndex);
-    Object.assign(this.level, { enemies: clone(data.enemies), items: clone(data.items), checkpoints: clone(data.checkpoints) });
+    Object.assign(this.level, { enemies: clone(data.enemies), items: clone(data.items), checkpoints: clone(data.checkpoints), hazards: clone(data.hazards) });
     this.player = clone(data.player); this.state = data.state;
-    for (const key of ['time', 'deaths', 'kills', 'relics', 'checkpointLabel', 'message']) this[key] = data[key];
+    for (const key of ['time', 'deaths', 'kills', 'relics', 'unidentifiedRelics', 'craft', 'checkpointLabel', 'message']) this[key] = data[key];
+    this.relicLog = [...data.relicLog];
     this._bossAnnounced = false;
   }
 }

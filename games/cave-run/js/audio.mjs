@@ -358,6 +358,18 @@ export class AudioEngine {
         this._tone(time, 55, 35, 0.9, 0.21, 'sawtooth');
         this._tone(time + 0.045, 82, 52, 0.85, 0.09);
         this._noise(time, 0.7, 460, 1.3, 0.15, 'fx'); break;
+      case 'slam-warning':
+        this._tone(time, 110, 75, 0.45, 0.12, 'sawtooth');
+        this._tone(time + 0.14, 165, 120, 0.3, 0.06); break;
+      case 'slam':
+        this._kick(time, 0.85, 'fx');
+        this._noise(time, 0.45, 450, 0.8, 0.19, 'fx'); break;
+      case 'hazardwarning':
+        this._tone(time, 360, 240, 0.18, 0.06);
+        this._noise(time, 0.24, 1700, 0.7, 0.075, 'fx'); break;
+      case 'hazardactive':
+        this._noise(time, 0.38, 950, 0.8, 0.15, 'fx');
+        this._tone(time, 90, 45, 0.2, 0.09); break;
       case 'complete':
       case 'stageclear':
       case 'levelcomplete':

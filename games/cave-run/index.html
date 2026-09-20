@@ -6,11 +6,11 @@
   <meta name="theme-color" content="#111c20">
   <meta name="description" content="Cave Run: The Ten-Sun Hunt. A modern illustrated action adventure across ten prehistoric wildlands.">
   <title>CAVE RUN · The Ten-Sun Hunt</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?build=expedition-2">
 </head>
 <body>
   <main id="experience">
-    <canvas id="scene" aria-label="Cave Run adventure world"></canvas>
+    <canvas id="scene" tabindex="0" aria-label="Cave Run adventure world. Arrow keys move, Space jumps, J strikes, K evades, Escape pauses."></canvas>
     <div class="edge-shade" aria-hidden="true"></div>
     <header class="topbar">
       <a href="../../" class="arcade" aria-label="Back to SKAB Digital Arcade"><span aria-hidden="true">↖</span> SKAB <span class="arcade-word">ARCADE</span></a>
@@ -26,7 +26,7 @@
       <div class="vitals">
         <div class="health-label"><span>VITALITY</span><span id="health-value"></span></div><div id="health" class="health-pips" role="meter" aria-label="Health" aria-valuemin="0" aria-valuemax="12"></div>
         <div class="resource"><span id="weapon-name">CLUB</span><div class="track"><i id="club-fill"></i></div><span id="club-value"></span></div>
-        <div class="resource stamina"><span>EVASION</span><div class="track"><i id="stamina-fill"></i></div><span id="stamina-value"></span></div>
+        <div class="resource stamina"><span>EVASION</span><div class="track"><i id="stamina-fill"></i></div><span id="stamina-value"></span></div><div id="craft-active" class="craft-active" hidden></div>
       </div>
     </section>
     <section id="boss" class="boss" hidden aria-label="Great Beast"><div><span>THE GREAT BEAST</span><span id="boss-phase">WATCH. EVADE. STRIKE.</span></div><div class="boss-track"><i id="boss-fill"></i></div></section>
@@ -46,16 +46,26 @@
     <div id="keyboard-hint" class="keyboard-hint" hidden><span><kbd>A</kbd><kbd>D</kbd> move</span><span><kbd>SPACE</kbd> jump</span><span><kbd>J</kbd> strike</span><span><kbd>K</kbd> evade</span><span><kbd>ESC</kbd> pause</span></div>
   </main>
   <dialog id="menu" aria-labelledby="menu-heading"><div class="menu-inner"><div class="menu-head"><div><span class="eyebrow">TAKE A BREATH</span><h2 id="menu-heading">Your journey</h2></div><button id="close-menu" class="icon-button" aria-label="Close menu">×</button></div>
-    <div class="menu-tabs" role="tablist" aria-label="Journey menu"><button role="tab" aria-selected="true" data-tab="journey" aria-controls="panel-journey">The trail</button><button role="tab" aria-selected="false" data-tab="help" aria-controls="panel-help">Field guide</button><button role="tab" aria-selected="false" data-tab="settings" aria-controls="panel-settings">Settings & saves</button></div>
+    <div class="menu-tabs" role="tablist" aria-label="Journey menu"><button role="tab" aria-selected="true" data-tab="journey" aria-controls="panel-journey">The trail</button><button role="tab" aria-selected="false" data-tab="journal" aria-controls="panel-journal">Relics & skills</button><button role="tab" aria-selected="false" data-tab="help" aria-controls="panel-help">Field guide</button><button role="tab" aria-selected="false" data-tab="settings" aria-controls="panel-settings">Settings</button></div>
     <section id="panel-journey" class="menu-panel" role="tabpanel"><p class="muted">Carry your strength from one land to the next. Campfires remember the hunt.</p><ol id="route-list" class="route-list"></ol><p id="journey-stats" class="small-note"></p></section>
-    <section id="panel-help" class="menu-panel" role="tabpanel" hidden><div class="guide-grid"><article><b>01 / Find your footing</b><p>Move with A/D or the arrows. Hold Space to jump higher; release for a short hop. On touch, use the arrows and Jump.</p></article><article><b>02 / Read the animal</b><p>Hold J or Strike to swing. Watch a predator's warning before it lunges. Press K, Shift, or Evade to roll through danger; evasion needs stamina.</p></article><article><b>03 / Carry what matters</b><p>Food restores health. A new club restores durability. If the club breaks, your fists still work. Jump onto small creatures; tigers and the Great Beast cannot be stomped.</p></article><article><b>04 / Remember the fire</b><p>Passing a campfire records your resources and the world. Retry and Continue return to the last camp, including the supplies you had then. Returning gives you a brief moment of protection. Reaching a new land also saves.</p></article><article><b>05 / Follow your curiosity</b><p>Trail relics reward exploration. Raised stone shelves offer optional paths. Ordinary animals may be avoided; the Great Beast must be defeated to finish the hunt.</p></article><article><b>06 / Make it home</b><p>Reach the trail marker at the end of each land. Ten lands make one journey. In the final encounter, let the Beast commit to its attack, evade, then strike during recovery.</p></article></div><p class="small-note">Controller: left stick / D-pad move · A jump · X strike · B evade · Start pause.</p></section>
+    <section id="panel-journal" class="menu-panel" role="tabpanel" hidden>
+      <div class="journal-intro"><div><span class="eyebrow">WHAT THE WILD TEACHES</span><h3>Relics of the hunt</h3></div><p id="journal-summary" class="small-note"></p></div>
+      <p class="muted">Bring discoveries to a campfire to unlock trail skills. Equip one at a time; relics are kept, never spent.</p>
+      <p id="journal-memory" class="journal-memory" hidden></p>
+      <div class="craft-heading"><h4>Trail skills</h4><span id="craft-equipped" class="small-note"></span></div>
+      <div id="craft-list" class="craft-grid"></div>
+      <p id="craft-status" class="small-note" role="status" aria-live="polite"></p>
+      <div class="collection-heading"><h4>Your discoveries</h4><span class="small-note">One relic in each land</span></div>
+      <ol id="relic-list" class="relic-grid"></ol>
+    </section>
+    <section id="panel-help" class="menu-panel" role="tabpanel" hidden><div class="guide-grid"><article><b>01 / Find your footing</b><p>Move with A/D or the arrows. Hold Space to jump higher; release for a short hop. On touch, use the arrows and Jump.</p></article><article><b>02 / Read the animal</b><p>Hold J or Strike to swing. Watch a predator's warning before it lunges. Press K, Shift, or Evade to roll through danger; evasion needs stamina.</p></article><article><b>03 / Carry what matters</b><p>Food restores health. A new club restores durability. If the club breaks, your fists still work. Jump onto small creatures; tigers and the Great Beast cannot be stomped.</p></article><article><b>04 / Remember the fire</b><p>Passing a campfire records your resources and the world. Retry and Continue return to the last camp, including the supplies you had then. Returning gives you a brief moment of protection. Reaching a new land also saves.</p></article><article><b>05 / Follow your curiosity</b><p>Each land holds a named relic. Secure finds at the next camp to unlock trail skills in Relics & skills. Equip one skill at a time. Raised stone shelves offer optional paths. Ordinary animals may be avoided; the Great Beast must be defeated to finish the hunt.</p></article><article><b>06 / Make it home</b><p>Reach the trail marker at the end of each land. Ten lands make one journey. The Great Beast alternates charges and ground slams. Evade a charge. When it raises its forelegs, get ready; hold Jump when the warning says HOLD JUMP NOW. Strike during recovery.</p></article><article><b>07 / Watch the ground</b><p>Falling stone and steam vents warn before they strike. Leave a rockfall marker; jump over a steam burst or wait for it to settle. The ground markings show the danger zone.</p></article></div><p class="small-note">Controller: left stick / D-pad move · A jump · X strike · B evade · Start pause.</p></section>
     <section id="panel-settings" class="menu-panel" role="tabpanel" hidden><label class="setting"><span>Music & sound<small>Original industrial score and world effects</small></span><input id="audio-setting" type="checkbox"></label><label class="setting"><span>Volume</span><input id="volume" type="range" min="0" max="100" value="45" aria-label="Volume"></label><label class="setting"><span>Reduced motion<small>Less camera movement and screen shake</small></span><input id="motion" type="checkbox"></label><label class="setting"><span>Show touch controls<small>Always display movement and action buttons</small></span><input id="touch-setting" type="checkbox"></label><div class="save-tools"><p id="storage-status">Progress is saved on this device at campfires.</p><button id="export" class="button secondary">Export journey</button><label class="button secondary import-label">Import journey<input id="import" type="file" accept="application/json,.json"></label><p id="import-status" role="status" class="small-note"></p></div><button id="restart" class="text-button danger">Start a new hunt…</button></section>
     <div class="menu-bottom"><button id="resume" class="button primary">Return to the wild <span>→</span></button><span class="small-note">The world waits while this menu is open.</span></div>
   </div></dialog>
   <dialog id="confirm" aria-labelledby="confirm-title"><div class="confirm-inner"><span class="eyebrow">A NEW BEGINNING</span><h2 id="confirm-title">Leave this journey?</h2><p>Starting again replaces the saved hunt on this device. Export it first if you want to keep it.</p><div class="confirm-actions"><button id="cancel-new" class="button secondary">Keep this journey</button><button id="confirm-new" class="button primary">Begin a new hunt</button></div></div></dialog>
   <noscript><div class="fatal">Cave Run needs JavaScript enabled to play.</div></noscript>
   <script type="module">
-    import('./js/app.mjs').catch(error => {
+    import('./js/app.mjs?build=expedition-2').catch(error => {
       console.error(error);
       const box = document.createElement('div'); box.className = 'fatal';
       const content = document.createElement('div');
