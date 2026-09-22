@@ -18,6 +18,8 @@ server = ThreadingHTTPServer(('127.0.0.1', 8765), partial(QuietHandler, director
 Thread(target=server.serve_forever, daemon=True).start()
 BASE = 'http://127.0.0.1:8765/' + ROOT.name + '/'
 results = []
+completed = False
+failure = None
 
 def check(name, passed, detail=''):
     results.append({'check': name, 'pass': bool(passed), 'detail': detail})
@@ -71,9 +73,11 @@ try:
             page.wait_for_selector('#begin', state='visible')
             check(mode + ': Swarm nested entry resolves to dist', page.url.endswith('/games/swarm-attack/dist/'))
             page.locator('#begin').click()
-            page.wait_for_selector('#hud', state='visible')
+            # The HUD container has only positioned children and no own box.
+            # Check a visible child and the actual hidden attribute instead.
+            page.wait_for_selector('#health', state='visible')
             page.wait_for_timeout(1000)
-            check(mode + ': Swarm starts alive', int(page.locator('#health').inner_text()) > 0)
+            check(mode + ': Swarm starts alive', not page.locator('#hud').evaluate('e=>e.hidden') and int(page.locator('#health').inner_text()) > 0)
             page.locator('#view-button').click()
             page.wait_for_timeout(200)
             check(mode + ': Swarm camera switch responds', page.locator('#view-button').inner_text() != 'ISO')
@@ -133,6 +137,12 @@ try:
             page.screenshot(path=str(EVIDENCE / f'arcade-{mode}.png'), full_page=True)
             context.close()
         browser.close()
+        completed = True
+except Exception as error:
+    failure = str(error)
+    print('BROWSER_CHECK_FAILURE:', failure, flush=True)
+    print('LAST_PAGE_ERRORS:', errors, 'LAST_REQUEST_ERRORS:', requests, flush=True)
+    raise
 finally:
     server.shutdown()
-    (ROOT / 'qa/project-games-browser.json').write_text(json.dumps({'checks': results, 'passed': sum(r['pass'] for r in results), 'total': len(results), 'scope': 'Chromium desktop and mobile emulation, not physical-device certification.'}, indent=2) + '\n')
+    (ROOT / 'qa/project-games-browser.json').write_text(json.dumps({'completed': completed, 'failure': failure, 'checks': results, 'passed': sum(r['pass'] for r in results), 'total': len(results), 'scope': 'Chromium desktop and mobile emulation, not physical-device certification.'}, indent=2) + '\n')
