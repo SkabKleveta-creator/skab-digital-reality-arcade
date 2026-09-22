@@ -54,6 +54,13 @@
     #skab-underground .ug-feature-nav button{background:transparent;border:1px solid #66665c;color:var(--ug-paper);height:44px;width:44px;font-size:22px}
     #skab-underground .ug-feature-nav span{font:11px monospace;white-space:nowrap;color:var(--ug-muted);padding:0 6px}
     #skab-underground .ug-divider{border:0;border-top:1px solid #666459;margin:34px 0 25px;transform:rotate(-.7deg)}
+    #skab-underground .ug-release{margin:28px 0 30px;padding:18px 22px 20px;border:1px solid #666459;border-left:5px solid var(--ug-lime);background:#20201c;position:relative;transform:rotate(.25deg)}
+    #skab-underground .ug-release::before{content:'NEW DROP';position:absolute;right:18px;top:-13px;background:var(--ug-pink);color:var(--ug-black);padding:7px 11px;font:900 15px/1 'UG Condensed',Impact,sans-serif;letter-spacing:.8px;transform:rotate(3deg)}
+    #skab-underground .ug-release h2{font-size:clamp(30px,5vw,48px);color:var(--ug-lime);margin-bottom:9px}
+    #skab-underground .ug-release p{max-width:820px;color:var(--ug-paper);font-size:13px;line-height:1.55}
+    #skab-underground .ug-release-games{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    #skab-underground .ug-release-games a{border:1px solid #77796b;padding:9px 12px;min-height:24px;display:inline-flex;align-items:center;font:900 15px/1 'UG Condensed',Impact,sans-serif;text-transform:uppercase;color:var(--ug-paper)}
+    #skab-underground .ug-release-games a:hover{border-color:var(--ug-lime);color:var(--ug-lime)}
     #skab-underground .ug-library-head{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:22px}
     #skab-underground .ug-library-head h2{font-size:39px;transform:rotate(-2deg);padding:10px 19px 13px}
     #skab-underground .ug-library-note{font-size:15px;transform:rotate(3deg);color:var(--ug-paper);text-align:right}
@@ -143,6 +150,11 @@
         <p id="ug-detail-description"></p>
         <h3 class="ug-condensed">How to play</h3><p id="ug-detail-controls"></p>
         <a id="ug-detail-play" class="ug-play" target="_blank" rel="noopener noreferrer">▶ Play</a>
+      </section>
+      <section class="ug-release" aria-labelledby="ug-release-title">
+        <h2 id="ug-release-title" class="ug-condensed">Four New Games Just Hit the Arcade</h2>
+        <p>Four project builds are now playable in the Underground: build a prehistoric community in <strong>First Kin</strong>, manage a growing realm in <strong>Kingdom Maker</strong>, carve through Hollow Wake in <strong>Swarm Attack</strong>, or turn horror on its head and hunt the humans in <strong>Night Hunt: Reversed</strong>.</p>
+        <div class="ug-release-games"><a href="./games/first-kin/" target="_blank" rel="noopener noreferrer">▶ First Kin</a><a href="./games/kingdom-maker/" target="_blank" rel="noopener noreferrer">▶ Kingdom Maker</a><a href="./games/swarm-attack/" target="_blank" rel="noopener noreferrer">▶ Swarm Attack</a><a href="./games/night-hunt/" target="_blank" rel="noopener noreferrer">▶ Night Hunt: Reversed</a></div>
       </section>
       <hr class="ug-divider">
       <section id="ug-library" aria-labelledby="ug-library-title">
