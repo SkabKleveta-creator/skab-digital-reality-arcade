@@ -1,0 +1,50 @@
+name: Verify published project games
+on:
+  push:
+    branches: [migration/first-kin-swarm-attack]
+    paths: [.github/workflows/verify-project-games-live.yml]
+permissions:
+  contents: read
+jobs:
+  verify-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check release and verify every published runtime file
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,time,urllib.request
+          base='https://skabkleveta-creator.github.io/skab-digital-reality-arcade/'
+          def fetch(path):
+              req=urllib.request.Request(base+path,headers={'User-Agent':'SKAB-Arcade-release-check/1.0','Cache-Control':'no-cache'})
+              with urllib.request.urlopen(req,timeout=25) as r:
+                  assert r.status==200,(path,r.status)
+                  return r.read()
+          for attempt in range(20):
+              try:
+                  release=json.loads(fetch('site-version.json'))
+                  if release['version']=='2026.09.21.001':
+                      break
+              except Exception as error:
+                  print('Waiting for deployment:',str(error),flush=True)
+              time.sleep(6)
+          else:
+              raise AssertionError('New release did not become available during verification window')
+          print('LIVE_RELEASE',json.dumps(release),flush=True)
+          home=fetch('index.html').decode()
+          assert 'underground-2026-09-21-project-games' in home
+          assert '"id": "first-kin"' in home and '"id": "swarm-attack"' in home
+          assert '"id": "kingdom-maker"' not in home and '"id": "night-hunt"' not in home
+          count=0
+          for slug in ['first-kin','swarm-attack']:
+              prefix='games/'+slug+'/'
+              manifest=json.loads(fetch(prefix+'ARCADE-SOURCE.json'))
+              for f in manifest['files']:
+                  data=fetch(prefix+f['path'])
+                  assert hashlib.sha256(data).hexdigest()==f['sha256'],(slug,f['path'])
+                  count+=1
+              print('LIVE_GAME_VERIFIED',slug,manifest['source_commit'],len(manifest['files']),'files',flush=True)
+          for path in ['assets/arcade-covers/cards/29-first-kin.png','assets/arcade-covers/cards/30-swarm-attack.png']:
+              assert fetch(path).startswith(b'\x89PNG\r\n\x1a\n')
+          print('PUBLICATION_VERIFIED',count,'source files; both game cards and covers; build 2026.09.21.001',flush=True)
+          PY
