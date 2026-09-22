@@ -1,0 +1,33 @@
+{
+  "build": "underground-2026-09-21-project-games",
+  "method": "Byte-identical copies of pinned upstream runtime files.",
+  "games": [
+    {
+      "id": "first-kin",
+      "source": "SkabKleveta-creator/FirstKinProject",
+      "commit": "30e1c707034f9ad6822240bb047345839219db24",
+      "files": 12,
+      "bytes": 4027100
+    },
+    {
+      "id": "swarm-attack",
+      "source": "SkabKleveta-creator/swarm_attack",
+      "commit": "af2852ff916b2486cb8a0b7368e570524e2cb2ac",
+      "files": 13,
+      "bytes": 2118222
+    }
+  ],
+  "excluded": [
+    "Castle Realm",
+    "Terrarium"
+  ],
+  "not_imported": {
+    "Kingdom Maker": "Existing source unavailable; published build requires authentication.",
+    "Night Hunt: Reversed": "Existing source unavailable; published build requires authentication."
+  },
+  "catalog": {
+    "before": 24,
+    "after": 26,
+    "existing_entries_unchanged": true
+  }
+}

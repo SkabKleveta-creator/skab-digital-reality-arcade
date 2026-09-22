@@ -1,0 +1,257 @@
+{
+  "completed": true,
+  "failure": null,
+  "checks": [
+    {
+      "check": "desktop: First Kin starts",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: First Kin resources rendered",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: First Kin construction opens",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "First Kin cover contains rendered gameplay",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: First Kin has no runtime or asset errors",
+      "pass": true,
+      "detail": {
+        "errors": [],
+        "requests": []
+      }
+    },
+    {
+      "check": "desktop: Swarm nested entry resolves to dist",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Swarm starts alive",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Swarm camera switch responds",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "Swarm cover contains rendered gameplay",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Swarm has no runtime or asset errors",
+      "pass": true,
+      "detail": {
+        "errors": [],
+        "requests": []
+      }
+    },
+    {
+      "check": "mobile: First Kin starts",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: First Kin resources rendered",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: First Kin construction opens",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: First Kin has no runtime or asset errors",
+      "pass": true,
+      "detail": {
+        "errors": [],
+        "requests": []
+      }
+    },
+    {
+      "check": "mobile: Swarm nested entry resolves to dist",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Swarm starts alive",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Swarm camera switch responds",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "Mobile Swarm touch attack visible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "Mobile Swarm movement joystick visible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Swarm has no runtime or asset errors",
+      "pass": true,
+      "detail": {
+        "errors": [],
+        "requests": []
+      }
+    },
+    {
+      "check": "desktop: catalog increases by exactly two",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: no coming-soon placeholders",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: both new games in first lineup",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: first-kin cover loads",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: first-kin details link correct",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: swarm-attack cover loads",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: swarm-attack details link correct",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: simulation filter includes First Kin",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: search finds Swarm Attack",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: favorites persist",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: all catalog covers load",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: arcade has no horizontal overflow",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: arcade has no runtime or asset errors",
+      "pass": true,
+      "detail": {
+        "errors": [],
+        "requests": []
+      }
+    },
+    {
+      "check": "mobile: catalog increases by exactly two",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: no coming-soon placeholders",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: both new games in first lineup",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: first-kin cover loads",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: first-kin details link correct",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: swarm-attack cover loads",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: swarm-attack details link correct",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: simulation filter includes First Kin",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: search finds Swarm Attack",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: favorites persist",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: all catalog covers load",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: arcade has no horizontal overflow",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: arcade has no runtime or asset errors",
+      "pass": true,
+      "detail": {
+        "errors": [],
+        "requests": []
+      }
+    }
+  ],
+  "passed": 46,
+  "total": 46,
+  "scope": "Chromium desktop and mobile emulation, not physical-device certification."
+}

@@ -1,0 +1,67 @@
+{
+  "source_repository": "SkabKleveta-creator/FirstKinProject",
+  "source_commit": "30e1c707034f9ad6822240bb047345839219db24",
+  "runtime_changes": "None",
+  "files": [
+    {
+      "path": "index.html",
+      "bytes": 6510,
+      "sha256": "6978a2609854d236649d304d80e6c9db3add500ca0105a25c69f07cf7e2e039e"
+    },
+    {
+      "path": "src/app.js",
+      "bytes": 28975,
+      "sha256": "e366e9bbb89e38888e23d6e9420d22e4a0290f65f8e664149313456a9167680e"
+    },
+    {
+      "path": "src/art.js",
+      "bytes": 64,
+      "sha256": "2361005e797c3e1a36ca9ba7b7efe833bd3772b7831a98806d9800664f99564d"
+    },
+    {
+      "path": "src/core.js",
+      "bytes": 31200,
+      "sha256": "7b3a88864728da404c4b0f15ade01293489ae37d0bfbd45ce227ba0de839caac"
+    },
+    {
+      "path": "src/field.js",
+      "bytes": 7570,
+      "sha256": "0271988e826a689edf0b216b905e4f703939fa4ac71d828e940dad9ed0a43844"
+    },
+    {
+      "path": "src/render.js",
+      "bytes": 13771,
+      "sha256": "bd14f7ba125ba7dd6cce04e1c262779d6537772c118b1990638d47b718469335"
+    },
+    {
+      "path": "src/shell.html",
+      "bytes": 6306,
+      "sha256": "206199c5f728c2da4a56e94bc65f588357cb57cb196c4ded9af8ebc6b6082728"
+    },
+    {
+      "path": "src/style.css",
+      "bytes": 20226,
+      "sha256": "325580ebe9e0a566b068133f2a6317a5994fbd8150753d33d6948b9b53d62002"
+    },
+    {
+      "path": "assets/founding-family.png",
+      "bytes": 2044113,
+      "sha256": "8c604f0d1c579220a32713b7427788ffa6559df7a11c64d8d6acf03600e8bd11"
+    },
+    {
+      "path": "assets/settlers.png",
+      "bytes": 1860519,
+      "sha256": "8cf11719190261021eb1df922e003f7f7eac99ac58361b4afb2be6649768b949"
+    },
+    {
+      "path": "data/lore.json",
+      "bytes": 553,
+      "sha256": "536d9369025ef3d38eeb962f1af3321108ea7469c492933eab09feebbe4d279d"
+    },
+    {
+      "path": "README.md",
+      "bytes": 7293,
+      "sha256": "3de20e142ba7e9d354d30753532d401b7660408f0521a66cd8ba0d3006f53a07"
+    }
+  ]
+}

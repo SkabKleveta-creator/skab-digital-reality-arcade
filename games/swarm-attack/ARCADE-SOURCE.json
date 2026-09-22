@@ -1,0 +1,72 @@
+{
+  "source_repository": "SkabKleveta-creator/swarm_attack",
+  "source_commit": "af2852ff916b2486cb8a0b7368e570524e2cb2ac",
+  "runtime_changes": "None",
+  "files": [
+    {
+      "path": "index.html",
+      "bytes": 402,
+      "sha256": "9e66b67430517858a22977548214e08e06b305544a268c66e97fc5fe05cc8938"
+    },
+    {
+      "path": "dist/THREE-LICENSE.txt",
+      "bytes": 1081,
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+    },
+    {
+      "path": "dist/core.mjs",
+      "bytes": 18538,
+      "sha256": "4adcb9879f8e8f37bab1d61fdee40cc4a8b5da68f4f725f1e8c48fed8bcc25c7"
+    },
+    {
+      "path": "dist/game.js",
+      "bytes": 47055,
+      "sha256": "5916303562f87d4d6d2a1cf39adf27ee4fa263d5f5ea4cbe5436eff191574724"
+    },
+    {
+      "path": "dist/index.html",
+      "bytes": 998,
+      "sha256": "e50018260beb6044fb668d7499748e11e49795379184e738361fbd03826eccb5"
+    },
+    {
+      "path": "dist/level.mjs",
+      "bytes": 7588,
+      "sha256": "9cb79dc0ac9c77bc86b440d429503ded23a7731f7f79f3ae227dbba4059dae8f"
+    },
+    {
+      "path": "dist/style.css",
+      "bytes": 15398,
+      "sha256": "7d47134362101af23765911bbfd084b8e58b64ed48232eae3b4461d28fabc4c8"
+    },
+    {
+      "path": "dist/three.core.js",
+      "bytes": 1403455,
+      "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20"
+    },
+    {
+      "path": "dist/three.module.js",
+      "bytes": 603113,
+      "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a"
+    },
+    {
+      "path": "dist/world.js",
+      "bytes": 7708,
+      "sha256": "6c6e1cc1c6b35b13493057193998811426432fac8f5edfaebe3bce60080b48f7"
+    },
+    {
+      "path": "README.md",
+      "bytes": 4190,
+      "sha256": "c1df368d43318c245690515a5f8c8ba9953ff2bebf484a0c13036927a0578cbc"
+    },
+    {
+      "path": "LEVEL-01.md",
+      "bytes": 5938,
+      "sha256": "5a6cf7122a50ac2d8a6f77295a085ea5d8fb37857d5ae4d11721db3612a50b2d"
+    },
+    {
+      "path": "TESTING.md",
+      "bytes": 2758,
+      "sha256": "83ea00c0415f776b722ae9a4ec4b64752ad13f82bf8223cde8e62d866601d312"
+    }
+  ]
+}

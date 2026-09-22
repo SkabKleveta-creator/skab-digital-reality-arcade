@@ -1,0 +1,19 @@
+{
+  "setting": "fictional_prehistoric",
+  "note": "No specific living culture is represented by the fictional camp. Nation-specific content is a future layer.",
+  "entries": [],
+  "entryShape": {
+    "id": "",
+    "title": "",
+    "people_or_nation": "",
+    "place": "",
+    "period": "",
+    "knowledge_holder_or_author": "",
+    "source_url": "",
+    "usage_terms": "",
+    "content_type": "public_knowledge | attributed_story | original_fiction",
+    "mechanic_connection": "",
+    "review_status": "draft | sourced | reviewed",
+    "text": ""
+  }
+}
