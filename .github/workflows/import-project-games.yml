@@ -1,0 +1,82 @@
+name: Import recovered project games
+on:
+  push:
+    branches: [migration/first-kin-swarm-attack]
+    paths:
+      - .github/workflows/import-project-games.yml
+      - qa/import_project_games.py
+      - qa/project_games_browser.py
+permissions:
+  contents: write
+concurrency:
+  group: import-first-kin-swarm-attack
+  cancel-in-progress: false
+jobs:
+  import-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: migration/first-kin-swarm-attack
+          fetch-depth: 0
+      - name: Fetch exact existing game builds
+        env:
+          GAME_SOURCE_ROOT: ${{ runner.temp }}/project-game-sources
+        run: |
+          mkdir -p "$GAME_SOURCE_ROOT"
+          git clone --quiet https://github.com/SkabKleveta-creator/FirstKinProject.git "$GAME_SOURCE_ROOT/FirstKinProject"
+          git -C "$GAME_SOURCE_ROOT/FirstKinProject" checkout --quiet 30e1c707034f9ad6822240bb047345839219db24
+          git clone --quiet https://github.com/SkabKleveta-creator/swarm_attack.git "$GAME_SOURCE_ROOT/swarm_attack"
+          git -C "$GAME_SOURCE_ROOT/swarm_attack" checkout --quiet af2852ff916b2486cb8a0b7368e570524e2cb2ac
+      - name: Run original First Kin tests
+        run: |
+          cd "${{ runner.temp }}/project-game-sources/FirstKinProject"
+          npm test
+      - name: Run original Swarm Attack tests
+        run: |
+          cd "${{ runner.temp }}/project-game-sources/swarm_attack"
+          node --check dist/game.js
+          node --check dist/world.js
+          node --check dist/core.mjs
+          node --check dist/level.mjs
+          node --test tests/*.test.mjs
+      - name: Import runtime without changing gameplay
+        env:
+          GAME_SOURCE_ROOT: ${{ runner.temp }}/project-game-sources
+        run: python3 qa/import_project_games.py
+      - name: Install browser test tools
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          python3 -m playwright install --with-deps chromium
+      - name: Check desktop, touch emulation, catalog and real cover screenshots
+        run: python3 qa/project_games_browser.py
+      - name: Verify copied bytes still match the pinned source
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          for slug in ['first-kin','swarm-attack']:
+              root=pathlib.Path('games')/slug
+              manifest=json.loads((root/'ARCADE-SOURCE.json').read_text())
+              for entry in manifest['files']:
+                  assert hashlib.sha256((root/entry['path']).read_bytes()).hexdigest()==entry['sha256'], entry['path']
+              print('Verified byte-identical runtime:',slug,len(manifest['files']),'files')
+          PY
+      - name: Commit tested import to the review branch only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html .nojekyll games/first-kin games/swarm-attack assets/arcade-covers/cards/29-first-kin.png assets/arcade-covers/cards/30-swarm-attack.png qa/project-games-import.json qa/project-games-browser.json evidence/project-games
+          git commit -m 'Add existing First Kin and Swarm Attack builds to Underground arcade'
+          git push origin HEAD:refs/heads/migration/first-kin-swarm-attack
+          echo "TESTED_COMMIT=$(git rev-parse HEAD)"
+      - name: Save validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-games-validation
+          path: |
+            qa/project-games-import.json
+            qa/project-games-browser.json
+            evidence/project-games
+          retention-days: 7
