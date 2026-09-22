@@ -136,8 +136,8 @@ try:
             check(mode + ': Night Hunt starts through real controls', True)
             capture(page, 'night-hunt', mode, '#game')
             check(mode + ': Night Hunt has no horizontal overflow', page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'))
-            # Existing opt-in diagnostics observe the original engine; no code is injected.
-            page.goto(BASE + 'games/night-hunt/#test', wait_until='networkidle')
+            # A changed query forces a new document; a hash-only navigation does not rerun the engine.
+            page.goto(BASE + 'games/night-hunt/?qa=campaign#test', wait_until='networkidle')
             page.wait_for_function('()=>{try{window.__nightHuntTest.startAs(0);return window.__nightHuntTest.snapshot().state==="play"}catch{return false}}')
             initial = page.evaluate('window.__nightHuntTest.snapshot()')
             page.wait_for_timeout(800)
