@@ -1,0 +1,110 @@
+name: Publish Kingdom Maker and Night Hunt
+on:
+  push:
+    branches: [release/kingdom-maker-night-hunt, main]
+    paths:
+      - .github/workflows/publish-kingdom-night.yml
+      - qa/import_kingdom_night.py
+      - qa/kingdom_night_browser.py
+      - games/kingdom-maker/**
+      - games/night-hunt/**
+permissions:
+  contents: read
+concurrency:
+  group: kingdom-night-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  stage-and-test:
+    if: github.ref == 'refs/heads/release/kingdom-maker-night-hunt' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch the approved source revisions
+        env:
+          GAME_SOURCE_ROOT: ${{ runner.temp }}/kingdom-night-sources
+        run: |
+          mkdir -p "$GAME_SOURCE_ROOT" evidence/kingdom-night
+          git clone --quiet https://github.com/SkabKleveta-creator/Kingdom_Maker.git "$GAME_SOURCE_ROOT/Kingdom_Maker"
+          git -C "$GAME_SOURCE_ROOT/Kingdom_Maker" checkout --quiet bf608966457b208cbb32d284b300feee69e88a5c
+          git clone --quiet https://github.com/SkabKleveta-creator/Night_Hunt-Reverse_Horror.git "$GAME_SOURCE_ROOT/Night_Hunt-Reverse_Horror"
+          git -C "$GAME_SOURCE_ROOT/Night_Hunt-Reverse_Horror" checkout --quiet baf18fba5c81e94d468e8011caf8f7fdea2a4edd
+      - name: Run Kingdom Maker simulation tests
+        run: |
+          cd "${{ runner.temp }}/kingdom-night-sources/Kingdom_Maker"
+          npm test 2>&1 | tee "$GITHUB_WORKSPACE/evidence/kingdom-night/kingdom-tests.txt"
+      - name: Run Night Hunt control and campaign tests
+        run: |
+          cd "${{ runner.temp }}/kingdom-night-sources/Night_Hunt-Reverse_Horror"
+          npm test 2>&1 | tee "$GITHUB_WORKSPACE/evidence/kingdom-night/night-tests.txt"
+      - name: Import exact runtime and update the catalog
+        env:
+          GAME_SOURCE_ROOT: ${{ runner.temp }}/kingdom-night-sources
+        run: python3 qa/import_kingdom_night.py
+      - name: Install browser tools
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          python3 -m playwright install --with-deps chromium
+      - name: Test games and arcade on desktop and touch emulation
+        run: python3 qa/kingdom_night_browser.py
+      - name: Verify source preservation and modification scope
+        run: |
+          git diff --exit-code fc6afd70485108ef49b6973a30982415568a99e3 -- games/first-kin games/swarm-attack
+          python3 - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          for slug in ['kingdom-maker','night-hunt']:
+              root=pathlib.Path('games')/slug
+              manifest=json.loads((root/'ARCADE-SOURCE.json').read_text())
+              for entry in manifest['files']:
+                  assert hashlib.sha256((root/entry['path']).read_bytes()).hexdigest()==entry['sha256'],entry['path']
+              print('SOURCE_PRESERVED',slug,len(manifest['files']))
+          changed=subprocess.check_output(['git','diff','--name-only','--','games'],text=True).splitlines()
+          assert changed==[],changed
+          test=json.loads(pathlib.Path('qa/kingdom-night-browser.json').read_text())
+          assert test['completed'] and test['passed']==test['total']
+          PY
+      - name: Commit tested files to release branch only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html site-version.json qa/project-games-import.json qa/kingdom-night-import.json qa/kingdom-night-browser.json games/kingdom-maker games/night-hunt assets/arcade-covers/cards/31-kingdom-maker.png assets/arcade-covers/cards/32-night-hunt.png evidence/kingdom-night
+          git commit -m 'Publish existing Kingdom Maker and Night Hunt builds in the arcade'
+          git push origin HEAD:refs/heads/release/kingdom-maker-night-hunt
+          echo "TESTED_COMMIT=$(git rev-parse HEAD)"
+      - name: Save staged validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kingdom-night-staged-validation
+          path: |
+            qa/kingdom-night-import.json
+            qa/kingdom-night-browser.json
+            evidence/kingdom-night
+          retention-days: 7
+  verify-live:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install browser tools
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          python3 -m playwright install --with-deps chromium
+      - name: Verify published source bytes and real Play links
+        env:
+          ARCADE_BASE: https://skabkleveta-creator.github.io/skab-digital-reality-arcade/
+        run: python3 qa/kingdom_night_browser.py
+      - name: Save live validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kingdom-night-live-validation
+          path: |
+            qa/kingdom-night-live.json
+            evidence/kingdom-night
+          retention-days: 7
