@@ -1,0 +1,72 @@
+{
+  "source_repository": "SkabKleveta-creator/Kingdom_Maker",
+  "source_commit": "bf608966457b208cbb32d284b300feee69e88a5c",
+  "runtime_changes": "None",
+  "files": [
+    {
+      "path": "index.html",
+      "bytes": 6396,
+      "sha256": "cc4f2a07e60938e3dd0e2c87eaac1df1157f9a0ca1944eb4f44efdf860fb5cfc"
+    },
+    {
+      "path": "style.css",
+      "bytes": 29382,
+      "sha256": "318eb987c9ed04ac59ba3d890a7907985f01b4cb8296679c3e7e9a5f37c33a50"
+    },
+    {
+      "path": "app.mjs",
+      "bytes": 35835,
+      "sha256": "1217b55d6c9b2672bc7a81f45286ec9eaafc986429b2937371e59d239a68748e"
+    },
+    {
+      "path": "sim.mjs",
+      "bytes": 31368,
+      "sha256": "a1fe3a3966fe91127155d89d0a76d9f18ebaa4a2d2e26b39b8426706c122ce57"
+    },
+    {
+      "path": "scene.mjs",
+      "bytes": 10663,
+      "sha256": "cf58941b9d5e5ec5de17fd055706c7e9f948295b7cc30f4595641241d8897891"
+    },
+    {
+      "path": "models.mjs",
+      "bytes": 11486,
+      "sha256": "89e20aa0e37b76a12f57fb5e4c878365965408421c21c6652c3f9a21a990b866"
+    },
+    {
+      "path": "vendor/LUCIDE-LICENSE.txt",
+      "bytes": 3208,
+      "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+    },
+    {
+      "path": "vendor/THREE-LICENSE.txt",
+      "bytes": 1081,
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+    },
+    {
+      "path": "vendor/icons.js",
+      "bytes": 397450,
+      "sha256": "ab85225ecc1daa2033607856f03dd2dabcbc08e2d260a5b97e17c690aa929766"
+    },
+    {
+      "path": "vendor/three.core.js",
+      "bytes": 1403454,
+      "sha256": "94337bbcde63e61eb954f00d2ad72d122d1cc3dc3e0de68e57277eca3d30af47"
+    },
+    {
+      "path": "vendor/three.module.js",
+      "bytes": 603113,
+      "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3570,
+      "sha256": "e0bb62951dd0c5f14ff9e637e2bdba92ee25358fb29f261c3e0093567be58007"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 1781,
+      "sha256": "0194229f779f829ee081188d07618b597455e1541e74e3dc74a6e68a095e9394"
+    }
+  ]
+}

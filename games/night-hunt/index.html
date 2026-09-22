@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#171528">
+  <meta name="description" content="Hunt the humans in a moonlit gothic action platformer. Four monsters, one dark city.">
+  <title>Night Hunt: Reversed</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='9' fill='%23171528'/%3E%3Cpath d='M12 15h12l8 11 8-11h12l-5 36H17z' fill='%23d83b52'/%3E%3Cpath d='M23 34h5v5h-5zm13 0h5v5h-5z' fill='%23f6d365'/%3E%3C/svg%3E">
+  <style>
+    :root{--ink:#171528;--blood:#d83b52;--bone:#f6d365;--screen:#b9d870;--deep:#32264d;--teal:#4ea699}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100%;background:#0d0b17;color:#f8eed1;font-family:"Courier New",monospace;overflow-x:hidden}
+    body{display:grid;place-items:center;padding:max(12px,env(safe-area-inset-top)) 12px max(16px,env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 20%,#32264d 0,#171528 46%,#090810 100%)}
+    main{width:min(980px,100%);display:grid;gap:12px;justify-items:center}
+    .mast{width:min(920px,100%);display:flex;justify-content:space-between;align-items:end;gap:16px;color:#a6d9cb;text-transform:uppercase;letter-spacing:.12em}
+    h1{font-size:clamp(1rem,3vw,1.55rem);margin:0;color:#f6d365;text-shadow:3px 3px 0 #8c283e;line-height:1}
+    .mast span{font-size:.75rem;color:#db8b69;text-align:right}
+    .unit{width:min(920px,100%);padding:clamp(12px,2vw,22px);border:3px solid #655584;border-radius:24px;background:linear-gradient(145deg,#28213c,#171528 64%);box-shadow:0 16px 40px #000a,inset 0 0 0 2px #0b0913}
+    .bezel{position:relative;border:6px solid #08070c;border-radius:13px;overflow:hidden;background:#08070c;box-shadow:inset 0 0 0 2px #4a3a62,0 0 24px #4ea69933}
+    canvas{display:block;width:100%;aspect-ratio:10/9;background:#201b32;image-rendering:pixelated;touch-action:none}
+    .bezel:after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,#0000 0 3px,#08070c22 3px 5px);mix-blend-mode:multiply}
+    .controls{--direction-size:64px;--direction-gap:16px;--action-size:104px;margin-top:24px;padding-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:20px;user-select:none;-webkit-user-select:none;touch-action:none}
+    .dpad{display:grid;flex:none;grid-template:repeat(3,var(--direction-size))/repeat(3,var(--direction-size));gap:var(--direction-gap);filter:drop-shadow(0 6px 0 #08070c)}
+    .key,.action{border:0;color:#f8eed1;background:#3a3152;font:700 1rem "Courier New",monospace;touch-action:none;cursor:pointer;box-shadow:inset 0 -5px #1b1729,inset 0 2px #756493}
+    .key:active,.key.on,.action:active,.action.on{transform:translateY(4px);box-shadow:inset 0 -1px #1b1729}
+    .key.up{grid-column:2;grid-row:1}.key.left{grid-column:1;grid-row:2}.key.down{grid-column:2;grid-row:3}.key.right{grid-column:3;grid-row:2}
+    .key{padding:0;border-radius:10px;font-size:1.6rem;-webkit-touch-callout:none}
+    .key:focus-visible,.action:focus-visible{outline:3px solid var(--bone);outline-offset:3px}
+    .buttons{display:flex;flex:none;gap:24px;align-items:center}
+    .action{padding:0;flex:none;width:var(--action-size);height:var(--action-size);font-size:1.75rem;border-radius:50%;background:#8c283e;-webkit-touch-callout:none;box-shadow:inset 0 -7px #4b1425,inset 0 3px #e16b77,0 7px 0 #08070c}
+    .action:active,.action.on{transform:translateY(5px);box-shadow:inset 0 -2px #4b1425,inset 0 2px #e16b77,0 2px 0 #08070c}
+    .action small{display:block;font-size:.875rem;letter-spacing:.05em}.action.jump{background:#2e786f;box-shadow:inset 0 -7px #163d39,inset 0 3px #70c9bb,0 7px 0 #08070c}
+    .guide{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;color:#b7accb;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;text-align:center}
+    .guide b{color:#f6d365}
+    @media(max-width:620px){body{padding-left:6px;padding-right:6px}.unit{border-radius:16px;padding:8px}.controls{--direction-size:52px;--direction-gap:14px;--action-size:92px;gap:16px;margin-top:20px}.buttons{flex-direction:column;gap:16px}.mast{padding:0 6px}.guide{gap:8px;font-size:.64rem}}
+    @media(max-width:359px){.controls{--direction-size:48px;--direction-gap:12px;--action-size:88px;gap:12px}}
+    @media(min-width:900px) and (pointer:fine){.controls{display:none}.guide{margin-top:11px}}
+  </style>
+  <link rel="stylesheet" href="modern.css">
+</head>
+<body>
+<main>
+  <div class="mast"><h1>Night Hunt: Reversed</h1><span>4 levels · The hunt begins</span></div>
+  <section class="unit" aria-label="Night Hunt game and touch controls">
+    <div class="bezel"><canvas id="game" width="320" height="288" aria-label="Night Hunt game screen"></canvas></div>
+    <div class="controls" aria-label="Touch controls">
+      <div class="dpad">
+        <button class="key up" data-input="up" aria-label="Up">▲</button>
+        <button class="key left" data-input="left" aria-label="Left">◀</button>
+        <button class="key down" data-input="down" aria-label="Down">▼</button>
+        <button class="key right" data-input="right" aria-label="Right">▶</button>
+      </div>
+      <div class="buttons">
+        <button class="action attack" data-input="attack" aria-label="Attack">A<small>attack</small></button>
+        <button class="action jump" data-input="jump" aria-label="Jump">B<small>jump</small></button>
+      </div>
+    </div>
+  </section>
+  <div class="guide"><span><b>Move</b> arrows / D-pad</span><span><b>Attack</b> Z / A</span><span><b>Jump</b> X / B</span><span><b>Special</b> ↑ + attack</span><span><b>Grab climb</b> ↑ while jumping</span></div>
+</main>
+<script src="modern.js"></script>
+<script src="levels.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

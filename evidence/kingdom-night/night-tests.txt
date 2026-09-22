@@ -1,0 +1,8 @@
+
+> night-hunt-reversed@1.1.0 test
+> node tests/controls.cjs && node tests/traversal.cjs && node tests/campaign.cjs
+
+PASS: CSS box-fit checks at 9 widths (320–899px); separated cross; enlarged actions; multi-touch combinations; pointer capture/release/cancel; blur/hidden reset; all-four-monster spawn regression. Not physical-device or rendered-browser QA.
+PASS: 192 bidirectional gate/cache crossings; all four monsters, all four levels, all humans alive.
+PASS: 16 protected spawns; 32 pursuit cases; 4 human climb routes; telegraphed/interruptible melee; 16 unrestricted exits; backtracking, retry, specials, health caches.
+PASS: four full campaigns through normal movement/combat; all 16 climb, descend, jump-release, and elevator combinations.

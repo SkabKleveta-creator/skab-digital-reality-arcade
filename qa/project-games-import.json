@@ -1,5 +1,5 @@
 {
-  "build": "underground-2026-09-21-project-games",
+  "build": "underground-2026-09-21-four-project-games",
   "method": "Byte-identical copies of pinned upstream runtime files.",
   "games": [
     {
@@ -15,19 +15,30 @@
       "commit": "af2852ff916b2486cb8a0b7368e570524e2cb2ac",
       "files": 13,
       "bytes": 2118222
+    },
+    {
+      "id": "kingdom-maker",
+      "source": "SkabKleveta-creator/Kingdom_Maker",
+      "commit": "bf608966457b208cbb32d284b300feee69e88a5c",
+      "files": 13,
+      "bytes": 2538787
+    },
+    {
+      "id": "night-hunt",
+      "source": "SkabKleveta-creator/Night_Hunt-Reverse_Horror",
+      "commit": "baf18fba5c81e94d468e8011caf8f7fdea2a4edd",
+      "files": 8,
+      "bytes": 2720039
     }
   ],
   "excluded": [
     "Castle Realm",
     "Terrarium"
   ],
-  "not_imported": {
-    "Kingdom Maker": "Existing source unavailable; published build requires authentication.",
-    "Night Hunt: Reversed": "Existing source unavailable; published build requires authentication."
-  },
+  "not_imported": {},
   "catalog": {
     "before": 24,
-    "after": 26,
+    "after": 28,
     "existing_entries_unchanged": true
   }
 }

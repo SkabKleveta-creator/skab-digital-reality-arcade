@@ -1,0 +1,47 @@
+{
+  "source_repository": "SkabKleveta-creator/Night_Hunt-Reverse_Horror",
+  "source_commit": "baf18fba5c81e94d468e8011caf8f7fdea2a4edd",
+  "runtime_changes": "None",
+  "files": [
+    {
+      "path": "index.html",
+      "bytes": 6027,
+      "sha256": "59d7c48529e66b1d13fa76551e43de1e90d9866b651815926e306b9714503277"
+    },
+    {
+      "path": "game.js",
+      "bytes": 15390,
+      "sha256": "859d6c5f16eb1d46fa5319227635db8dee77be0e21313473d2922083510687d9"
+    },
+    {
+      "path": "levels.js",
+      "bytes": 4263,
+      "sha256": "169112a15f0738baf7285316efe95d39bc719345b67c147e091149539ef78f67"
+    },
+    {
+      "path": "modern.js",
+      "bytes": 13537,
+      "sha256": "d002d7dc45e7a1e18d0b9270a94d3a1e88a1af6f04e865919f71ac8758c1dae3"
+    },
+    {
+      "path": "modern.css",
+      "bytes": 2045,
+      "sha256": "c855065e426349af74db194604097c62001d4bd0ef81fd31ddb35ed343bc056f"
+    },
+    {
+      "path": "assets/characters.png",
+      "bytes": 2341641,
+      "sha256": "65b4b46beee3a2ea4bee9115065f76d3c684172862066bc8ebd43177a42e9d72"
+    },
+    {
+      "path": "assets/ward.jpg",
+      "bytes": 332889,
+      "sha256": "76e1545be497fd888f979c39e66148c7ac15c6e98b52b2c2c066cd64a174c964"
+    },
+    {
+      "path": "README.md",
+      "bytes": 4247,
+      "sha256": "f055079df1b560a50279097b9f959bd38c0cb42a61740c20cd1eb330873e773c"
+    }
+  ]
+}

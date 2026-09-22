@@ -1,0 +1,98 @@
+
+> kingdom-maker@1.0.0 test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: starting realm has food, shelter, an enclosed keep and enough defense for the first raid
+ok 1 - starting realm has food, shelter, an enclosed keep and enough defense for the first raid
+  ---
+  duration_ms: 4.23422
+  type: 'test'
+  ...
+# Subtest: building spends resources, reserves land and needs builders plus time
+ok 2 - building spends resources, reserves land and needs builders plus time
+  ---
+  duration_ms: 42.33894
+  type: 'test'
+  ...
+# Subtest: canceling construction releases its footprint and returns 75 percent of costs
+ok 3 - canceling construction releases its footprint and returns 75 percent of costs
+  ---
+  duration_ms: 8.86397
+  type: 'test'
+  ...
+# Subtest: job assignments cannot exceed people or workplace capacity
+ok 4 - job assignments cannot exceed people or workplace capacity
+  ---
+  duration_ms: 7.849984
+  type: 'test'
+  ...
+# Subtest: upgrades unlock higher structures and damaged buildings can be repaired
+ok 5 - upgrades unlock higher structures and damaged buildings can be repaired
+  ---
+  duration_ms: 62.821956
+  type: 'test'
+  ...
+# Subtest: territory claims require adjoining land, resources and completed surveying
+ok 6 - territory claims require adjoining land, resources and completed surveying
+  ---
+  duration_ms: 14.934706
+  type: 'test'
+  ...
+# Subtest: removing a perimeter segment exposes the keep and weakens defense
+ok 7 - removing a perimeter segment exposes the keep and weakens defense
+  ---
+  duration_ms: 2.679611
+  type: 'test'
+  ...
+# Subtest: recruitment uses idle residents and barracks time
+ok 8 - recruitment uses idle residents and barracks time
+  ---
+  duration_ms: 9.637562
+  type: 'test'
+  ...
+# Subtest: expeditions lower home defense, prohibit redeploying absent troops, and return rewards
+ok 9 - expeditions lower home defense, prohibit redeploying absent troops, and return rewards
+  ---
+  duration_ms: 10.934988
+  type: 'test'
+  ...
+# Subtest: trade needs a completed market and rejects purchases beyond storage
+ok 10 - trade needs a completed market and rejects purchases beyond storage
+  ---
+  duration_ms: 11.770937
+  type: 'test'
+  ...
+# Subtest: policies and winter affect consumption, income and welfare
+ok 11 - policies and winter affect consumption, income and welfare
+  ---
+  duration_ms: 1.652071
+  type: 'test'
+  ...
+# Subtest: first raid resolves after time advances and resources stay bounded through a full year
+ok 12 - first raid resolves after time advances and resources stay bounded through a full year
+  ---
+  duration_ms: 321.75685
+  type: 'test'
+  ...
+# Subtest: save restoration preserves queued construction, training and expeditions and pauses time
+ok 13 - save restoration preserves queued construction, training and expeditions and pauses time
+  ---
+  duration_ms: 8.581748
+  type: 'test'
+  ...
+# Subtest: every structure level and orientation produces finite 3D geometry
+ok 14 - every structure level and orientation produces finite 3D geometry
+  ---
+  duration_ms: 295.706326
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 896.425477

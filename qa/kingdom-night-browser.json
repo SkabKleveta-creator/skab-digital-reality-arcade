@@ -1,0 +1,362 @@
+{
+  "completed": true,
+  "failure": null,
+  "passed": 67,
+  "total": 67,
+  "scope": "Nested local Pages-equivalent paths; Chromium desktop and mobile emulation, not physical-device certification.",
+  "checks": [
+    {
+      "check": "desktop: Kingdom Maker starts with resources and population",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Kingdom pause control responds",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Kingdom management opens #council-button",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Kingdom policy saves",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Kingdom management opens #army-button",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Kingdom management opens #trade-button",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Kingdom management opens #chronicle-button",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Kingdom construction selection opens inspector",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Kingdom territory tool opens",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Kingdom saved policy survives reload",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Kingdom restored game starts paused",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Kingdom has no horizontal overflow",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "kingdom-maker: rendered screenshot is not blank",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Kingdom has no runtime or asset errors",
+      "pass": true,
+      "detail": {
+        "errors": [],
+        "requests": []
+      }
+    },
+    {
+      "check": "desktop: Night Hunt starts without test mode",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Night Hunt starts through real controls",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "night-hunt: rendered screenshot is not blank",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Night Hunt has no horizontal overflow",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Night Hunt arrival remains alive and protected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "Desktop Night Hunt keyboard moves the monster",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Night Hunt traverses all four levels and finishes",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Night Hunt has no runtime or asset errors",
+      "pass": true,
+      "detail": {
+        "errors": [],
+        "requests": []
+      }
+    },
+    {
+      "check": "mobile: Kingdom Maker starts with resources and population",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Kingdom pause control responds",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Kingdom management opens #council-button",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Kingdom policy saves",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Kingdom management opens #army-button",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Kingdom management opens #trade-button",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Kingdom management opens #chronicle-button",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Kingdom construction selection opens inspector",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Kingdom territory tool opens",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Kingdom saved policy survives reload",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Kingdom restored game starts paused",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Kingdom has no horizontal overflow",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Kingdom has no runtime or asset errors",
+      "pass": true,
+      "detail": {
+        "errors": [],
+        "requests": []
+      }
+    },
+    {
+      "check": "mobile: Night Hunt starts without test mode",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Night Hunt starts through real controls",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Night Hunt has no horizontal overflow",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Night Hunt arrival remains alive and protected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "Mobile Night Hunt large separated controls",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "Mobile Night Hunt two-finger special works",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Night Hunt traverses all four levels and finishes",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Night Hunt has no runtime or asset errors",
+      "pass": true,
+      "detail": {
+        "errors": [],
+        "requests": []
+      }
+    },
+    {
+      "check": "desktop: Arcade has 28 titles",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Both new games lead the lineup",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Card and details link work: kingdom-maker",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Card and details link work: night-hunt",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Card and details link work: first-kin",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Card and details link work: swarm-attack",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Simulation filter includes both builders",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Night Hunt search works",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: New-game favorites persist",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: All 28 cards and covers load",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Arcade has no horizontal overflow",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "desktop: Arcade has no runtime or asset errors",
+      "pass": true,
+      "detail": {
+        "errors": [],
+        "requests": []
+      }
+    },
+    {
+      "check": "mobile: Arcade has 28 titles",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Both new games lead the lineup",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Card and details link work: kingdom-maker",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Card and details link work: night-hunt",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Card and details link work: first-kin",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Card and details link work: swarm-attack",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Simulation filter includes both builders",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Night Hunt search works",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: New-game favorites persist",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: All 28 cards and covers load",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Arcade has no horizontal overflow",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "mobile: Arcade has no runtime or asset errors",
+      "pass": true,
+      "detail": {
+        "errors": [],
+        "requests": []
+      }
+    }
+  ]
+}
