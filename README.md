@@ -48,6 +48,20 @@ Designed to run directly in modern browsers on:
 
 ## LIVE PLAYABLE
 
+### BREACHFRAME
+
+A modern side-scrolling action-platformer. Guide Rook through three hostile districts, defeat guardian machines, recover their weapons, and climb the Crown Relay to restore the city.
+
+Play:
+
+https://skabkleveta-creator.github.io/skab-digital-reality-arcade/games/breachframe/
+
+Status:
+
+Live playable
+
+---
+
 ### DIGITAL REALITY RUN
 
 A first-person recovery run through fractured digital sectors. Cut the command signal, collapse Replicator Stations, shut down Automatons, and enter the Signal Gate.
