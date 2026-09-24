@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+<defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#101318"/><stop offset="1" stop-color="#3a2018"/></linearGradient><radialGradient id="r"><stop stop-color="#f2a64a" stop-opacity=".75"/><stop offset="1" stop-color="#d0662c" stop-opacity="0"/></radialGradient></defs>
+<rect width="1200" height="800" fill="url(#g)"/><circle cx="850" cy="350" r="260" fill="url(#r)"/>
+<g opacity=".35" stroke="#8d96a3" stroke-width="8"><path d="M0 610h1200M0 660h1200M120 0v800M340 0v800M1020 0v800"/></g>
+<g transform="translate(520 180)"><rect x="-70" y="135" width="140" height="250" rx="45" fill="#1b1e23"/><path d="M-62 135h124l-15 92H-50z" fill="#ece7dc"/><rect x="-46" y="168" width="92" height="14" rx="7" fill="#d0662c"/><rect x="56" y="215" width="190" height="70" rx="28" fill="#2c3139"/><rect x="215" y="230" width="55" height="40" rx="10" fill="#d0662c"/><circle cx="-45" cy="425" r="35" fill="#2c3139"/><circle cx="45" cy="425" r="35" fill="#2c3139"/></g>
+<text x="70" y="115" fill="#ece7dc" font-family="Arial,sans-serif" font-weight="800" font-size="88" letter-spacing="5">BREACHFRAME</text>
+<text x="75" y="175" fill="#f2a64a" font-family="Arial,sans-serif" font-size="30" letter-spacing="8">BREAK THE NETWORK</text>
+</svg>
