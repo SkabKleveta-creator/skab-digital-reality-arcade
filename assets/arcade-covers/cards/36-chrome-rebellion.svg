@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 576" role="img" aria-labelledby="title desc">
+<title id="title">Chrome Rebellion</title><desc id="desc">A cybernetic fighter stands against an Android patrol on a rain-soaked city street.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#070a12"/><stop offset="1" stop-color="#20324c"/></linearGradient></defs>
+<rect width="768" height="576" fill="url(#bg)"/>
+<g fill="#0b111e" stroke="#344357" stroke-width="3"><path d="M0 220h130v260H0zM150 180h110v300H150zM520 190h90v290h-90zM640 240h128v240H640z"/></g>
+<g stroke="#8fe9ff" opacity=".35" stroke-width="5"><path d="M22 255h78M22 290h78M180 230h55M180 265h55M548 230h34M548 266h34M665 285h65"/></g>
+<path d="M0 480h768v96H0z" fill="#111827"/><path d="M0 486h768M120 518h170M460 533h190" stroke="#8fe9ff" opacity=".25" stroke-width="3"/>
+<g transform="translate(342 214)" stroke="#070a12" stroke-width="4"><path d="M-24 7h47l8 40-31 18-28-19z" fill="#c4ab96"/><path d="M-28 7l8-13h42l7 17-34-3-21 18z" fill="#19222a"/><path d="M-35 70h69l22 96-79 9-34-73z" fill="#e9eef2"/><path d="M-24 89h48v18h-48z" fill="#f2a541"/><path d="M-20 175l-15 86h-31l15-97M26 171l44 83-29 12-49-89" fill="#55687b"/><path d="M-37 81l-41 54 17 19 46-47" fill="#667c91"/><path d="M34 77l40 18 41-24 16 30-53 36-60-30" fill="#97acbe"/><path d="M107 64h36v39h-36z" fill="#f2a541"/></g>
+<g fill="#455669" stroke="#131c29" stroke-width="4"><path d="M586 337h35v35h-35zM580 378h48l13 67h-72zM583 445l-12 40M617 445l17 40"/></g>
+<path d="M590 352h26" stroke="#e23d4b" stroke-width="5"/>
+<g stroke="#8fe9ff" opacity=".15"><path d="M80 170l-30 170M230 200l-40 200M450 180l-40 220M700 180l-45 230"/></g>
+<text x="40" y="75" fill="#e9eef2" font-family="Arial,sans-serif" font-size="59" font-weight="900">CHROME</text>
+<text x="38" y="139" fill="#f2a541" font-family="Arial,sans-serif" font-size="59" font-weight="900">REBELLION</text>
+<text x="42" y="550" fill="#e9eef2" font-family="Arial,sans-serif" font-size="17" letter-spacing="4">FOUR FIGHTERS. ONE REBELLION.</text>
+</svg>
