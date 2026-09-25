@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 576" role="img" aria-labelledby="title desc">
+<title id="title">SIGNALBOUND</title>
+<desc id="desc">A doorway between the warm physical world and a cyan signal network.</desc>
+<defs>
+<linearGradient id="bg"><stop stop-color="#32291f"/><stop offset=".49" stop-color="#101820"/><stop offset="1" stop-color="#06323c"/></linearGradient>
+<linearGradient id="gate"><stop stop-color="#ffe3b0"/><stop offset="1" stop-color="#4fe0ff"/></linearGradient>
+</defs>
+<rect width="768" height="576" fill="url(#bg)"/>
+<g stroke="#9f8460" stroke-width="3" opacity=".24" fill="none"><path d="M0 220h350M0 320h350M0 420h350M70 160v360M210 160v360M350 160v360"/></g>
+<g stroke="#4fe0ff" stroke-width="2" opacity=".38" fill="none"><path d="M420 160v80h110v80h130v180M465 500V355h110V200h155M405 430h100v-50h180V160"/><circle cx="660" cy="500" r="8"/><circle cx="730" cy="200" r="8"/><circle cx="685" cy="160" r="8"/></g>
+<path d="M276 475V220l108-62 108 62v255" fill="#071017" stroke="url(#gate)" stroke-width="9"/>
+<path d="M306 475V240l78-44 78 44v235" fill="none" stroke="url(#gate)" stroke-width="2"/>
+<path d="M384 196v279" stroke="#4fe0ff" opacity=".45" stroke-dasharray="5 9"/>
+<g fill="#cbd4d5" stroke="#13232d" stroke-width="4"><circle cx="380" cy="334" r="20"/><path d="M358 355h44l13 68h-23l-3 55h-19l-4-55h-23z"/></g>
+<path d="M357 368l-26 36-28 3M402 368l25 40" fill="none" stroke="#cbd4d5" stroke-width="12"/>
+<path d="M427 411l41-78" stroke="#4fe0ff" stroke-width="5"/>
+<text x="44" y="75" fill="#eef4f4" font-family="Arial,sans-serif" font-weight="800" font-size="57" letter-spacing="3">SIGNALBOUND</text>
+<text x="46" y="117" fill="#4fe0ff" font-family="Arial,sans-serif" font-size="18" letter-spacing="5">ONE WORLD. TWO REALITIES.</text>
+<text x="44" y="539" fill="#ffe3b0" font-family="Arial,sans-serif" font-size="17" letter-spacing="3">EXPLORE · FIGHT · SHIFT</text>
+</svg>
